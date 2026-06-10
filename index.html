@@ -14,6 +14,11 @@ body { margin:0; background:var(--bg); color:var(--txt);
   padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom));
   -webkit-font-smoothing:antialiased; }
 .wrap { max-width:640px; margin:0 auto; }
+.tabs { display:grid; grid-template-columns:1fr 1fr; gap:4px; background:var(--card);
+  border-radius:12px; padding:4px; margin-bottom:4px; }
+.tab { text-align:center; padding:9px 0; border-radius:9px; font-size:14px; font-weight:600;
+  color:var(--dim); text-decoration:none; }
+.tab.active { background:#3a3a3c; color:var(--txt); }
 .hero { text-align:center; padding:28px 0 8px; }
 .hero .label { font-size:15px; color:var(--dim); font-weight:500; }
 .hero .big { font-size:48px; font-weight:700; letter-spacing:-1px; margin:2px 0; font-variant-numeric:tabular-nums; }
@@ -44,11 +49,13 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 .lesson { padding:12px 16px; font-size:14px; border-bottom:.5px solid var(--line); }
 </style></head><body><div class="wrap">
 
+<div class="tabs"><a href="index.html" class="tab active">📊 Depot</a><a href="spec.html" class="tab">⚙️ System</a></div>
+
 <div class="hero">
   <div class="label">Depot · Tag 4</div>
   <div class="big">1989.82 €</div>
   <span class="pill down">-0.51 % auf 2000 € Einzahlungen</span>
-  <div class="stamp">Stand 11.06.2026, 00:17 · davon 1066 € Cash · aktualisiert ~16 &amp; ~22 Uhr</div>
+  <div class="stamp">Stand 11.06.2026, 00:21 · davon 1066 € Cash · aktualisiert ~16 &amp; ~22 Uhr</div>
 </div>
 
 <div class="compare">
@@ -187,33 +194,6 @@ function copyPrompt() {
   }, function() { t.select(); document.execCommand('copy'); });
 }
 </script>
-
-<h2>So arbeitet der Agent</h2><div class="card"><details><summary style="padding:13px 16px;font-size:15px;font-weight:600;cursor:pointer;list-style:none">So arbeitet der Agent — System-Spec <span class="dim">(antippen)</span></summary><div style="padding:0 16px 13px;font-size:14px;line-height:1.55;color:var(--txt)"><div><b>Setup:</b> 5 Analyse-Agenten (Momentum · Value · Sentiment · Contrarian · Makro/Risiko) + Portfolio-Manager, persistentes Gedächtnis (Journal, Lessons, Profil, Registry). Der Agent entscheidet und bucht <b>autonom</b> — die realen Orders zieht der Nutzer am Broker nach.</div>
-<div style="height:6px"></div>
-<div class="tk" style="padding-top:10px">Tagesablauf (werktags, deutsche Zeit)</div>
-<div style="height:6px"></div>
-<div style="padding-left:14px">&bull; <b>09:08 · Morgen-Briefing</b> — Overnight-News, Futures, Termine, Stop-Risiken. Kein Trading.</div>
-<div style="padding-left:14px">&bull; <b>10:13–15:58 alle 15 Min · Vorbörslicher Medien-Scan</b> — Markt zu: bei wichtigen News nur Alarm + Analyse, nie buchen.</div>
-<div style="padding-left:14px">&bull; <b>15:36 · Eröffnungs-Check</b> — Stop gerissen / Gap-Down? → sofort verkaufen. Keine Käufe.</div>
-<div style="padding-left:14px">&bull; <b>16:02 · Hauptlauf</b> — Live-Kurse, Exit-Check jeder Position, 5 Agenten + PM, autonome Buchungen, Bericht + Dashboard-Push.</div>
-<div style="padding-left:14px">&bull; <b>16:13–21:28 alle 15 Min · Medien-Scan (Markt offen)</b> — bei wesentlichen Ereignissen (Halt, Gewinnwarnung, Eskalationssprung, Fed-Notfall) sofortiger Blitz-Check + autonomes Handeln.</div>
-<div style="padding-left:14px">&bull; <b>21:44 · Abend-Check</b> — Schlusskurse, Stops/Ziele, Equity-Kurve, Abendbericht.</div>
-<div style="padding-left:14px">&bull; <b>Mo + Do 16:34 · Speku-Slot</b> — kompaktes Multi-Agenten-Research (~6–10 Agenten) für max. 1 Katalysator-Trade (max 120 €, max 4 Tage).</div>
-<div style="padding-left:14px">&bull; <b>Sa 11:03 · Wochen-Reflexion</b> — Lessons (erst ab n≥30 handlungsleitend), Präferenz-Profil, Korrelations-Check.</div>
-<div style="height:6px"></div>
-<div class="tk" style="padding-top:10px">Research in 3 Stufen</div>
-<div style="height:6px"></div>
-<div style="padding-left:14px">&bull; <b>Stufe 1 — Wache (alle 15 Min):</b> kleiner Scout, 3–4 Websuchen, eine Frage: „Wesentliches passiert — ja/nein?"</div>
-<div style="padding-left:14px">&bull; <b>Stufe 2 — Analyse (täglich):</b> 5 Agenten + PM mit Live-Daten. Liest die gespeicherten Research-Berichte als Kontext, statt sie zu wiederholen.</div>
-<div style="padding-left:14px">&bull; <b>Stufe 3 — Deep Research (anlassbezogen):</b> ~100 Agenten, mehrere Suchwinkel, jede Kernaussage von 3 Skeptikern adversarial geprüft. Bisher: News-Playbook (10.06., 17/25 Claims bestätigt) und Zukunfts-Aktien-Mandat (11.06., 24/25 bestätigt → Quantum-Tranche QBTS/IONQ/RGTI).</div>
-<div style="height:6px"></div>
-<div><b>Logik:</b> Thesen ändern sich nicht täglich — sie werden anlassbezogen tief recherchiert und als Berichte gespeichert. Täglich geprüft wird, was sich täglich ändert (Kurse, Stops, News); Thesen-Brüche fängt die 15-Minuten-Wache ab.</div>
-<div style="height:6px"></div>
-<div class="tk" style="padding-top:10px">Leitplanken (nicht verhandelbar)</div>
-<div style="height:6px"></div>
-<div style="padding-left:14px">&bull; Max <b>500 € pro Position</b> (25 %) · min <b>200 € Cash</b> (10 %) · max <b>8 Positionen</b>.</div>
-<div style="padding-left:14px">&bull; Jeder Einstieg mit <b>Ziel + Stop + max. Haltedauer</b>; gerissene Stops werden <b>sofort und ohne Aufweichen</b> verkauft.</div>
-<div style="padding-left:14px">&bull; Lessons erst ab 30 Trades handlungsleitend (vorher: Rauschen); Base-Rate-Ehrlichkeit: über 15 Jahre schlägt die Mehrheit der Profi-Fonds ihren Index in keiner US-Kategorie (SPIVA). Kein Edge-Versprechen.</div></div></details></div>
 
 <div class="note">Experiment (2000 € Einzahlungen), keine Anlageberatung. Unter 30 Trades ist jedes Ergebnis
 statistisches Rauschen — auch ein Vorsprung. Zum Vergleich: über 15 Jahre schlägt die Mehrheit

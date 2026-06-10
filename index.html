@@ -48,7 +48,7 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
   <div class="label">Depot · Tag 3</div>
   <div class="big">1993.55 €</div>
   <span class="pill down">-0.32 % auf 2000 € Einzahlungen</span>
-  <div class="stamp">Stand 10.06.2026, 19:33 · davon 1798 € Cash · aktualisiert ~16 &amp; ~22 Uhr</div>
+  <div class="stamp">Stand 10.06.2026, 19:38 · davon 1798 € Cash · aktualisiert ~16 &amp; ~22 Uhr</div>
 </div>
 
 <div class="compare">
@@ -103,6 +103,28 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 <h2>Markt-News <span style="color:var(--dim);font-weight:500">(● = handelsrelevant)</span></h2><div class="card"><div class="lesson"><span class="up">●</span> <b>06.10 · 16:13</b> &nbsp;<span class="badge buy">AMD</span> <span class="badge buy">NVDA</span><br><span style="color:var(--txt)">AMD-Stop 469 intraday gerissen (468.32) -> Position regelkonform verkauft. NVDA haelt relative Staerke (Apple-Deal als Katalysator).</span><span class="dim"> — stockanalysis.com Live-Kurse</span></div><div class="lesson"><span class="up">●</span> <b>06.10 · 16:00</b> &nbsp;<span class="badge buy">NVDA</span> <span class="badge buy">AMD</span> <span class="badge buy">SPY</span> <span class="badge buy">IWM</span><br><span style="color:var(--txt)">Rotation raus aus AI-Chips haelt an (Tag 2): Broadcom-Enttaeuschung, Russell 2000 gruen bei rotem Nasdaq. CPI Mai heiss: 4.2% p.a. Iran-Eskalation: Trump droht, Oel WTI 88$.</span><span class="dim"> — TheStreet/TipRanks/CNBC</span></div></div>
 
 <h2>Erkenntnisse</h2><div class="card"><div class="lesson">(noch keine Lessons — Phase 1, n=0)</div></div>
+
+<h2>Automatik</h2><div class="card">
+<div class="row"><div><div class="tk">Zeitpläne</div>
+<div class="dim">Hauptlauf Mo-Fr 16:02 · Medien-Scans Mo-Fr 16:13-20:43 alle 30 Min + 21:13 · Abend-Check Mo-Fr 21:44 · Wochen-Reflexion Sa 11:03</div></div>
+<div class="right"><span class="up">aktiv bis 17.06.2026 (noch 6 Tage)</span></div></div>
+<div style="padding:13px 16px">
+<div class="dim" style="margin-bottom:8px">Zum Verlängern: Button drücken, Text in Claude Code einfügen, Enter.</div>
+<button id="copybtn" onclick="copyPrompt()" style="width:100%;padding:12px;border:none;border-radius:12px;
+background:var(--blue);color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer">
+Verlängerungs-Prompt kopieren</button>
+<textarea id="renew" readonly style="width:100%;margin-top:8px;height:96px;background:var(--bg);color:var(--dim);
+border:1px solid var(--line);border-radius:10px;padding:8px;font-size:11px;font-family:inherit">verlängern — Lies Memory, registry.md und coach_state.json des epmt-Projekts und lege alle Automatik-Jobs für 7 Tage neu an: werktags 16:02 autonomer Hauptlauf, 16:13–20:43 alle 30 Min + 21:13 Medien-Scans (Haiku-Scout, news_log.jsonl), 21:44 Abend-Check, Samstag 11:03 Wochen-Reflexion — jeweils mit Dashboard-Update und git push nach jedem Lauf. Danach in automation.json das neue expires-Datum eintragen und das Dashboard neu pushen.</textarea>
+</div></div>
+<script>
+function copyPrompt() {
+  var t = document.getElementById('renew');
+  navigator.clipboard.writeText(t.value).then(function() {
+    var b = document.getElementById('copybtn');
+    b.textContent = '✓ Kopiert'; setTimeout(function() { b.textContent = 'Verlängerungs-Prompt kopieren'; }, 2000);
+  }, function() { t.select(); document.execCommand('copy'); });
+}
+</script>
 
 <div class="note">Experiment (2000 € Einzahlungen), keine Anlageberatung. Unter 30 Trades ist jedes Ergebnis
 statistisches Rauschen — auch ein Vorsprung. Zum Vergleich: über 15 Jahre schlägt die Mehrheit

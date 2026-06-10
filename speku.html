@@ -55,7 +55,7 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
   <div class="label">Speku-Depot (Zukunfts-Mandat) · Tag 1</div>
   <div class="big">2000.00 €</div>
   <span class="pill up">+0.00 % auf 2000 € Einzahlungen</span>
-  <div class="stamp">Stand 11.06.2026, 00:37 · davon 1230 € Cash · aktualisiert ~16 &amp; ~22 Uhr</div>
+  <div class="stamp">Stand 11.06.2026, 00:49 · davon 1230 € Cash · aktualisiert ~16 &amp; ~22 Uhr</div>
 </div>
 
 <div class="compare">
@@ -149,7 +149,7 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 background:var(--blue);color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer">
 Verlängerungs-Prompt kopieren</button>
 <textarea id="renew" readonly style="width:100%;margin-top:8px;height:96px;background:var(--bg);color:var(--dim);
-border:1px solid var(--line);border-radius:10px;padding:8px;font-size:11px;font-family:inherit">verlängern — Lies Memory, registry.md und coach_state.json des epmt-Projekts und lege alle Automatik-Jobs für 7 Tage neu an: werktags 16:02 autonomer Hauptlauf, 16:13–20:43 alle 30 Min + 21:13 Medien-Scans (Haiku-Scout, news_log.jsonl), 21:44 Abend-Check, Samstag 11:03 Wochen-Reflexion — jeweils mit Dashboard-Update und git push nach jedem Lauf. Danach in automation.json das neue expires-Datum eintragen und das Dashboard neu pushen.</textarea>
+border:1px solid var(--line);border-radius:10px;padding:8px;font-size:11px;font-family:inherit">verlängern — Lies zuerst PROJEKT_GEDAECHTNIS.md, registry.md und coach_state.json des Speku-Depot-Projekts (Ordner 'epmt - Copy' — eigenständiger Fork, Tag-1-Start 11.06.2026) und lege alle Automatik-Jobs für 7 Tage neu an: Mo-Fr 09:08 Morgen-Briefing (Overnight-News, Futures, Stop-Risiken; kein Trading) · Mo-Fr 10:13–15:58 alle 15 Min vorbörslicher Medien-Scan (Haiku-Scout; bei MATERIAL nur Alarm, nie buchen) · Mo-Fr 15:36 Eröffnungs-Check (nur offene Positionen: Stop/Gap-Down → sofort verkaufen, keine Käufe) · Mo-Fr 16:02 autonomer Hauptlauf (Live-Kurse Positionen + Watchlist aus coach_state, Exit-Check, 5 Agenten + PM, autonom buchen; dabei pending_plan beachten: Tranche 2 Space RKLB/UFO ~250 € NACH SpaceX-IPO nur bei Stabilisierung, IONQ-Aufstockung <50 $, QBTS <21 $, je max 500 € Gesamt; Research-Berichte research_zukunftsaktien_*.md + research_news_playbook.md als Kontext lesen) · Mo-Fr 16:13–21:28 alle 15 Min Medien-Scan Markt offen (strikte MATERIAL-Schwelle, bei ja autonom handeln; Headline immer an news_log.jsonl) · Mo+Do 16:34 Speku-Slot (Multi-Agenten-Research, 1 Katalysator-Trade max 120 €/4 Tage; nächste Abdeckungslücke: Nuklear/AI-Strom, Robotik) · Mo-Fr 21:44 Abend-Check (Schlusskurse, equity_history heutige Zeile ersetzen, equity_chart.py) · Sa 11:03 Wochen-Reflexion (Lessons mit n-Gate, user_profile, Korrelations-Check). Nach JEDEM Lauf und JEDEM Trade: dashboard.py ausführen und im Ordner site/ NUR speku.html und spec.html committen und pushen — index.html gehört einem ANDEREN Agenten und wird NIEMALS geschrieben, gestaged oder gepusht! Leitplanken unverhandelbar: max 500 €/Position, min 200 € Cash, max 8 Positionen, Stops nie aufweichen; reale Orders zieht der Nutzer nach (in jedem Bericht erinnern). Danach in automation.json jobs_created/expires aktualisieren und das Dashboard neu pushen.</textarea>
 </div></div>
 <script>
 function copyPrompt() {

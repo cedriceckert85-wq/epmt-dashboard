@@ -34,7 +34,6 @@ body { margin:0; background:var(--bg); color:var(--txt);
 .up { color:var(--up); } .down { color:var(--down); }
 h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px; }
 .card { background:var(--card); border-radius:18px; overflow:hidden; }
-.card img { display:block; width:100%; border-radius:18px; }
 .row { display:flex; justify-content:space-between; align-items:center; gap:10px;
   padding:13px 16px; border-bottom:.5px solid var(--line); font-size:15px; }
 .row:last-child { border-bottom:none; }
@@ -58,72 +57,70 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px;color:var(--down);font-weight:600">
 &#9888;&#65039; Diese Seite ist veraltet &#8212; der letzte Automatik-Lauf liegt &#252;ber 24 Stunden zur&#252;ck.</div>
 <script>
-(function(){var b=1781368560,n=Math.floor(Date.now()/1000);if(n>b)document.getElementById('stale-banner').style.display='block';})();
+(function() { var built = 1781366520;
+var age = Date.now()/1000 - built;
+if (age > 86400) document.getElementById('stale-banner').style.display='block';
+})();
 </script>
 
 <div class="hero">
-  <div class="label">&#128640; Speku-Depot &middot; Tag 2 &middot; 12.06.2026</div>
-  <div class="big">2.028,70 &euro;</div>
-  <span class="pill up">+28,70 &euro; &middot; +1,44 %</span>
-  <div class="stamp">Wache 18:36 &middot; Snapshot 18:26 &middot; Markt offen</div>
+<div class="label">&#128640; Speku-Depot</div>
+<div class="big up">&#8364;2.028,72</div>
+<div class="pill up">+&#8364;28,72 &middot; +1,44%</div>
+<div class="stamp">Stand: 12.06.2026 18:36 CEST &middot; Snapshot 18:26 (10 Min)</div>
 </div>
 
 <div class="compare">
-  <div class="chip">
-    <div class="t">DEPOT</div>
-    <div class="v up">+1,44 %</div>
-    <div class="s">2.029 &euro;</div>
-  </div>
-  <div class="chip">
-    <div class="t">SPY B&amp;H</div>
-    <div class="v up">+2,14 %</div>
-    <div class="s">2.043 &euro;</div>
-  </div>
-  <div class="chip">
-    <div class="t">CASH 2 %/J.</div>
-    <div class="v up">+0,01 %</div>
-    <div class="s">2.000 &euro;</div>
-  </div>
+<div class="chip"><div class="t">Heute real.</div><div class="v up">+&#8364;5,25</div><div class="s up">RKLB Cover</div></div>
+<div class="chip"><div class="t">vs SPY +2,14%</div><div class="v down">&minus;0,70pp</div><div class="s dim">SPY 740,97</div></div>
+<div class="chip"><div class="t">Cash</div><div class="v">&#8364;1.235,25</div><div class="s dim">60,9%</div></div>
 </div>
 
-<h2>Positionen</h2>
+<h2>Positionen (3)</h2>
 <div class="card">
-  <div class="row">
-    <div><div class="tk">QBTS <span class="badge buy">LONG</span></div>
-    <div class="dim">EK 23,25 &middot; Stop 18,60 &middot; Ziel 36,00</div></div>
-    <div class="right"><div>23,55 $</div><div class="res up">+5,16 &euro; (+1,3 %)</div></div>
-  </div>
-  <div class="row">
-    <div><div class="tk">IONQ <span class="badge buy">LONG</span></div>
-    <div class="dim">EK 56,63 &middot; Stop 46,00 &middot; Ziel 75,00</div></div>
-    <div class="right"><div>58,06 $</div><div class="res up">+6,31 &euro; (+2,5 %)</div></div>
-  </div>
-  <div class="row">
-    <div><div class="tk">RGTI <span class="badge buy">LONG</span></div>
-    <div class="dim">EK 19,45 &middot; Stop 15,50 &middot; Ziel 28,00</div></div>
-    <div class="right"><div>21,39 $</div><div class="res up">+11,97 &euro; (+10,0 %)</div></div>
-  </div>
-  <div class="row">
-    <div><div class="tk">CASH</div>
-    <div class="dim">inkl. +5,25 &euro; real. (RKLB-Cover 12.06.)</div></div>
-    <div class="right"><div>1.235,25 &euro;</div><div class="res" style="color:var(--dim)">61,6 %</div></div>
-  </div>
+<div class="row">
+<div><div class="tk">QBTS <span class="badge buy">Long</span></div>
+<div class="dim">Entry 23,25 &middot; Stop 18,60 (&minus;21%) &middot; Ziel 36,00</div></div>
+<div class="right"><div>23,55 <span class="up">+1,3%</span></div>
+<div class="res up">+&#8364;5,16 offen</div></div>
+</div>
+<div class="row">
+<div><div class="tk">IONQ <span class="badge buy">Long</span></div>
+<div class="dim">Entry 56,63 &middot; Stop 46,00 (&minus;21%) &middot; Ziel 75,00</div></div>
+<div class="right"><div>58,06 <span class="up">+2,5%</span></div>
+<div class="res up">+&#8364;6,31 offen</div></div>
+</div>
+<div class="row">
+<div><div class="tk">RGTI <span class="badge buy">Long</span></div>
+<div class="dim">Entry 19,45 &middot; Stop 15,50 (&minus;28%) &middot; Ziel 28,00</div></div>
+<div class="right"><div>21,39 <span class="up">+10,0%</span></div>
+<div class="res up">+&#8364;11,97 offen</div></div>
+</div>
 </div>
 
-<h2>News &middot; letzte 10</h2>
+<h2>Realisiert</h2>
 <div class="card">
-  <div class="lesson">18:36 &middot; Wache &middot; HOLD x3 &#8212; kein Material, alle Stops &gt;20 % entfernt</div>
-  <div class="lesson">18:22 &middot; Stunden-Wache &middot; HOLD x3, RGTI +10,1 % auf EK (21,41 $)</div>
-  <div class="lesson">17:09 &middot; Wache &middot; HOLD x3, QBTS +4,6%, IONQ +5,3%, RGTI +12,3%</div>
-  <div class="lesson">16:54 &middot; Wache &middot; HOLD x3, SPY 742,59 Tageshoch &#8212; ruhig</div>
-  <div class="lesson">16:39 &middot; Wache &middot; HOLD x3, alle nahe Tageshochs (RGTI +10,3 %)</div>
-  <div class="lesson">16:24 &middot; Wache &middot; HOLD x3, SPCX ~171&#8211;176 h&#228;lt Pop</div>
-  <div class="lesson">&#128994; 16:11 &middot; SPCX-ERSTPRINT ~171 (+27 %) &middot; Proxy-Rotation RKLB/UFO &#8722;6&#8211;8 % &middot; These &#10003;</div>
-  <div class="lesson">&#10003;&#65039; 15:39 &middot; RKLB-Short gecovert @ 106,05 &middot; +5,25 &euro; (+4,4 %)</div>
-  <div class="lesson">15:34 &middot; SPCX T+3 &middot; RKLB er&#246;ffnet 109,50 (&#8722;8 % Gap), kein Print</div>
-  <div class="lesson">&#128308; 09:15 &middot; STOP-ALARM RKLB-Short: Nachb&#246;rse 121,50 &gt; Stop 119,80 &middot; Cover Pflicht</div>
+<div class="row">
+<div><div class="tk">RKLB <span class="badge sell">Cover &#10003;</span></div>
+<div class="dim">Short 110,90 &rarr; Cover 106,05 &middot; 12.06. 15:38</div></div>
+<div class="right"><div class="res up">+&#8364;5,25 &middot; +4,4%</div></div>
+</div>
 </div>
 
-<p class="note">&#9888;&#65039; GTC-Stop-Loss beim Broker: QBTS 18,60 &middot; IONQ 46,00 &middot; RGTI 15,50<br>Reale Orders immer selbst nachziehen!</p>
+<h2>News-Log</h2>
+<div class="card">
+<div class="lesson"><b>18:36</b> HOLD x3. QBTS 23,55 (+1,3%), IONQ 58,06 (+2,5%), RGTI 21,39 (+10,0%). Depot 2028,72 EUR (+1,44%). Kein Material.</div>
+<div class="lesson"><b>18:22</b> HOLD x3. QBTS 23,76, IONQ 58,58, RGTI 21,41. Kein Material: SPCX-Pop bekannt, Iran-Deal pending.</div>
+<div class="lesson"><b>17:06</b> HOLD x3. QBTS +4,6%, IONQ +5,3%, RGTI +12,3%. RKLB Nasdaq-100 ab 22.06. (kein Re-Short).</div>
+<div class="lesson"><b>16:51</b> HOLD x3. SPY Tageshoch 742,59. Wedbush RGTI-Ziel 40$.</div>
+<div class="lesson"><b>16:36</b> HOLD x3. Alle nahe Tageshochs (QBTS +3,5%, IONQ +4,2%, RGTI +10,3%).</div>
+<div class="lesson"><b>16:11</b> SPCX-Erstprint ~171 (+27%). Proxies fallen (RKLB Tief 103). Rotationsthese bestaetigt.</div>
+<div class="lesson"><b>15:39</b> &#9989; RKLB-Short GECOVERT @ 106,05 &rarr; +&#8364;5,25 (+4,4%). Sell-the-News-Gap rettete den Trade.</div>
+<div class="lesson"><b>15:34</b> SPCX T+3: RKLB eroeffnet 109,50 (&minus;8% vs Referenz), Short im Gewinn.</div>
+<div class="lesson"><b>15:29</b> SPCX T-2: Ref. RKLB 119,00 / UFO 57,02 / SPY 740,42. Pop-Indikation ~157 (+16%).</div>
+<div class="lesson"><b>09:15</b> Stop-Alarm RKLB-Short: Nachboerse 121,50 &gt; Stop 119,80 &mdash; Cover zur Eroeffnung Pflicht (verifiziert 2 Quellen).</div>
+</div>
+
+<p class="note">Journal only &#8212; reale Orders + echte Stop-Loss-Orders beim Broker selbst hinterlegen!<br>Speku-Depot &middot; Zukunfts-Mandat &middot; Start 11.06.2026 &middot; 2000&#8364; &middot; Tag 2</p>
 
 </div></body></html>

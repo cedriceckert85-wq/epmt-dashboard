@@ -42,294 +42,230 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 .right { text-align:right; font-variant-numeric:tabular-nums; }
 .res { font-weight:600; font-size:13px; }
 .badge { font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; vertical-align:1px; }
-.badge.up { background:rgba(48,209,88,.18); color:var(--up); }
-.badge.down { background:rgba(255,69,58,.18); color:var(--down); }
-.badge.neu { background:rgba(10,132,255,.18); color:var(--blue); }
-.note { font-size:12px; color:var(--dim); padding:10px 16px 12px; }
-.target-row { display:flex; justify-content:space-between; align-items:center;
-  padding:10px 16px; border-bottom:.5px solid var(--line); font-size:13px; }
-.target-row:last-child { border-bottom:none; }
-.bar-wrap { background:#2c2c2e; border-radius:4px; height:4px; margin-top:6px; overflow:hidden; }
-.bar-fill { height:4px; border-radius:4px; }
-.section-head { display:flex; justify-content:space-between; align-items:baseline; }
-.section-head span { font-size:13px; color:var(--dim); font-weight:500; }
-/* Allocation donut */
-.alloc-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
-.alloc-item { background:var(--card); border-radius:14px; padding:12px 14px; }
-.alloc-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:2px; }
-.alloc-name { font-size:13px; color:var(--dim); }
-.alloc-val { font-size:20px; font-weight:700; margin-top:2px; font-variant-numeric:tabular-nums; }
-.alloc-sub { font-size:12px; color:var(--dim); }
-/* Watchlist badge */
-.wl-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px;
-  background:rgba(10,132,255,.15); color:var(--blue); }
-/* Journal */
-.journal-row { padding:14px 16px; border-bottom:.5px solid var(--line); }
-.journal-row:last-child { border-bottom:none; }
-.j-head { display:flex; justify-content:space-between; align-items:center; }
-.j-ticker { font-weight:700; font-size:15px; }
-.j-action { font-size:12px; font-weight:600; padding:2px 8px; border-radius:999px; }
-.j-action.kauf { background:rgba(48,209,88,.15); color:var(--up); }
-.j-action.verkauf { background:rgba(255,69,58,.15); color:var(--down); }
-.j-meta { font-size:12px; color:var(--dim); margin-top:3px; }
-.j-grund { font-size:13px; margin-top:6px; color:#c7c7cc; }
-/* tabs scroll */
-@media(max-width:400px){ .tabs a { font-size:12px; } }
-</style></head><body>
-<div class="wrap">
+.badge.open { background:rgba(10,132,255,.18); color:var(--blue); }
+.badge.closed { background:rgba(48,209,88,.15); color:var(--up); }
+.badge.loss { background:rgba(255,69,58,.15); color:var(--down); }
+.section-meta { font-size:12px; color:var(--dim); margin:4px 4px 10px; }
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+.kpi { background:var(--card); border-radius:16px; padding:14px 12px; }
+.kpi .kpi-t { font-size:11px; color:var(--dim); font-weight:500; }
+.kpi .kpi-v { font-size:20px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums; }
+.kpi .kpi-s { font-size:12px; font-weight:600; }
+.bar-wrap { background:#2c2c2e; border-radius:999px; height:6px; margin-top:6px; overflow:hidden; }
+.bar-fill { height:6px; border-radius:999px; }
+.chart-wrap { background:var(--card); border-radius:18px; padding:16px; margin-bottom:10px; }
+chart-wrap canvas { border-radius:10px; }
+.note-box { background:var(--card); border-radius:16px; padding:16px; margin-bottom:10px; line-height:1.55; font-size:14px; color:var(--dim); }
+.note-box strong { color:var(--txt); }
+.action-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:16px 0; }
+.action-card { background:var(--card); border-radius:16px; padding:14px 14px; }
+.action-card .ac-tag { font-size:11px; font-weight:600; color:var(--dim); letter-spacing:.5px; text-transform:uppercase; }
+.action-card .ac-v { font-size:22px; font-weight:700; margin:4px 0 2px; font-variant-numeric:tabular-nums; }
+.action-card .ac-s { font-size:12px; color:var(--dim); }
+.timeline { position:relative; padding-left:20px; }
+.timeline::before { content:''; position:absolute; left:6px; top:4px; bottom:4px; width:2px; background:var(--line); border-radius:1px; }
+.tl-item { position:relative; margin-bottom:18px; }
+.tl-dot { position:absolute; left:-17px; top:4px; width:10px; height:10px; border-radius:50%; border:2px solid var(--bg); }
+.tl-dot.buy { background:var(--up); }
+.tl-dot.sell { background:var(--down); }
+.tl-dot.hold { background:var(--blue); }
+.tl-date { font-size:11px; color:var(--dim); font-weight:500; }
+.tl-text { font-size:14px; font-weight:600; margin:2px 0 1px; }
+.tl-sub { font-size:12px; color:var(--dim); }
+table.stats { width:100%; border-collapse:collapse; font-size:13px; }
+table.stats td { padding:9px 12px; border-bottom:.5px solid var(--line); }
+table.stats tr:last-child td { border-bottom:none; }
+table.stats td:first-child { color:var(--dim); }
+table.stats td:last-child { text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
+@media(max-width:600px){
+  .kpi-grid { grid-template-columns:1fr 1fr; }
+  .compare { grid-template-columns:1fr 1fr; }
+  .action-grid { grid-template-columns:1fr 1fr; }
+}
+</style></head>
+<body><div class="wrap">
 
-<!-- NAVIGATION -->
-<nav class="tabs" style="margin-bottom:20px">
-  <a href="#depot" class="active" onclick="show('depot',this)">Depot</a>
-  <a href="#watchlist" onclick="show('watchlist',this)">Watchlist</a>
-  <a href="#allokation" onclick="show('allokation',this)">Allok.</a>
-  <a href="#journal" onclick="show('journal',this)">Journal</a>
+<!-- TABS -->
+<nav class="tabs" style="margin-bottom:18px">
+  <a href="#" class="active" onclick="showTab('depot');return false">Depot</a>
+  <a href="#" onclick="showTab('watchlist');return false">Watchlist</a>
+  <a href="#" onclick="showTab('journal');return false">Journal</a>
+  <a href="#" onclick="showTab('stats');return false">Statistik</a>
 </nav>
 
-<!-- ========== DEPOT ========== -->
-<section id="depot">
+<!-- ===================== TAB: DEPOT ===================== -->
+<div id="tab-depot">
 
 <div class="hero">
-  <div class="label">Depotwert</div>
-  <div class="big" id="tot">–</div>
+  <div class="label">Gesamtwert Depot</div>
+  <div class="big" id="hero-total">–</div>
   <div id="hero-pill"></div>
-  <div class="stamp" id="stamp"></div>
+  <div class="stamp" id="hero-stamp"></div>
 </div>
 
-<div class="compare">
-  <div class="chip"><div class="t">Heute</div><div class="v" id="c-day">–</div><div class="s" id="cs-day"></div></div>
-  <div class="chip"><div class="t">1 Woche</div><div class="v" id="c-wk">–</div><div class="s" id="cs-wk"></div></div>
-  <div class="chip"><div class="t">1 Monat</div><div class="v" id="c-mo">–</div><div class="s" id="cs-mo"></div></div>
+<div class="compare" id="compare-chips"></div>
+
+<h2>Offene Positionen</h2>
+<div class="card" id="open-positions"></div>
+
+<h2>Geschlossene Positionen</h2>
+<div class="card" id="closed-positions"></div>
+
+</div><!-- /tab-depot -->
+
+<!-- ===================== TAB: WATCHLIST ===================== -->
+<div id="tab-watchlist" style="display:none">
+
+<h2 style="margin-top:8px">Watchlist</h2>
+<div class="section-meta">Kandidaten & Beobachtung — noch nicht im Depot</div>
+<div class="card" id="watchlist-rows"></div>
+
+<div class="action-grid" style="margin-top:20px">
+  <div class="action-card">
+    <div class="ac-tag">Stärkste Watchlist</div>
+    <div class="ac-v" id="wl-best-name">–</div>
+    <div class="ac-s" id="wl-best-reason">–</div>
+  </div>
+  <div class="action-card">
+    <div class="ac-tag">Nächste Prüfung</div>
+    <div class="ac-v" id="wl-next-check">–</div>
+    <div class="ac-s" id="wl-next-note">–</div>
+  </div>
 </div>
 
-<div class="section-head"><h2>Positionen</h2><span id="pos-sum"></span></div>
-<div class="card" id="pos-list"></div>
+</div><!-- /tab-watchlist -->
 
-<h2>Ziele &amp; Stops</h2>
-<div class="card" id="targets"></div>
+<!-- ===================== TAB: JOURNAL ===================== -->
+<div id="tab-journal" style="display:none">
 
-</section>
+<h2 style="margin-top:8px">Handelstagebuch</h2>
+<div class="section-meta" id="journal-meta"></div>
 
-<!-- ========== WATCHLIST ========== -->
-<section id="watchlist" style="display:none">
-<h2>Watchlist</h2>
-<div class="card" id="wl-list"></div>
-</section>
+<div class="note-box" id="journal-today"></div>
 
-<!-- ========== ALLOKATION ========== -->
-<section id="allokation" style="display:none">
-<h2>Allokation</h2>
-<div id="alloc-items"></div>
-<div class="card" style="margin-top:8px">
-  <div class="row"><span>Investiert</span><span class="right" id="al-invested">–</span></div>
-  <div class="row"><span>Cash (fiktiv)</span><span class="right" id="al-cash">–</span></div>
-  <div class="row"><span>Gesamt</span><span class="right" id="al-total">–</span></div>
+<div class="timeline" id="journal-timeline"></div>
+
+</div><!-- /tab-journal -->
+
+<!-- ===================== TAB: STATISTIK ===================== -->
+<div id="tab-stats" style="display:none">
+
+<h2 style="margin-top:8px">Performance-Überblick</h2>
+
+<div class="kpi-grid" id="kpi-grid"></div>
+
+<div class="chart-wrap">
+  <div style="font-size:13px;color:var(--dim);font-weight:600;margin-bottom:10px">Kapitalverlauf (simuliert)</div>
+  <canvas id="equity-chart" height="160"></canvas>
 </div>
-</section>
 
-<!-- ========== JOURNAL ========== -->
-<section id="journal" style="display:none">
-<h2>Handels-Journal</h2>
-<div class="card" id="journal-list"></div>
-</section>
+<h2>Positions-Statistik</h2>
+<div class="card"><table class="stats" id="stats-table"></table></div>
+
+<h2>Sektoren-Allokation</h2>
+<div class="chart-wrap">
+  <canvas id="sector-chart" height="200"></canvas>
+</div>
+
+</div><!-- /tab-stats -->
 
 </div><!-- /wrap -->
 <script>
-/* ===== DATA ===== */
-const POSITIONS = [
-  { ticker:"TSLA",  name:"Tesla",           stk:4,  buy:246.38, cur:314.19, ziel:380.0, stop:275.0,  sektor:"Tech" },
-  { ticker:"NVDA",  name:"Nvidia",          stk:4,  buy:103.55, cur:131.44, ziel:155.0, stop:115.0,  sektor:"Tech" },
-  { ticker:"MSTR",  name:"MicroStrategy",   stk:2,  buy:380.80, cur:420.16, ziel:520.0, stop:340.0,  sektor:"Crypto" },
-  { ticker:"COIN",  name:"Coinbase",        stk:2,  buy:248.00, cur:239.62, ziel:310.0, stop:210.0,  sektor:"Crypto" },
-  { ticker:"CEG",   name:"Constellation E.",stk:2,  buy:252.69, cur:299.54, ziel:340.0, stop:255.0,  sektor:"Energie" },
-  { ticker:"PLTR",  name:"Palantir",        stk:10, buy:119.20, cur:138.29, ziel:160.0, stop:118.0,  sektor:"Tech" },
-  { ticker:"RDDT",  name:"Reddit",          stk:4,  buy:166.26, cur:201.27, ziel:235.0, stop:165.0,  sektor:"Tech" },
-  { ticker:"APP",   name:"AppLovin",        stk:4,  buy:363.14, cur:437.27, ziel:500.0, stop:355.0,  sektor:"Tech" },
-  { ticker:"SHOP",  name:"Shopify",         stk:4,  buy:104.22, cur:107.29, ziel:125.0, stop:96.0,   sektor:"Tech" },
-  { ticker:"CLOV",  name:"Clover Health",   stk:50, buy:3.80,   cur:5.78,   ziel:7.5,   stop:4.20,   sektor:"Health" }
-];
-
-const WATCHLIST = [
-  { ticker:"HOOD", name:"Robinhood",     cur:55.12,  kommentar:"Breakout über 50 bestätigt — Momentum läuft", tag:"Momentum" },
-  { ticker:"UBER", name:"Uber",          cur:88.34,  kommentar:"Konsolidierung — Einstieg um 84 interessant", tag:"Value" },
-  { ticker:"SOFI", name:"SoFi",          cur:14.22,  kommentar:"Fintech-Rebound möglich, enge Stops nötig", tag:"Spekul." },
-  { ticker:"RKLB", name:"Rocket Lab",    cur:28.90,  kommentar:"Space-Sektor zieht an — Nachkauf möglich", tag:"Wachstum" },
-  { ticker:"IONQ", name:"IonQ",          cur:38.45,  kommentar:"Quantum Computing Hype — sehr volatil", tag:"Spekul." },
-  { ticker:"ARM",  name:"Arm Holdings",  cur:142.60, kommentar:"KI-Chip-Architektur — starkes Fundament", tag:"Wachstum" }
-];
-
-const HISTORY = {
-  w1:  { TSLA:285.0, NVDA:122.0, MSTR:395.0, COIN:225.0, CEG:272.0, PLTR:128.0, RDDT:188.0, APP:410.0, SHOP:101.0, CLOV:5.10 },
-  mo1: { TSLA:242.0, NVDA:108.0, MSTR:350.0, COIN:198.0, CEG:248.0, PLTR:108.0, RDDT:160.0, APP:340.0, SHOP:95.0,  CLOV:4.20 }
-};
-
-const JOURNAL = [
-  { datum:"2025-06-10", ticker:"PLTR",  aktion:"Kauf",    preis:119.20, info:"10 Stk · Einstieg nach Konsolidierung",      ergebnis:"",       grund:"KI-Infrastruktur-Ausbau, Regierungsaufträge wachsen" },
-  { datum:"2025-06-09", ticker:"RDDT",  aktion:"Kauf",    preis:166.26, info:"4 Stk · Breakout über 160er Marke",          ergebnis:"",       grund:"User-Wachstum + Ads-Monetarisierung beschleunigt" },
-  { datum:"2025-06-07", ticker:"SHOP",  aktion:"Kauf",    preis:104.22, info:"4 Stk · Rücksetzer gekauft",                 ergebnis:"",       grund:"E-Commerce Rebound Q2, starke Merchant-Daten" },
-  { datum:"2025-06-05", ticker:"NVDA",  aktion:"Kauf",    preis:103.55, info:"4 Stk · Post-Split Einstieg",               ergebnis:"",       grund:"KI-Chip Nachfrage ungebrochen, H100/H200 ausverkauft" },
-  { datum:"2025-06-03", ticker:"TSLA",  aktion:"Verkauf", preis:280.00, info:"2 Stk · Teilgewinnmitnahme",               ergebnis:"+67 €",  grund:"Überkauft kurzfristig, Reduktion der Positionsgröße" },
-  { datum:"2025-06-01", ticker:"MSTR",  aktion:"Kauf",    preis:380.80, info:"2 Stk · Bitcoin-Korrelation",               ergebnis:"",       grund:"BTC über 70k — MSTR als gehebelte BTC-Position" },
-  { datum:"2025-05-28", ticker:"CEG",   aktion:"Kauf",    preis:252.69, info:"2 Stk · Energie-Infrastruktur",             ergebnis:"",       grund:"KI-Rechenzentren brauchen Strom: Nuklear-Thema" },
-  { datum:"2025-05-25", ticker:"COIN",  aktion:"Kauf",    preis:248.00, info:"2 Stk · Krypto-Regulierung positiv",       ergebnis:"",       grund:"SEC-Klage fallen gelassen — Krypto-Frühling 2025" },
-  { datum:"2025-05-20", ticker:"APP",   aktion:"Kauf",    preis:363.14, info:"4 Stk · Mobile-Ads Boom",                  ergebnis:"",       grund:"AppLovin übertrifft Erwartungen 3x in Folge" },
-  { datum:"2025-05-15", ticker:"CLOV",  aktion:"Kauf",    preis:3.80,   info:"50 Stk · Turnaround-Spekulation",          ergebnis:"",       grund:"Medicare Advantage Rebound, niedrige Bewertung" }
-];
-
-/* ===== HELPERS ===== */
-const fmt  = v => v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
-const fmtE = v => (v>=0?'+':'')+v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
-const pct  = v => (v>=0?'+':'')+v.toFixed(2)+'%';
-const cls  = v => v>=0?'up':'down';
-
-function totalAt(prices){
-  return POSITIONS.reduce((s,p)=>s+(prices[p.ticker]??p.cur)*p.stk,0);
-}
-
-/* ===== DEPOT ===== */
-function buildDepot(){
-  const tot = POSITIONS.reduce((s,p)=>s+p.cur*p.stk,0);
-  const cost= POSITIONS.reduce((s,p)=>s+p.buy*p.stk,0);
-  const gain= tot-cost;
-  const gp  = gain/cost*100;
-
-  document.getElementById('tot').textContent = fmt(tot)+' €';
-
-  const pill = document.getElementById('hero-pill');
-  pill.innerHTML = `<span class="pill ${cls(gain)}">${fmtE(gain)} (${pct(gp)})</span>`;
-
-  document.getElementById('stamp').textContent =
-    'Stand: '+new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-
-  // compare chips
-  const t1w = totalAt(HISTORY.w1);
-  const t1m = totalAt(HISTORY.mo1);
-  const dDay=0, dDayP=0; // intraday placeholder
-  const dWk=tot-t1w, dWkP=(tot-t1w)/t1w*100;
-  const dMo=tot-t1m, dMoP=(tot-t1m)/t1m*100;
-
-  const dayEl=document.getElementById('c-day');
-  dayEl.textContent=fmt(tot)+' €';
-  dayEl.className='v';
-  document.getElementById('cs-day').textContent='Heute';
-  document.getElementById('cs-day').className='s '+cls(0);
-
-  ['wk','mo'].forEach((k,i)=>{
-    const [d,dp]= k==='wk'?[dWk,dWkP]:[dMo,dMoP];
-    document.getElementById('c-'+k).textContent=fmt(tot-(k==='wk'?dWk:dMo)+0)+' → '+fmt(tot)+' €';
-    document.getElementById('cs-'+k).textContent=fmtE(d)+' ('+pct(dp)+')';
-    document.getElementById('cs-'+k).className='s '+cls(d);
-  });
-
-  // positions list
-  const list = document.getElementById('pos-list');
-  let totalCur=0;
-  list.innerHTML = POSITIONS.map(p=>{
-    const val=p.cur*p.stk, diff=p.cur-p.buy, diffP=diff/p.buy*100;
-    totalCur+=val;
-    return `<div class="row">
-      <div><div class="tk">${p.ticker} <span class="badge neu">${p.sektor}</span></div>
-        <div class="dim">${p.name} · ${p.stk} Stk · Kauf ${fmt(p.buy)} €</div></div>
-      <div class="right">
-        <div>${fmt(p.cur)} €</div>
-        <div class="res ${cls(diff)}">${fmtE(diff*p.stk)} (${pct(diffP)})</div>
-      </div></div>`;
-  }).join('');
-  document.getElementById('pos-sum').textContent = fmt(totalCur)+' €';
-
-  // targets
-  const tgt = document.getElementById('targets');
-  tgt.innerHTML = POSITIONS.map(p=>{
-    const range = p.ziel - p.stop;
-    const pos   = Math.max(0,Math.min(1,(p.cur - p.stop)/range));
-    const toZiel = (p.ziel-p.cur)/p.cur*100;
-    const toStop = (p.stop-p.cur)/p.cur*100;
-    return `<div class="target-row">
-      <div style="flex:1">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-weight:600">${p.ticker}</span>
-          <span style="font-size:12px;color:var(--dim)">${fmt(p.cur)} €</span>
-        </div>
-        <div class="bar-wrap"><div class="bar-fill" style="width:${(pos*100).toFixed(1)}%;background:${pos>0.7?'var(--up)':pos<0.3?'var(--down)':'#ff9f0a'}"></div></div>
-        <div style="display:flex;justify-content:space-between;margin-top:3px">
-          <span style="font-size:11px;color:var(--down)">Stop ${fmt(p.stop)} € (${pct(toStop)})</span>
-          <span style="font-size:11px;color:var(--up)">Ziel ${fmt(p.ziel)} € (+${toZiel.toFixed(1)}%)</span>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-/* ===== WATCHLIST ===== */
-function buildWatchlist(){
-  const el = document.getElementById('wl-list');
-  el.innerHTML = WATCHLIST.map(w=>`
-    <div class="row">
-      <div><div class="tk">${w.ticker} <span class="wl-badge">${w.tag}</span></div>
-        <div class="dim">${w.name}</div>
-        <div style="font-size:12px;color:#c7c7cc;margin-top:4px">${w.kommentar}</div>
-      </div>
-      <div class="right"><div>${fmt(w.cur)} €</div></div>
-    </div>`).join('');
-}
-
-/* ===== ALLOKATION ===== */
-function buildAllokation(){
-  const sektorMap={};
-  POSITIONS.forEach(p=>{
-    sektorMap[p.sektor]=(sektorMap[p.sektor]||0)+p.cur*p.stk;
-  });
-  const invested = POSITIONS.reduce((s,p)=>s+p.cur*p.stk,0);
-  const cash = 1500; // fiktiv
-  const total = invested+cash;
-
-  const colors={Tech:'#0a84ff',Crypto:'#ff9f0a',Energie:'#30d158',Health:'#ff453a',Sonstige:'#98989d'};
-  const grid = document.getElementById('alloc-items');
-  grid.innerHTML='<div class="alloc-grid">'+Object.entries(sektorMap).map(([k,v])=>{
-    const p=(v/invested*100).toFixed(1);
-    return `<div class="alloc-item">
-      <div class="alloc-name"><span class="alloc-dot" style="background:${colors[k]||'#98989d'}"></span>${k}</div>
-      <div class="alloc-val">${p}%</div>
-      <div class="alloc-sub">${fmt(v)} €</div>
-    </div>`;
-  }).join('')+'</div>';
-
-  document.getElementById('al-invested').textContent=fmt(invested)+' €';
-  document.getElementById('al-cash').textContent=fmt(cash)+' €';
-  document.getElementById('al-total').textContent=fmt(total)+' €';
-}
-
-/* ===== JOURNAL ===== */
-function buildJournal(){
-  const el = document.getElementById('journal-list');
-  el.innerHTML = JOURNAL.map(j=>{
-    const d = new Date(j.datum).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
-    return `<div class="journal-row">
-      <div class="j-head">
-        <span class="j-ticker">${j.ticker}</span>
-        <span class="j-action ${j.aktion.toLowerCase()}">${j.aktion}</span>
-      </div>
-      <div class="j-meta">${d} · ${j.info}${j.ergebnis?' · <span class="'+(j.ergebnis.startsWith('+')?'up':'down')+'">'+j.ergebnis+'</span>':''}</div>
-      <div class="j-grund">${j.grund}</div>
-    </div>`;
-  }).join('');
-}
-
-/* ===== NAV ===== */
-function show(id,el){
-  ['depot','watchlist','allokation','journal'].forEach(s=>{
-    document.getElementById(s).style.display= s===id?'':'none';
-  });
-  document.querySelectorAll('.tabs a').forEach(a=>a.classList.remove('active'));
-  el.classList.add('active');
-  if(id==='watchlist') buildWatchlist();
-  if(id==='allokation') buildAllokation();
-  if(id==='journal') buildJournal();
-}
-
-/* ===== INIT ===== */
-buildDepot();
-</script>
-<script type="application/json" id="journal-data">
-[{"datum": "2025-06-10", "ticker": "PLTR", "aktion": "Kauf", "preis": 119.2, "info": "10 Stk · Einstieg nach Konsolidierung", "ergebnis": "", "grund": "KI-Infrastruktur-Ausbau, Regierungsaufträge wachsen"}, {"datum": "2025-06-09", "ticker": "RDDT", "aktion": "Kauf", "preis": 166.26, "info": "4 Stk · Breakout über 160er Marke", "ergebnis": "", "grund": "User-Wachstum + Ads-Monetarisierung beschleunigt"}, {"datum": "2025-06-07", "ticker": "SHOP", "aktion": "Kauf", "preis": 104.22, "info": "4 Stk · Rücksetzer gekauft", "ergebnis": "", "grund": "E-Commerce Rebound Q2, starke Merchant-Daten"}, {"datum": "2025-06-05", "ticker": "NVDA", "aktion": "Kauf", "preis": 103.55, "info": "4 Stk · Post-Split Einstieg", "ergebnis": "", "grund": "KI-Chip Nachfrage ungebrochen, H100/H200 ausverkauft"}, {"datum": "2025-06-03", "ticker": "TSLA", "aktion": "Verkauf", "preis": 280.0, "info": "2 Stk · Teilgewinnmitnahme", "ergebnis": "+67 €", "grund": "Überkauft kurzfristig, Reduktion der Positionsgröße"}, {"datum": "2025-06-01", "ticker": "MSTR", "aktion": "Kauf", "preis": 380.8, "info": "2 Stk · Bitcoin-Korrelation", "ergebnis": "", "grund": "BTC über 70k — MSTR als gehebelte BTC-Position"}, {"datum": "2025-05-28", "ticker": "CEG", "aktion": "Kauf", "preis": 252.69, "info": "2 Stk · Energie-Infrastruktur", "ergebnis": "", "grund": "KI-Rechenzentren brauchen Strom: Nuklear-Thema (TMI/Microsoft)"}]}
+// ============================================================
+//  DATA
+// ============================================================
+const DATA = {
+  "depot": {
+    "stand": "12.06.2026 · 18:13 Uhr",
+    "einstand_gesamt": 2000.00,
+    "positionen": [
+      {
+        "ticker": "MSTR",
+        "name": "MicroStrategy",
+        "typ": "Aktie",
+        "sektor": "Tech/Crypto",
+        "kauf_datum": "29.05.2026",
+        "kauf_preis": 421.72,
+        "stueck": 0.5928,
+        "aktuell": 427.00,
+        "ziel": 500.0,
+        "stop": 370.0,
+        "status": "offen",
+        "notiz": "BTC-Proxy; Stop weit wegen Volatilität"
+      },
+      {
+        "ticker": "RXRX",
+        "name": "Recursion Pharma",
+        "typ": "Aktie",
+        "sektor": "Biotech/KI",
+        "kauf_datum": "29.05.2026",
+        "kauf_preis": 6.29,
+        "stueck": 39.7456,
+        "aktuell": 6.40,
+        "ziel": 8.5,
+        "stop": 5.50,
+        "status": "offen",
+        "notiz": "KI-Drug-Discovery; spekulativ"
+      },
+      {
+        "ticker": "IONQ",
+        "name": "IonQ",
+        "typ": "Aktie",
+        "sektor": "Quantum",
+        "kauf_datum": "29.05.2026",
+        "kauf_preis": 37.90,
+        "stueck": 6.5963,
+        "aktuell": 41.50,
+        "ziel": 50.0,
+        "stop": 30.0,
+        "status": "offen",
+        "notiz": "Quantum-Computing-Leader; Sektor im Fokus"
+      },
+      {
+        "ticker": "CEG",
+        "name": "Constellation Energy",
+        "typ": "Aktie",
+        "sektor": "Energie/Nuklear",
+        "kauf_datum": "29.05.2026",
+        "kauf_preis": 252.69,
+        "stueck": 0.9893,
+        "aktuell": 261.00,
+        "ziel": 290.0,
+        "stop": 220.0,
+        "status": "offen",
+        "notiz": "KI-Rechenzentren brauchen Strom; Nuklear-Thema"
+      }
+    ],
+    "geschlossen": []
+  },
+  "watchlist": [
+    { "ticker": "NVDA",  "name": "Nvidia",            "sektor": "KI-Chips",      "kurs": 135.58, "ziel": 160.0, "grund": "Marktführer KI-Infrastruktur; wartet auf Rücksetzer", "prio": "hoch" },
+    { "ticker": "PLTR",  "name": "Palantir",          "sektor": "KI-Software",   "kurs": 28.10,  "ziel": 35.0,  "grund": "Regierungs-KI; starkes Wachstum", "prio": "mittel" },
+    { "ticker": "RKLB",  "name": "Rocket Lab",        "sektor": "Space",         "kurs": 22.45,  "ziel": 30.0,  "grund": "NewSpace-Play; Neutron-Rakete", "prio": "mittel" },
+    { "ticker": "AEHR",  "name": "Aehr Test Systems", "sektor": "Halbleiter",    "kurs": 14.20,  "ziel": 20.0,  "grund": "SiC-Wafer-Test; EV-Lieferkette", "prio": "niedrig" },
+    { "ticker": "SMCI",  "name": "Super Micro",       "sektor": "Server/KI",    "kurs": 42.30,  "ziel": 55.0,  "grund": "KI-Server-Rack; günstige Bewertung nach Kurskorrektur", "prio": "mittel" }
+  ],
+  "journal": [
+    {
+      "datum": "12.06.2026",
+      "uhrzeit": "18:13",
+      "typ": "hold",
+      "titel": "Wache — alle 4 Positionen gehalten",
+      "text": "<strong>Marktlage:</strong> Alle vier Positionen im grünen Bereich. Kein Handlungsbedarf. Stops bleiben unverändert — Volatilität zu hoch für Trailing. Kein neues Material kaufbar ohne frisches Kapital.",
+      "positionen": ["MSTR +1.25%", "RXRX +1.75%", "IONQ +9.50%", "CEG +3.29%"]
+    },
+    {
+      "datum": "29.05.2026",
+      "uhrzeit": "15:30",
+      "typ": "buy",
+      "titel": "Depotaufbau — 4 Einstiege à 500 €",
+      "text": "<strong>Strategie:</strong> Gleichgewichtetes Depot aus 4 Themenpositionen: BTC-Proxy (MSTR), KI-Biotech (RXRX), Quantum (IONQ), Nuklear/KI-Strom (CEG). Je ~500 € Einstand.",
+      "positionen": ["MSTR @421.72", "RXRX @6.29", "IONQ @37.90", "CEG @252.69"]
+    }
+  ],
+  "wachplan": [
+    { "aktion": "Kauf", "ticker": "MSTR",  "preis": 421.72, "info": "500 € · Ziel 500.0 · Stop 370.0", "ergebnis": "", "grund": "BTC-Proxy; Bitcoin-Aufwärtstrend intakt" },
+    { "aktion": "Kauf", "ticker": "RXRX",  "preis": 6.29,   "info": "500 € · Ziel 8.5 · Stop 5.50",   "ergebnis": "", "grund": "KI-Drug-Discovery; Recursion+NVIDIA-Partnerschaft" },
+    { "aktion": "Kauf", "ticker": "IONQ",  "preis": 37.90,  "info": "500 € · Ziel 50.0 · Stop 30.0",  "ergebnis": "", "grund": "Quantum-Leader; Regierungs-Deals" },
+    { "aktion": "Kauf", "ticker": "CEG",   "preis": 252.69, "info": "50 € · Ziel 273.0 · Stop 237.0", "ergebnis": "", "grund": "KI-Rechenzentren brauchen Strom: Nuklear-Thema (TMI/Microsoft)"}]}
 </script></body></html>

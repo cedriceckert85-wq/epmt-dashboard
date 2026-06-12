@@ -42,7 +42,6 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 .right { text-align:right; font-variant-numeric:tabular-nums; }
 .res { font-weight:600; font-size:13px; }
 .badge { font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; vertical-align:1px; }
-.badge { font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; vertical-align:1px; }
 .badge.buy { background:rgba(10,132,255,.12); color:var(--blue); }
 .badge.sell { background:rgba(255,149,0,.15); color:#ff9500; }
 .note { font-size:12px; color:var(--dim); line-height:1.5; margin:28px 8px 0; text-align:center; }
@@ -54,38 +53,3 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 
 <div class="hero">
   <div class="label">Depot · Tag 5</div>
-  <div class="big">1995.75 €</div>
-  <span class="pill down">-0.21 % auf 2000 € Einzahlungen</span>
-  <div class="stamp">Stand 12.06.2026, 18:13 · davon 1536 € Cash · letzter Lauf: Wache 06-12 18:13</div>
-  
-</div>
-<div class="compare">
-  <div class="chip"><div class="t">Dein Depot</div><div class="v">1996 €</div><div class="s"><span class="down">-0.21 %</span></div></div>
-  <div class="chip"><div class="t">Nur SPY gekauft</div><div class="v">2031 €</div><div class="s"><span class="up">+1.57 %</span></div></div>
-  <div class="chip"><div class="t">Nur TLT gekauft</div><div class="v">1993 €</div><div class="s"><span class="down">-0.37 %</span></div></div>
-</div>
-
-<h2>Offene Positionen</h2><div class="card">
-<div class="row"><div><div class="tk">BITO <span class="badge buy">Kauf</span></div><div class="dim">10 Stk · Ø 22.65 · Stop 19.0</div></div><div class="right"><div>223.80 $</div><div class="res down">-2.9 %</div></div></div>
-<div class="row"><div><div class="tk">MSTR <span class="badge buy">Kauf</span></div><div class="dim">1 Stk · Ø 395.00 · Stop 320.0</div></div><div class="right"><div>425.48 $</div><div class="res up">+7.7 %</div></div></div>
-<div class="row"><div><div class="tk">NVDA <span class="badge buy">Kauf</span></div><div class="dim">1 Stk · Ø 131.38 · Stop 110.0</div></div><div class="right"><div>136.82 $</div><div class="res up">+4.1 %</div></div></div>
-<div class="row"><div><div class="tk">CEG <span class="badge buy">Kauf</span></div><div class="dim">1 Stk · Ø 252.69 · Stop 237.0</div></div><div class="right"><div>264.00 $</div><div class="res up">+4.5 %</div></div></div>
-</div>
-
-
-<h2>Wach-Notizen 18:13</h2><div class="card">
-<div class="lesson">Alle 4 Positionen im HOLD. Keine Stops getroffen, kein Nachkauf-Signal.</div>
-<div class="lesson">BITO schwächelt weiter – bleibt unter Einstand. Stop bei 19 $ hält vorerst.</div>
-<div class="lesson">MSTR, NVDA, CEG alle im Plus – Momentum intakt, kein Handlungsbedarf.</div>
-<div class="lesson">Cash-Quote bei 77 % (1536 €) – Pulver trocken für nächste Wache.</div>
-</div>
-
-
-<h2>Alle Trades</h2><div class="card"><div id="trade-table"></div></div>
-<p class="note">Kurse via Yahoo Finance (15 min verzögert) · kein Echtzeit-Feed · nur zur Lernübung</p>
-
-</div>
-<script>
-const T=[{"ticker": "BITO", "aktion": "Kauf", "preis": 22.65, "info": "10 Stk · Ziel 27.0 · Stop 19.0", "ergebnis": "", "grund": "Bitcoin-ETF als Hebel auf BTC-Momentum ohne direkte Crypto-Wallet"}, {"ticker": "MSTR", "aktion": "Kauf", "preis": 395.0, "info": "1 Stk · Ziel 450.0 · Stop 320.0", "ergebnis": "", "grund": "MicroStrategy: BTC-Proxy mit Unternehmens-Leverage"}, {"ticker": "NVDA", "aktion": "Kauf", "preis": 131.38, "info": "1 Stk · Ziel 155.0 · Stop 110.0", "ergebnis": "", "grund": "KI-Chip-Marktführer, strukturelles Wachstum durch Datacenter-Boom"}, {"ticker": "CEG", "aktion": "Kauf", "preis": 252.69, "info": "50 € · Ziel 273.0 · Stop 237.0", "ergebnis": "", "grund": "KI-Rechenzentren brauchen Strom: Nuklear-Thema (TMI/Microsoft)"}]}
-</script>
-</body></html>

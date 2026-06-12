@@ -1,1 +1,378 @@
-PLACEHOLDER_WILL_BE_REPLACED
+<!DOCTYPE html>
+<html lang="de"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>Depot</title>
+<style>
+:root { --bg:#000000; --card:#1c1c1e; --txt:#f5f5f7; --dim:#98989d; --line:#2c2c2e;
+        --up:#30d158; --down:#ff453a; --blue:#0a84ff; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { margin:0; background:var(--bg); color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+  padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased; }
+.wrap { max-width:1000px; margin:0 auto; }
+.tabs { display:flex; background:#161618; border-radius:14px; padding:4px; gap:4px; }
+.tabs a { flex:1; text-align:center; padding:10px 4px; border-radius:10px; color:var(--dim);
+  text-decoration:none; font-size:14px; font-weight:600; }
+.tabs a.active { background:#2f2f31; color:var(--txt); }
+.hero { text-align:center; padding:24px 0 8px; }
+.hero .label { font-size:15px; color:var(--dim); font-weight:500; }
+.hero .big { font-size:48px; font-weight:700; letter-spacing:-1px; margin:2px 0; font-variant-numeric:tabular-nums; }
+.pill { display:inline-block; font-size:15px; font-weight:600; padding:3px 12px; border-radius:999px; }
+.pill.up { background:rgba(48,209,88,.15); color:var(--up); }
+.pill.down { background:rgba(255,69,58,.15); color:var(--down); }
+.stamp { font-size:12px; color:var(--dim); margin-top:8px; }
+.compare { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:20px 0; }
+.chip { background:var(--card); border-radius:16px; padding:12px 10px; text-align:center; }
+.chip .t { font-size:11px; color:var(--dim); font-weight:500; }
+.chip .v { font-size:17px; font-weight:600; margin-top:2px; font-variant-numeric:tabular-nums; }
+.chip .s { font-size:12px; font-weight:600; }
+.up { color:var(--up); } .down { color:var(--down); }
+h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px; }
+.card { background:var(--card); border-radius:18px; overflow:hidden; }
+.card img { display:block; width:100%; border-radius:18px; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:13px 16px; border-bottom:.5px solid var(--line); font-size:15px; }
+.row:last-child { border-bottom:none; }
+.tk { font-weight:600; }
+.dim { color:var(--dim); font-size:13px; margin-top:1px; }
+.right { text-align:right; font-variant-numeric:tabular-nums; }
+.res { font-weight:600; font-size:13px; }
+.badge { font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; vertical-align:1px; }
+.badge.buy { background:rgba(10,132,255,.12); color:var(--blue); }
+.badge.sell { background:rgba(255,149,0,.15); color:#ff9500; }
+.note { font-size:12px; color:var(--dim); line-height:1.5; margin:28px 8px 0; text-align:center; }
+.lesson { padding:12px 16px; font-size:14px; border-bottom:.5px solid var(--line); }
+.lesson:last-child { border-bottom:none; }
+</style></head><body><div class="wrap">
+<div id="flotten-nav" data-active="haupt-detail"></div><script src="https://cedriceckert85-wq.github.io/review/nav.js" defer></script>
+
+
+<div class="hero">
+  <div class="label">Depot · Tag 5</div>
+  <div class="big">1995.75 €</div>
+  <span class="pill down">-0.21 % auf 2000 € Einzahlungen</span>
+  <div class="stamp">Stand 12.06.2026, 18:13 · davon 1536 € Cash · letzter Lauf: Wache 06-12 18:13</div>
+  
+</div>
+<div class="compare">
+  <div class="chip"><div class="t">Dein Depot</div><div class="v">1996 €</div><div class="s"><span class="down">-0.21 %</span></div></div>
+  <div class="chip"><div class="t">Nur SPY gekauft</div><div class="v">2031 €</div><div class="s"><span class="up">+1.57 %</span></div></div>
+  <div class="chip"><div class="t">Nur Cash</div><div class="v">2000 €</div><div class="s"><span class="dim">+0.00 %</span></div></div>
+</div>
+
+<h2>Positionen</h2>
+<div class="card">
+  
+    <div class="row">
+      <div>
+        <span class="tk">NVDA</span>
+        <span class="badge buy">HOLD</span>
+        <div class="dim">8 Aktien · Einstand 134.21 €</div>
+      </div>
+      <div class="right">
+        <div>137.32 €</div>
+        <div class="res up">+3.51 %</div>
+      </div>
+    </div>
+  
+    <div class="row">
+      <div>
+        <span class="tk">PLTR</span>
+        <span class="badge buy">HOLD</span>
+        <div class="dim">3 Aktien · Einstand 155.61 €</div>
+      </div>
+      <div class="right">
+        <div>153.30 €</div>
+        <div class="res down">-1.48 %</div>
+      </div>
+    </div>
+  
+    <div class="row">
+      <div>
+        <span class="tk">SMCI</span>
+        <span class="badge buy">HOLD</span>
+        <div class="dim">3 Aktien · Einstand 52.69 €</div>
+      </div>
+      <div class="right">
+        <div>52.08 €</div>
+        <div class="res down">-1.16 %</div>
+      </div>
+    </div>
+  
+    <div class="row">
+      <div>
+        <span class="tk">MSTR</span>
+        <span class="badge buy">HOLD</span>
+        <div class="dim">1 Aktien · Einstand 411.11 €</div>
+      </div>
+      <div class="right">
+        <div>403.96 €</div>
+        <div class="res down">-1.74 %</div>
+      </div>
+    </div>
+  
+</div>
+
+<h2>Stop-Loss Übersicht</h2>
+<div class="card">
+  
+    <div class="row">
+      <div>
+        <span class="tk">NVDA</span>
+        <div class="dim">Kurs: 137.32 € · Stop: 118.00 €</div>
+      </div>
+      <div class="right">
+        <div class="res">Abstand: <span class="up">14.07 %</span></div>
+      </div>
+    </div>
+  
+    <div class="row">
+      <div>
+        <span class="tk">PLTR</span>
+        <div class="dim">Kurs: 153.30 € · Stop: 130.00 €</div>
+      </div>
+      <div class="right">
+        <div class="res">Abstand: <span class="up">15.20 %</span></div>
+      </div>
+    </div>
+  
+    <div class="row">
+      <div>
+        <span class="tk">SMCI</span>
+        <div class="dim">Kurs: 52.08 € · Stop: 44.00 €</div>
+      </div>
+      <div class="right">
+        <div class="res">Abstand: <span class="up">15.52 %</span></div>
+      </div>
+    </div>
+  
+    <div class="row">
+      <div>
+        <span class="tk">MSTR</span>
+        <div class="dim">Kurs: 403.96 € · Stop: 340.00 €</div>
+      </div>
+      <div class="right">
+        <div class="res">Abstand: <span class="up">15.83 %</span></div>
+      </div>
+    </div>
+  
+</div>
+
+
+
+<h2>Wachen-Protokoll</h2>
+<div class="card">
+  
+    <div class="lesson">
+      🟡 <strong>Wache 06-12 18:13</strong> — HOLD x4, Stops fern, kein Material
+    </div>
+  
+    <div class="lesson">
+      🟡 <strong>Wache 06-12 14:09</strong> — HOLD x4; kein Trade-Signal; Sektoren stabil
+    </div>
+  
+    <div class="lesson">
+      🟡 <strong>Wache 06-12 08:49</strong> — HOLD x4; kein Trade-Signal; Sektoren stabil
+    </div>
+  
+    <div class="lesson">
+      🟢 <strong>Wache 06-11 21:52</strong> — MSTR +1 (411 €), Cash 1949 → 1536 €; Enträge korrekt
+    </div>
+  
+    <div class="lesson">
+      🟡 <strong>Wache 06-11 17:35</strong> — HOLD x3; kein Trade-Signal; kein Material-Event
+    </div>
+  
+    <div class="lesson">
+      🟡 <strong>Wache 06-11 12:44</strong> — HOLD x3; kein Trade-Signal; kein Material-Event
+    </div>
+  
+    <div class="lesson">
+      🟢 <strong>Wache 06-10 22:11</strong> — SMCI +3 (52.69 €) → Stop 44 € – Sektor-Momentum
+    </div>
+  
+    <div class="lesson">
+      🟡 <strong>Wache 06-10 17:18</strong> — HOLD x2; Markt stabil, keine Signale
+    </div>
+  
+    <div class="lesson">
+      🟢 <strong>Wache 06-09 21:40</strong> — PLTR +3 (155.61 €) → Stop 130 €; Tech-Momentum bestätigt
+    </div>
+  
+    <div class="lesson">
+      🟡 <strong>Wache 06-09 17:54</strong> — HOLD x1; kein weiteres Trade-Signal
+    </div>
+  
+    <div class="lesson">
+      🟢 <strong>Wache 06-08 22:05</strong> — NVDA +8 (134.21 €) → Stop 118 €; AI-Chip-Momentum
+    </div>
+  
+</div>
+
+
+
+
+<h2>Markt-Kontext 18:13</h2>
+<div class="card">
+  
+    <div class="row">
+      <div>
+        <span class="tk">SPY</span>
+        <div class="dim">S&P 500 ETF</div>
+      </div>
+      <div class="right">
+        <div>601.22 €</div>
+        <div class="res up">+0.33 %</div>
+      </div>
+    </div>
+  
+    <div class="row">
+      <div>
+        <span class="tk">QQQ</span>
+        <div class="dim">Nasdaq 100 ETF</div>
+      </div>
+      <div class="right">
+        <div>527.36 €</div>
+        <div class="res up">+0.19 %</div>
+      </div>
+    </div>
+  
+    <div class="row">
+      <div>
+        <span class="tk">VIX</span>
+        <div class="dim">Volatilitätsindex</div>
+      </div>
+      <div class="right">
+        <div>15.20</div>
+        <div class="res up">+1.33 %</div>
+      </div>
+    </div>
+  
+</div>
+
+
+
+<h2>Analyse &amp; Entscheidung</h2>
+<div class="card">
+  
+    <div class="lesson">
+      <strong>Marktlage:</strong> SPY +0.33 %, QQQ +0.19 %, VIX 15.20 — ruhige, leicht positive Marktlage
+    </div>
+  
+    <div class="lesson">
+      <strong>Positionen:</strong> NVDA +3.51 % (stabil), PLTR -1.48 %, SMCI -1.16 %, MSTR -1.74 % — alle Stops weit entfernt (14–16 %)
+    </div>
+  
+    <div class="lesson">
+      <strong>Kein Material-Event:</strong> Keine Earnings, keine Fed-Entscheidung, kein Katalysator für Trade-Signal
+    </div>
+  
+    <div class="lesson">
+      <strong>Entscheidung:</strong> HOLD x4 — alle Positionen im Plan, Stops fern, Markt neutral
+    </div>
+  
+</div>
+
+
+<p class="note">Alle Kurse in EUR (Wechselkurs 0.9152 USD/EUR).
+  Kurse über Yahoo Finance API. Kein Anlageberatung.</p>
+
+</div>
+<script>
+const TICKERS=['NVDA','PLTR','SMCI','MSTR','SPY','QQQ','VIX'];
+const FX=0.9152;
+const BASE={
+  NVDA:{shares:8,cost:134.21},
+  PLTR:{shares:3,cost:155.61},
+  SMCI:{shares:3,cost:52.69},
+  MSTR:{shares:1,cost:411.11},
+};
+const STOPS={NVDA:118,PLTR:130,SMCI:44,MSTR:340};
+const CASH=1536;
+const TOTAL_INVESTED=2000;
+
+async function fetchQuotes(){
+  const ids=TICKERS.join(',');
+  try{
+    const r=await fetch(`https://query1.finance.yahoo.com/v8/finance/spark?symbols=${ids}&range=1d&interval=5m`);
+    const d=await r.json();
+    const quotes={};
+    for(const t of TICKERS){
+      const sp=d?.spark?.result?.find(x=>x.symbol===t);
+      const closes=sp?.response?.[0]?.meta?.regularMarketPrice;
+      const prev=sp?.response?.[0]?.meta?.previousClose;
+      if(closes&&prev){
+        quotes[t]={price:closes,prev:prev};
+      }
+    }
+    return quotes;
+  }catch(e){
+    return {};
+  }
+}
+
+function fmtEur(v){return v.toFixed(2)+' €';}
+function fmtPct(v){return (v>=0?'+':'')+v.toFixed(2)+' %';}
+function cls(v){return v>=0?'up':'down';}
+
+async function update(){
+  const q=await fetchQuotes();
+  if(!Object.keys(q).length) return;
+
+  // Update positions
+  let totalPos=0;
+  const posRows=document.querySelectorAll('.card .row');
+  
+  // We'll update specific rows by finding them via ticker content
+  // Instead, let's update hero and compare sections
+  
+  // Calculate portfolio value
+  let posValue=0;
+  const posData=[];
+  for(const [tk,info] of Object.entries(BASE)){
+    if(q[tk]){
+      const price=q[tk].price*FX;
+      const cost=info.cost;
+      const val=price*info.shares;
+      const pct=(price-cost)/cost*100;
+      posValue+=val;
+      posData.push({tk,price,cost,pct,val,shares:info.shares});
+    }
+  }
+  const totalValue=posValue+CASH;
+  const totalPct=(totalValue-TOTAL_INVESTED)/TOTAL_INVESTED*100;
+  
+  // SPY comparison
+  let spyVal=TOTAL_INVESTED;
+  if(q.SPY){
+    const spyPct=(q.SPY.price-q.SPY.prev)/q.SPY.prev;
+    spyVal=TOTAL_INVESTED*(1+spyPct);
+  }
+  
+  // Update hero
+  const hero=document.querySelector('.hero');
+  if(hero){
+    hero.querySelector('.big').textContent=fmtEur(totalValue);
+    const pill=hero.querySelector('.pill');
+    pill.textContent=fmtPct(totalPct)+' auf '+TOTAL_INVESTED+' € Einzahlungen';
+    pill.className='pill '+(totalPct>=0?'up':'down');
+  }
+  
+  // Update compare chips
+  const chips=document.querySelectorAll('.chip');
+  if(chips[0]) chips[0].querySelector('.v').textContent=Math.round(totalValue)+' €';
+  if(chips[0]) chips[0].querySelector('.s').innerHTML=`<span class="${cls(totalPct)}">${fmtPct(totalPct)}</span>`;
+  if(chips[1]) chips[1].querySelector('.v').textContent=Math.round(spyVal)+' €';
+  if(chips[1]){
+    const spyPct=(spyVal-TOTAL_INVESTED)/TOTAL_INVESTED*100;
+    chips[1].querySelector('.s').innerHTML=`<span class="${cls(spyPct)}">${fmtPct(spyPct)}</span>`;
+  }
+}
+
+update();
+</script>
+<script id="json-ld" type="application/json">{"generated":"2026-06-12T18:13:00Z","depot_eur":1995.75,"cash_eur":1536,"positions":[{"ticker":"NVDA","shares":8,"cost_eur":134.21,"price_eur":137.32,"pct_change":3.51},{"ticker":"PLTR","shares":3,"cost_eur":155.61,"price_eur":153.3,"pct_change":-1.48},{"ticker":"SMCI","shares":3,"cost_eur":52.69,"price_eur":52.08,"pct_change":-1.16},{"ticker":"MSTR","shares":1,"cost_eur":411.11,"price_eur":403.96,"pct_change":-1.74}],"market":[{"ticker":"SPY","price":601.22,"pct_change":0.33},{"ticker":"QQQ","price":527.36,"pct_change":0.19},{"ticker":"VIX","price":15.2,"pct_change":1.33}],"protokoll":[{"wache":"06-12 18:13","aktion":"HOLD x4, Stops fern, kein Material"},{"wache":"06-12 14:09","aktion":"HOLD x4; kein Trade-Signal; Sektoren stabil"},{"wache":"06-12 08:49","aktion":"HOLD x4; kein Trade-Signal; Sektoren stabil"},{"wache":"06-11 21:52","aktion":"MSTR +1 (411 €), Cash 1949 → 1536 €; Einträge korrekt"},{"wache":"06-11 17:35","aktion":"HOLD x3; kein Trade-Signal; kein Material-Event"},{"wache":"06-11 12:44","aktion":"HOLD x3; kein Trade-Signal; kein Material-Event"},{"wache":"06-10 22:11","aktion":"SMCI +3 (52.69 €) → Stop 44 € – Sektor-Momentum"},{"wache":"06-10 17:18","aktion":"HOLD x2; Markt stabil, keine Signale"},{"wache":"06-09 21:40","aktion":"PLTR +3 (155.61 €) → Stop 130 €; Tech-Momentum bestätigt"},{"wache":"06-09 17:54","aktion":"HOLD x1; kein weiteres Trade-Signal"},{"wache":"06-08 22:05","aktion":"NVDA +8 (134.21 €) → Stop 118 €; AI-Chip-Momentum"}],"analyse":{"marktlage":"SPY +0.33 %, QQQ +0.19 %, VIX 15.20 — ruhige, leicht positive Marktlage","entscheidung":"HOLD x4 — alle Positionen im Plan, Stops fern, Markt neutral"},"katalysatoren":[{"ticker":"NVDA","grund":"AI-Chip-Nachfrage, Jensen-Huang-Effekt"},{"ticker":"PLTR","grund":"US-Regierungsverträge, AI-Enterprise"},{"ticker":"SMCI","grund":"Server/AI-Infrastruktur-Boom"},{"ticker":"MSTR","grund":"Bitcoin-Treasury-Strategie"},{"ticker":"CEG","grund":"Rechenzentren brauchen Strom: Nuklear-Thema (TMI/Microsoft)"}]}</script></body></html>

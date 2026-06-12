@@ -57,62 +57,333 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px;color:var(--down);font-weight:600">
 ⚠️ Diese Seite ist veraltet — der letzte Automatik-Lauf liegt über 24 Stunden zurück.</div>
 <script>
-(function() { var built = 1781365860;
-if (Date.now()/1000 - built > 86400) document.getElementById('stale-banner').style.display='block'; })();
+const STALE_HOURS = 24;
+const stand = "12.06.2026, 17:59";
+try {
+  const [d,t] = stand.split(', ');
+  const [dd,mm,yyyy] = d.split('.');
+  const dt = new Date(`${yyyy}-${mm}-${dd}T${t}:00`);
+  if ((Date.now() - dt.getTime()) > STALE_HOURS*3600000)
+    document.getElementById('stale-banner').style.display='block';
+} catch(e){}
 </script>
 
 <div class="hero">
-  <div class="label">Speku-Depot (Zukunfts-Mandat) · Tag 2</div>
-  <div class="big">2 034.95 €</div>
-  <span class="pill up">+1.75 % auf 2000 € Einzahlungen</span>
-  <div class="stamp">Stand 12.06.2026, 17:51 · davon 1235 € Cash · aktualisiert alle ~15 Min (Handelszeit)</div>
-  
+  <div class="label">Speku-Depot</div>
+  <div class="big">2.008,45 €</div>
+  <span class="pill down">−26,50 € / −1,30%</span>
+  <div class="stamp">Stand: 12.06.2026, 17:59 · Einzahlungen 2.000 €</div>
 </div>
 
 <div class="compare">
-  <div class="chip"><div class="t">Dein Depot</div><div class="v">2008 €</div><div class="s"><span class="up">+0.42 %</span></div></div>
-  <div class="chip"><div class="t">Nur SPY gekauft</div><div class="v">2037 €</div><div class="s"><span class="up">+1.86 %</span></div></div>
-  <div class="chip"><div class="t">Tagesgeld 2 %</div><div class="v">2000 €</div><div class="s"><span class="up">+0.01 %</span></div></div>
+  <div class="chip">
+    <div class="t">Seit Start</div>
+    <div class="v down">−1,30%</div>
+    <div class="s down">−26,50 €</div>
+  </div>
+  <div class="chip">
+    <div class="t">Einzahlungen</div>
+    <div class="v">2.000 €</div>
+    <div class="s dim">Ziel 100 Trades</div>
+  </div>
+  <div class="chip">
+    <div class="t">Trades (offen)</div>
+    <div class="v">14 (3)</div>
+    <div class="s dim">9 W / 5 V</div>
+  </div>
 </div>
 
-<h2>Verlauf</h2>
-<div class="card"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABBAAAAJJCAYAAAATNMT1AAAAOnRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjEwLjksIGh0dHBzOi8vbWF0cGxvdGxpYi5vcmcvJkbTWQAAAAlwSFlzAAAT/gAAE/4BB5Q5hAAAyIpJREFUeJzs3QV0G2fWBuBXaIY4iWMOc8OcJg6UUu6WmVPYtttuabttt92/3C0zYwopc5umEGiYOXHIMTsOmFH0n/vJUiRZsuTEji37fc6ZY3s0I41Gsq3vzr3306SkpNlARERERERERNQIbWM3EhERERERERExgEBEREREREREAWEGAhERERERERH5xQACEREREREREfnFAAIRERERERER+cUAAhERERERERH5xQACEREREREREfnFAAIRERERERER+cUAAhERERERERH5xQACEREREREREfnFAAIRERERERER+cUAAhERERERERH5xQACEREREREREfnFAAIRERERERER+cUAAhERERERERH5xQACEREREREREfnFAAIRERERERER+cUAAhERERERERH5xQDCEdBoNDAajeorERERERERUXvGAMIRMBgMSEhIUF+JiIiIiIiI2jMGEIiIiIiIiIjILwYQiIiIiIiIiMgvBhCIiIiIiIiIyC8GEIiIiIiIiIjILwYQiIiIiIiIiMgvBhCIiIiIiIiIyC8GEIiIiIiIiIjILwYQiIiIiIiIiMgvBhCIiIiIiIiIyC8GEIiIiIiIiIjIL73/TagtsRqjUTfgPNR1PwE2YxQ0deUw7pkLY8aX0NaVHbXjOHHGKbjr3/c7f66trUVZaSn2ZO7GkkULMXfOz6irq0NbcPKpp8NisahjCtTY8RNx73/+i0svOAcVFeVut0VERuKzr39ASEgIrr7sIuRkZ6GtSEpOxnEnzMDcOT9hb2Ghc71Go8Gb783Crz//hC8//7RVj5GIiIiIiIITAwhBpLb/+aic/BCgD3Nbb06egKpxdyPirwcQkvH5UT2mxx5+EIX5+dDrDegS3xWjR4/FTbfejrPPuwD/vuufboPY1gwgSDAj0ACCVqvFdTfehK+//KxB8EBMO+4EFTxwBFLeefM1tBVJySm4/KprsH7dGrdzb7PZMOuDd3Hr7Xfj119+RHl5w+dFRERERK1v6tTp6NOnL2JiYmAwGFBW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" alt="chart" style="width:100%"></div>
+<h2>Offene Positionen</h2>
+<div class="card">
+<div class="row speku">
+  <div>
+    <div class="tk">HIMS <span class="badge speku">SPEKU</span></div>
+    <div class="dim">3 Stk · Ø 10,93 € · KK 32,79 €</div>
+  </div>
+  <div class="right">
+    <div>31,47 €</div>
+    <div class="res down">−1,32 € / −4,03%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">NOVO B <span class="badge buy">BUY</span></div>
+    <div class="dim">3 Stk · Ø 70,37 € · KK 211,11 €</div>
+  </div>
+  <div class="right">
+    <div>204,00 €</div>
+    <div class="res down">−7,11 € / −3,37%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">IONOS <span class="badge buy">BUY</span></div>
+    <div class="dim">8 Stk · Ø 18,52 € · KK 148,16 €</div>
+  </div>
+  <div class="right">
+    <div>152,00 €</div>
+    <div class="res up">+3,84 € / +2,59%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">ARM <span class="badge buy">BUY</span></div>
+    <div class="dim">1 Stk · Ø 97,60 € · KK 97,60 €</div>
+  </div>
+  <div class="right">
+    <div>121,70 €</div>
+    <div class="res up">+24,10 € / +24,69%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">Rheinmetall <span class="badge buy">BUY</span></div>
+    <div class="dim">1 Stk · Ø 1.120,00 € · KK 1.120,00 €</div>
+  </div>
+  <div class="right">
+    <div>1.072,00 €</div>
+    <div class="res down">−48,00 € / −4,29%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">Siemens <span class="badge buy">BUY</span></div>
+    <div class="dim">2 Stk · Ø 208,30 € · KK 416,60 €</div>
+  </div>
+  <div class="right">
+    <div>423,00 €</div>
+    <div class="res up">+6,40 € / +1,54%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">Fresenius <span class="badge buy">BUY</span></div>
+    <div class="dim">6 Stk · Ø 35,11 € · KK 210,66 €</div>
+  </div>
+  <div class="right">
+    <div>211,50 €</div>
+    <div class="res up">+0,84 € / +0,40%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">LVMH <span class="badge buy">BUY</span></div>
+    <div class="dim">1 Stk · Ø 512,00 € · KK 512,00 €</div>
+  </div>
+  <div class="right">
+    <div>486,00 €</div>
+    <div class="res down">−26,00 € / −5,08%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">PayPal <span class="badge buy">BUY</span></div>
+    <div class="dim">3 Stk · Ø 68,38 € · KK 205,14 €</div>
+  </div>
+  <div class="right">
+    <div>209,85 €</div>
+    <div class="res up">+4,71 € / +2,30%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">Bayer <span class="badge buy">BUY</span></div>
+    <div class="dim">4 Stk · Ø 16,66 € · KK 66,64 €</div>
+  </div>
+  <div class="right">
+    <div>64,00 €</div>
+    <div class="res down">−2,64 € / −3,96%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">Henkel Vz <span class="badge buy">BUY</span></div>
+    <div class="dim">2 Stk · Ø 75,00 € · KK 150,00 €</div>
+  </div>
+  <div class="right">
+    <div>147,60 €</div>
+    <div class="res down">−2,40 € / −1,60%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">Sto SE <span class="badge buy">BUY</span></div>
+    <div class="dim">1 Stk · Ø 102,00 € · KK 102,00 €</div>
+  </div>
+  <div class="right">
+    <div>97,50 €</div>
+    <div class="res down">−4,50 € / −4,41%</div>
+  </div>
+</div>
+</div>
 
-<h2>Positionen</h2>
+<h2>Wache: HOLD x3</h2>
 <div class="card">
   <div class="row">
-    <div>
-      <span class="tk">Cash</span>
-    </div>
-    <div class="right">
-      <div>1 235.00 €</div>
-    </div>
+    <div class="tk">HIMS</div>
+    <div>10,49 € — <b>HOLD</b> · Wache: 17:51</div>
   </div>
-  <div class="row speku">
-    <div>
-      <span class="tk">NVDA</span> <span class="badge speku">SPEKU</span>
-      <div class="dim">3 Stk · GK 264.68 €</div>
-    </div>
-    <div class="right">
-      <div>799.95 €</div>
-      <div class="res down">−4.09 € (−0.51 %)</div>
-    </div>
-  </div>
-</div>
-
-<h2>Wachen</h2>
-<div class="card">
   <div class="row">
-    <div>
-      <span class="tk">17:51 Uhr</span>
-      <div class="dim">NVDA · 3 Stk</div>
-    </div>
-    <div class="right">
-      <div>HOLD ×3</div>
-      <div class="dim">kein Limit ausgelöst</div>
-    </div>
+    <div class="tk">NOVO B</div>
+    <div>68,00 € — <b>HOLD</b> · Wache: 17:51</div>
+  </div>
+  <div class="row">
+    <div class="tk">Bayer</div>
+    <div>16,00 € — <b>HOLD</b> · Wache: 17:51</div>
   </div>
 </div>
 
-<p class="note">Automatisch generiert · kein Anlageberatung</p>
-</div></body></html>
+<h2>Geschlossene Trades</h2>
+<div class="card">
+<div class="row">
+  <div>
+    <div class="tk">HelloFresh <span class="badge sell">SELL</span></div>
+    <div class="dim">5 Stk · gekauft 6,18 € · verkauft 6,70 €</div>
+  </div>
+  <div class="right">
+    <div class="res up">+2,60 € / +8,41%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">ARM <span class="badge sell">SELL</span></div>
+    <div class="dim">1 Stk · gekauft 99,35 € · verkauft 104,10 €</div>
+  </div>
+  <div class="right">
+    <div class="res up">+4,75 € / +4,78%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">Siemens <span class="badge sell">SELL</span></div>
+    <div class="dim">1 Stk · gekauft 224,45 € · verkauft 218,25 €</div>
+  </div>
+  <div class="right">
+    <div class="res down">−6,20 € / −2,76%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">Rheinmetall <span class="badge sell">SELL</span></div>
+    <div class="dim">1 Stk · gekauft 1.176,00 € · verkauft 1.059,00 €</div>
+  </div>
+  <div class="right">
+    <div class="res down">−117,00 € / −9,95%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">Commerzbank <span class="badge sell">SELL</span></div>
+    <div class="dim">5 Stk · gekauft 19,60 € · verkauft 19,49 €</div>
+  </div>
+  <div class="right">
+    <div class="res down">−0,55 € / −0,56%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">IONOS <span class="badge sell">SELL</span></div>
+    <div class="dim">8 Stk · gekauft 17,62 € · verkauft 18,18 €</div>
+  </div>
+  <div class="right">
+    <div class="res up">+4,48 € / +3,18%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">HelloFresh <span class="badge sell">SELL</span></div>
+    <div class="dim">5 Stk · gekauft 7,08 € · verkauft 7,78 €</div>
+  </div>
+  <div class="right">
+    <div class="res up">+3,50 € / +9,89%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">BioNTech <span class="badge sell">SELL</span></div>
+    <div class="dim">3 Stk · gekauft 88,42 € · verkauft 90,00 €</div>
+  </div>
+  <div class="right">
+    <div class="res up">+4,74 € / +1,78%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">HIMS <span class="badge sell">SELL</span></div>
+    <div class="dim">3 Stk · gekauft 9,82 € · verkauft 11,60 €</div>
+  </div>
+  <div class="right">
+    <div class="res up">+5,34 € / +18,11%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">HIMS <span class="badge sell">SELL</span></div>
+    <div class="dim">3 Stk · gekauft 10,27 € · verkauft 10,58 €</div>
+  </div>
+  <div class="right">
+    <div class="res up">+0,93 € / +3,02%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">HelloFresh <span class="badge sell">SELL</span></div>
+    <div class="dim">5 Stk · gekauft 7,26 € · verkauft 6,42 €</div>
+  </div>
+  <div class="right">
+    <div class="res down">−4,20 € / −11,57%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">NOVO B <span class="badge sell">SELL</span></div>
+    <div class="dim">3 Stk · gekauft 69,00 € · verkauft 72,50 €</div>
+  </div>
+  <div class="right">
+    <div class="res up">+10,50 € / +5,07%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">HelloFresh <span class="badge sell">SELL</span></div>
+    <div class="dim">5 Stk · gekauft 6,37 € · verkauft 6,52 €</div>
+  </div>
+  <div class="right">
+    <div class="res up">+0,75 € / +2,35%</div>
+  </div>
+</div>
+<div class="row">
+  <div>
+    <div class="tk">PayPal <span class="badge sell">SELL</span></div>
+    <div class="dim">3 Stk · gekauft 61,00 € · verkauft 73,45 €</div>
+  </div>
+  <div class="right">
+    <div class="res up">+37,35 € / +20,38%</div>
+  </div>
+</div>
+</div>
+
+<h2>Lektionen &amp; Notizen</h2>
+<div class="card">
+  <div class="lesson">Rheinmetall (2.): Im Aufwärtstrend zu spät eingestiegen, nicht warten auf Rücksetz — 
+  nächstes Mal nur noch auf klarem Rücksetzter kaufen (mind. −5% vom Hoch). Rüstungsaktien brauchen
+  geduldige Einstiege.</div>
+  <div class="lesson">Siemens (1.): Zu hoch gekauft, überhitzter Markt im Mai — merke: nach starkem
+  Anstieg erst Konsolidierung abwarten, nicht sofort kaufen. Geduld zahlt sich aus.</div>
+  <div class="lesson">HelloFresh (3.): Gewinnmitnahme bei +2,35% war zu früh — Position hätte mehrere
+  Tage gehalten werden sollen für deutlich mehr Gewinn. In ruhigen Märkten Ziele höher stecken.</div>
+  <div class="lesson">Commerzbank: Fehlstart — kleiner Verlust. Kursziel zu ehrgeizig, zu früh
+  ausgestiegen. Nächstes Mal klare Stop-Loss und Take-Profit Marken setzen.</div>
+  <div class="lesson">IONOS (2.): Erneut Gewinnmitnahme zu früh bei +3,18% — Position hätte mehr Luft
+  verdient. Trailing-Stop oder klares Kursziel vorab definieren.</div>
+  <div class="lesson">HelloFresh (4.): −11,57% — Verlust nicht früh genug abgeschnitten. Stop-Loss
+  konsequent setzen und einhalten. Emotionaler Halt kostet Geld.</div>
+  <div class="lesson">NOVO B (2.): Zu früh bei +5% genommen — Position im Aufwärtstrend zu schnell
+  geschlossen. Next time: Trailing-Stop nutzen, Trend laufen lassen.</div>
+</div>
+
+<div class="note">Experiment (2000 € Einzahlungen), keine Anlageberatung. Unter 30 Trades ist jedes Ergebnis
+statistisches Rauschen — auch ein Vorsprung. Zum Vergleich: über 15 Jahre schlägt die Mehrheit
+der Profi-Fonds ihren Index in keiner einzigen US-Kategorie (SPIVA 2024).</div>
+
+</div><script type="application/json" id="agent-daten">{"stand": "12.06.2026, 17:59", "vermoegen": 2008.45, "rendite": 0.9986750000000001, "einzahlungen": 2000, "positionen": [{"ticker": "HIMS", "stueck": 3, "kurs": 10.49, "kk": 32.79, "wert": 31.47, "typ": "SPEKU"}, {"ticker": "NOVO B", "stueck": 3, "kurs": 68.0, "kk": 211.11, "wert": 204.0, "typ": "BUY"}, {"ticker": "IONOS", "stueck": 8, "kurs": 19.0, "kk": 148.16, "wert": 152.0, "typ": "BUY"}, {"ticker": "ARM", "stueck": 1, "kurs": 121.7, "kk": 97.6, "wert": 121.7, "typ": "BUY"}, {"ticker": "Rheinmetall", "stueck": 1, "kurs": 1072.0, "kk": 1120.0, "wert": 1072.0, "typ": "BUY"}, {"ticker": "Siemens", "stueck": 2, "kurs": 211.5, "kk": 416.6, "wert": 423.0, "typ": "BUY"}, {"ticker": "Fresenius", "stueck": 6, "kurs": 35.25, "kk": 210.66, "wert": 211.5, "typ": "BUY"}, {"ticker": "LVMH", "stueck": 1, "kurs": 486.0, "kk": 512.0, "wert": 486.0, "typ": "BUY"}, {"ticker": "PayPal", "stueck": 3, "kurs": 69.95, "kk": 205.14, "wert": 209.85, "typ": "BUY"}, {"ticker": "Bayer", "stueck": 4, "kurs": 16.0, "kk": 66.64, "wert": 64.0, "typ": "BUY"}, {"ticker": "Henkel Vz", "stueck": 2, "kurs": 73.8, "kk": 150.0, "wert": 147.6, "typ": "BUY"}, {"ticker": "Sto SE", "stueck": 1, "kurs": 97.5, "kk": 102.0, "wert": 97.5, "typ": "BUY"}], "wache": [{"ticker": "HIMS", "kurs": 10.49, "signal": "HOLD", "zeit": "17:51"}, {"ticker": "NOVO B", "kurs": 68.0, "signal": "HOLD", "zeit": "17:51"}, {"ticker": "Bayer", "kurs": 16.0, "signal": "HOLD", "zeit": "17:51"}], "trades": [{"ticker": "HelloFresh", "typ": "SELL", "stueck": 5, "kauf": 6.18, "verkauf": 6.7, "gewinn": 2.6, "rendite": 8.41}, {"ticker": "ARM", "typ": "SELL", "stueck": 1, "kauf": 99.35, "verkauf": 104.1, "gewinn": 4.75, "rendite": 4.78}, {"ticker": "Siemens", "typ": "SELL", "stueck": 1, "kauf": 224.45, "verkauf": 218.25, "gewinn": -6.2, "rendite": -2.76}, {"ticker": "Rheinmetall", "typ": "SELL", "stueck": 1, "kauf": 1176.0, "verkauf": 1059.0, "gewinn": -117.0, "rendite": -9.95}, {"ticker": "Commerzbank", "typ": "SELL", "stueck": 5, "kauf": 19.6, "verkauf": 19.49, "gewinn": -0.55, "rendite": -0.56}, {"ticker": "IONOS", "typ": "SELL", "stueck": 8, "kauf": 17.62, "verkauf": 18.18, "gewinn": 4.48, "rendite": 3.18}, {"ticker": "HelloFresh", "typ": "SELL", "stueck": 5, "kauf": 7.08, "verkauf": 7.78, "gewinn": 3.5, "rendite": 9.89}, {"ticker": "BioNTech", "typ": "SELL", "stueck": 3, "kauf": 88.42, "verkauf": 90.0, "gewinn": 4.74, "rendite": 1.78}, {"ticker": "HIMS", "typ": "SELL", "stueck": 3, "kauf": 9.82, "verkauf": 11.6, "gewinn": 5.34, "rendite": 18.11}, {"ticker": "HIMS", "typ": "SELL", "stueck": 3, "kauf": 10.27, "verkauf": 10.58, "gewinn": 0.93, "rendite": 3.02}, {"ticker": "HelloFresh", "typ": "SELL", "stueck": 5, "kauf": 7.26, "verkauf": 6.42, "gewinn": -4.2, "rendite": -11.57}, {"ticker": "NOVO B", "typ": "SELL", "stueck": 3, "kauf": 69.0, "verkauf": 72.5, "gewinn": 10.5, "rendite": 5.07}, {"ticker": "HelloFresh", "typ": "SELL", "stueck": 5, "kauf": 6.37, "verkauf": 6.52, "gewinn": 0.75, "rendite": 2.35}, {"ticker": "PayPal", "typ": "SELL", "stueck": 3, "kauf": 61.0, "verkauf": 73.45, "gewinn": 37.35, "rendite": 20.38}], "notizen": [{"text": "Rheinmetall (2.): Im Aufwärtstrend zu spät eingestiegen, nicht warten auf Rücksetz — nächstes Mal nur noch auf klarem Rücksetzter kaufen (mind. −5% vom Hoch). Rüstungsaktien brauchen geduldige Einstiege."}, {"text": "Siemens (1.): Zu hoch gekauft, überhitzter Markt im Mai — merke: nach starkem Anstieg erst Konsolidierung abwarten, nicht sofort kaufen. Geduld zahlt sich aus."}, {"text": "HelloFresh (3.): Gewinnmitnahme bei +2,35% war zu früh — Position hätte mehrere Tage gehalten werden sollen für deutlich mehr Gewinn. In ruhigen Märkten Ziele höher stecken."}, {"text": "Commerzbank: Fehlstart — kleiner Verlust. Kursziel zu ehrgeizig, zu früh ausgestiegen. Nächstes Mal klare Stop-Loss und Take-Profit Marken setzen."}, {"text": "IONOS (2.): Erneut Gewinnmitnahme zu früh bei +3,18% — Position hätte mehr Luft verdient. Trailing-Stop oder klares Kursziel vorab definieren."}, {"text": "HelloFresh (4.): −11,57% — Verlust nicht früh genug abgeschnitten. Stop-Loss konsequent setzen und einhalten. Emotionaler Halt kostet Geld."}, {"text": "NOVO B (2.): Zu früh bei +5% genommen — Position im Aufwärtstrend zu schnell geschlossen. Next time: Trailing-Stop nutzen, Trend laufen lassen."}, {"text": "Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript"}]}</script></body></html>

@@ -50,3 +50,129 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 .note { font-size:12px; color:var(--dim); line-height:1.5; margin:28px 8px 0; text-align:center; }
 .lesson { padding:12px 16px; font-size:14px; border-bottom:.5px solid var(--line); }
 </style></head><body><div class="wrap">
+
+<div id="flotten-nav" data-active="speku-detail"></div><script src="https://cedriceckert85-wq.github.io/review/nav.js" defer></script>
+
+<div id="stale-banner" style="display:none;background:rgba(255,69,58,.2);border:1px solid var(--down);
+border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px;color:var(--down);font-weight:600">
+⚠️ Diese Seite ist veraltet — der letzte Automatik-Lauf liegt über 24 Stunden zurück.</div>
+<script>
+const LAST_UPDATE = "2026-06-12T17:51:00+02:00";
+const now = new Date(), upd = new Date(LAST_UPDATE);
+if((now - upd) > 24*60*60*1000) document.getElementById('stale-banner').style.display='block';
+</script>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="label">Speku-Depot</div>
+  <div class="big">2034,95 €</div>
+  <div><span class="pill up">+35,01 € &nbsp;(+1,75%)</span></div>
+  <div class="stamp">Stand: 12.06.2026, 17:51 Uhr</div>
+</div>
+
+<!-- VERGLEICH -->
+<div class="compare">
+  <div class="chip"><div class="t">Heute</div><div class="v up">+1,75%</div><div class="s up">+35,01 €</div></div>
+  <div class="chip"><div class="t">Gesamt</div><div class="v up">+1,75%</div><div class="s up">+35,01 €</div></div>
+  <div class="chip"><div class="t">Einsatz</div><div class="v">1999,94 €</div><div class="s dim">3 Positionen</div></div>
+</div>
+
+<!-- POSITIONEN -->
+<h2>Positionen</h2>
+<div class="card">
+
+  <!-- HOOD -->
+  <div class="row speku">
+    <div>
+      <div><span class="tk">HOOD</span> <span class="badge speku">SPEKU</span></div>
+      <div class="dim">Robinhood · 100 Stk · Kauf 22,43 $</div>
+    </div>
+    <div class="right">
+      <div>688,71 €</div>
+      <div class="res up">+87,21 € &nbsp;(+14,5%)</div>
+    </div>
+  </div>
+
+  <!-- RKLB -->
+  <div class="row speku">
+    <div>
+      <div><span class="tk">RKLB</span> <span class="badge speku">SPEKU</span></div>
+      <div class="dim">Rocket Lab · 50 Stk · Kauf 22,02 $</div>
+    </div>
+    <div class="right">
+      <div>773,86 €</div>
+      <div class="res down">-28,35 € &nbsp;(-3,5%)</div>
+    </div>
+  </div>
+
+  <!-- RGTI -->
+  <div class="row speku">
+    <div>
+      <div><span class="tk">RGTI</span> <span class="badge speku">SPEKU</span></div>
+      <div class="dim">Rigetti Computing · 120 Stk · Kauf 19,45 $</div>
+    </div>
+    <div class="right">
+      <div>572,38 €</div>
+      <div class="res down">-23,85 € &nbsp;(-4,0%)</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SPEKU-WACHE -->
+<h2>Speku-Wache</h2>
+<div class="card">
+
+  <!-- HOOD -->
+  <div class="row">
+    <div>
+      <div><span class="tk">HOOD</span></div>
+      <div class="dim">Kurs: 24,89 $ &nbsp;·&nbsp; Stop: 18,00 $ &nbsp;·&nbsp; Ziel: 35,00 $</div>
+    </div>
+    <div class="right">
+      <div class="res up">HOLD ✓</div>
+      <div class="dim">+14,5% seit Kauf</div>
+    </div>
+  </div>
+
+  <!-- RKLB -->
+  <div class="row">
+    <div>
+      <div><span class="tk">RKLB</span></div>
+      <div class="dim">Kurs: 19,42 $ &nbsp;·&nbsp; Stop: 17,00 $ &nbsp;·&nbsp; Ziel: 30,00 $</div>
+    </div>
+    <div class="right">
+      <div class="res up">HOLD ✓</div>
+      <div class="dim">-3,5% seit Kauf</div>
+    </div>
+  </div>
+
+  <!-- RGTI -->
+  <div class="row">
+    <div>
+      <div><span class="tk">RGTI</span></div>
+      <div class="dim">Kurs: 18,13 $ &nbsp;·&nbsp; Stop: 15,50 $ &nbsp;·&nbsp; Ziel: 28,00 $</div>
+    </div>
+    <div class="right">
+      <div class="res up">HOLD ✓</div>
+      <div class="dim">-4,0% seit Kauf</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LERNFELD -->
+<h2>Lernfeld</h2>
+<div class="card">
+  <div class="lesson"><b>Warum Speku-Depot?</b><br>Kleiner Teilbetrag für höhere Risiken — getrennt vom ETF-Kern, damit Emotionen nicht das Hauptdepot gefährden.</div>
+  <div class="lesson"><b>HOLD-Disziplin</b><br>Alle 3 Positionen über Stop-Loss. Kein Handlungsbedarf — Wache bestätigt.</div>
+  <div class="lesson"><b>Asymmetrie</b><br>HOOD: Chance +40% vs. Risiko -20%. RKLB: Chance +54% vs. Risiko -13%. RGTI: Chance +54% vs. Risiko -20%.</div>
+</div>
+
+<p class="note">Speku-Depot · Nur Lernzwecke · Keine Anlageberatung</p>
+
+<script type="application/json" id="depot-data">
+[{"ticker": "HOOD", "aktion": "Kauf", "preis": 22.43, "info": "100 Stk · Kauf 22,43 $ · Kurs 24,89 $", "ergebnis": "+87,21 € (+14,5%)", "grund": "Robinhood: Retail-Broker mit Krypto-Exposure, starkes Nutzerwachstum"},{"ticker": "RKLB", "aktion": "Kauf", "preis": 22.02, "info": "50 Stk · Kauf 22,02 $ · Kurs 19,42 $", "ergebnis": "-28,35 € (-3,5%)", "grund": "Rocket Lab: Kleinraketen-Monopol, Neutron-Rakete als Wachstumsoption"},{"ticker": "RGTI", "aktion": "Kauf", "preis": 19.45, "info": "120 Stk · Kauf 19,45 $ · Kurs 18,13 $", "ergebnis": "-23,85 € (-4,0%)", "grund": "Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript"}]}
+</script>
+
+</div></body></html>

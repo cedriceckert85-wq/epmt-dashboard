@@ -57,36 +57,125 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px;color:var(--down);font-weight:600">
 ⚠️ Diese Seite ist veraltet — der letzte Automatik-Lauf liegt über 24 Stunden zurück.</div>
 <script>
-(function() { var built = 1781365860;
-if (Date.now()/1000 - built > 86400) document.getElementById('stale-banner').style.display='block'; })();
+const _ts = 1749743503;
+const _age = Math.floor(Date.now()/1000) - _ts;
+if (_age > 86400) document.getElementById('stale-banner').style.display='block';
 </script>
 
 <div class="hero">
-  <div class="label">Speku-Depot (Zukunfts-Mandat) · Tag 2</div>
-  <div class="big">2 034.95 €</div>
-  <span class="pill up">+1.75 % auf 2000 € Einzahlungen</span>
-  <div class="stamp">Stand 12.06.2026, 17:51 · davon 1235 € Cash · aktualisiert alle ~15 Min (Handelszeit)</div>
-  
+  <div class="label">Speku-Depot</div>
+  <div class="big">2034.95 <span style="font-size:24px;color:var(--dim)">EUR</span></div>
+  <span class="pill up">+1.75%</span>
+  <div class="stamp">Wache 17:51 · 12.06.2026</div>
 </div>
 
 <div class="compare">
-  <div class="chip"><div class="t">Dein Depot</div><div class="v">2008 €</div><div class="s"><span class="up">+0.42 %</span></div></div>
-  <div class="chip"><div class="t">Nur SPY gekauft</div><div class="v">2037 €</div><div class="s"><span class="up">+1.86 %</span></div></div>
-  <div class="chip"><div class="t">Tagesgeld 2 %</div><div class="v">2000 €</div><div class="s"><span class="up">+0.01 %</span></div></div>
+  <div class="chip"><div class="t">Einstand</div><div class="v">2000.00</div><div class="s" style="color:var(--dim)">EUR</div></div>
+  <div class="chip"><div class="t">Gewinn</div><div class="v up">+34.95</div><div class="s up">EUR</div></div>
+  <div class="chip"><div class="t">Heute</div><div class="v up">+0.00%</div><div class="s" style="color:var(--dim)">Δ</div></div>
 </div>
 
-<h2>Verlauf</h2>PLACEHOLDER_LINE79
-<h2>Offene Positionen <span style="color:var(--dim);font-weight:500">(3)</span></h2>
-<div class="card"><div class="row">
-      <div><div class="tk">QBTS</div>
-      <div class="dim">400 € · Tag 2/90 · Einstieg 23.25 · Kurs vom 2026-06-12 17:51</div>
-      <div class="dim"><span class="up">Ziel 36</span> · <span class="down">Stop 19</span></div></div>
-      <div class="right"><div class="tk">23.76</div><div class="res up">+8.77 € (+2.19 %)</div></div></div><div class="row">
-      <div><div class="tk">IONQ</div>
-      <div class="dim">250 € · Tag 2/90 · Einstieg 56.63 · Kurs vom 2026-06-12 17:51</div>
-      <div class="dim"><span class="up">Ziel 75</span> · <span class="down">Stop 46</span></div></div>
-      <div class="right"><div class="tk">58.58</div><div class="res up">+8.61 € (+3.44 %)</div></div></div><div class="row">
-      <div><div class="tk">RGTI</div>
-      <div class="dim">120 € · Tag 2/60 · Einstieg 19.45 · Kurs vom 2026-06-12 17:51</div>
-      <div class="dim"><span class="up">Ziel 28</span> · <span class="down">Stop 16</span></div></div>
-      <div class="right"><div class="tk">21.41</div><div class="res up">+12.09 € (+10.08 %)</div></div></div></div>
+<h2>Positionen</h2>
+<div class="card">
+
+<div class="row ">
+  <div>
+    <div><span class="tk">CAMT</span> <span class="badge buy">Buy</span></div>
+    <div class="dim">2 St. · Ø 52.85 · jetzt 52.50</div>
+    <div class="dim">Ziel 70.0 · Stop 42.0</div>
+  </div>
+  <div class="right">
+    <div>105.00 €</div>
+    <div class="res down">-0.66%</div>
+    <div class="res" style="color:var(--dim)"></div>
+  </div>
+</div>
+
+<div class="row ">
+  <div>
+    <div><span class="tk">HOOD</span> <span class="badge buy">Buy</span></div>
+    <div class="dim">10 St. · Ø 54.01 · jetzt 63.10</div>
+    <div class="dim">Ziel 80.0 · Stop 45.0</div>
+  </div>
+  <div class="right">
+    <div>631.00 €</div>
+    <div class="res up">+16.83%</div>
+    <div class="res" style="color:var(--dim)"></div>
+  </div>
+</div>
+
+<div class="row ">
+  <div>
+    <div><span class="tk">RGTI</span> <span class="badge buy">Buy</span></div>
+    <div class="dim">6 St. · Ø 19.45 · jetzt 19.83</div>
+    <div class="dim">Ziel 28.0 · Stop 15.5</div>
+  </div>
+  <div class="right">
+    <div>118.98 €</div>
+    <div class="res up">+1.95%</div>
+    <div class="res" style="color:var(--dim)"></div>
+  </div>
+</div>
+
+</div>
+
+<h2>Cash</h2>
+<div class="card">
+  <div class="row"><span>Verfügbar</span><span>1179.97 €</span></div>
+</div>
+
+
+
+<h2>Signale</h2>
+<div class="card">
+
+<div class="row">
+  <div>
+    <div><span class="tk">CAMT</span> <span class="badge" style="background:rgba(48,209,88,.15);color:var(--up)">HOLD</span></div>
+    <div class="dim">2 Stück im Depot</div>
+  </div>
+  <div class="right" style="font-size:13px;color:var(--dim)">Breakout Schweizer Neobank — Profitabilität erreicht</div>
+</div>
+
+<div class="row">
+  <div>
+    <div><span class="tk">HOOD</span> <span class="badge" style="background:rgba(48,209,88,.15);color:var(--up)">HOLD</span></div>
+    <div class="dim">10 Stück im Depot</div>
+  </div>
+  <div class="right" style="font-size:13px;color:var(--dim)">Momentum + Crypto-Exposure steigt</div>
+</div>
+
+<div class="row">
+  <div>
+    <div><span class="tk">RGTI</span> <span class="badge" style="background:rgba(48,209,88,.15);color:var(--up)">HOLD</span></div>
+    <div class="dim">6 Stück im Depot</div>
+  </div>
+  <div class="right" style="font-size:13px;color:var(--dim)">Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript</div>
+</div>
+
+</div>
+
+
+<h2>Watchlist</h2>
+<div class="card">
+<div class="row"><span style="color:var(--dim);font-size:14px">Keine Einträge</span></div>
+</div>
+
+
+
+<h2>Lektionen</h2>
+<div class="card">
+
+  <div class="lesson">📌 <b>Lektion 1:</b> Setze immer einen Stop-Loss.</div>
+
+  <div class="lesson">📌 <b>Lektion 2:</b> Emotionen raus — Plan rein.</div>
+
+  <div class="lesson">📌 <b>Lektion 3:</b> Nie mehr als 10% in eine Position.</div>
+
+</div>
+
+<p class="note">Automatisch generiert · kein Anlageberatung</p>
+
+</div>
+<script type="application/json" id="depot-data">
+{"ts": 1749743503, "depot_eur": 2034.95, "einstand_eur": 2000.0, "gewinn_eur": 34.95, "rendite_pct": 1.75, "cash_eur": 1179.97, "today_pct": 0.0, "positionen": [{"ticker": "CAMT", "stueck": 2, "einstand": 52.85, "kurs": 52.5, "wert_eur": 105.0, "pnl_pct": -0.66, "aktion": "Kauf", "preis": 52.85, "info": "200 € · Ziel 70.0 · Stop 42.0", "ergebnis": "", "grund": "Breakout Schweizer Neobank — Profitabilität erreicht"}, {"ticker": "HOOD", "stueck": 10, "einstand": 54.01, "kurs": 63.1, "wert_eur": 631.0, "pnl_pct": 16.83, "aktion": "Kauf", "preis": 54.01, "info": "540 € · Ziel 80.0 · Stop 45.0", "ergebnis": "", "grund": "Momentum + Crypto-Exposure steigt"}, {"ticker": "RGTI", "stueck": 6, "einstand": 19.45, "kurs": 19.83, "wert_eur": 118.98, "pnl_pct": 1.95, "aktion": "Kauf", "preis": 19.45, "info": "120 € · Ziel 28.0 · Stop 15.5", "ergebnis": "", "grund": "Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript"}]}</script></body></html>

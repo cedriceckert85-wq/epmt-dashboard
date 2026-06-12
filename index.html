@@ -1,1 +1,544 @@
-PLACEHOLDER_CONTENT
+<!DOCTYPE html>
+<html lang="de"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>Depot</title>
+<style>
+:root { --bg:#000000; --card:#1c1c1e; --txt:#f5f5f7; --dim:#98989d; --line:#2c2c2e;
+        --up:#30d158; --down:#ff453a; --blue:#0a84ff; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { margin:0; background:var(--bg); color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+  padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased; }
+.wrap { max-width:1000px; margin:0 auto; }
+.tabs { display:flex; background:#161618; border-radius:14px; padding:4px; gap:4px; }
+.tabs a { flex:1; text-align:center; padding:10px 4px; border-radius:10px; color:var(--dim);
+  text-decoration:none; font-size:14px; font-weight:600; }
+.tabs a.active { background:#2f2f31; color:var(--txt); }
+.hero { text-align:center; padding:24px 0 8px; }
+.hero .label { font-size:15px; color:var(--dim); font-weight:500; }
+.hero .big { font-size:48px; font-weight:700; letter-spacing:-1px; margin:2px 0; font-variant-numeric:tabular-nums; }
+.pill { display:inline-block; font-size:15px; font-weight:600; padding:3px 12px; border-radius:999px; }
+.pill.up { background:rgba(48,209,88,.15); color:var(--up); }
+.pill.down { background:rgba(255,69,58,.15); color:var(--down); }
+.stamp { font-size:12px; color:var(--dim); margin-top:8px; }
+.compare { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:20px 0; }
+.chip { background:var(--card); border-radius:16px; padding:12px 10px; text-align:center; }
+.chip .t { font-size:11px; color:var(--dim); font-weight:500; }
+.chip .v { font-size:17px; font-weight:600; margin-top:2px; font-variant-numeric:tabular-nums; }
+.chip .s { font-size:12px; font-weight:600; }
+.up { color:var(--up); } .down { color:var(--down); }
+h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px; }
+.card { background:var(--card); border-radius:18px; overflow:hidden; }
+.card img { display:block; width:100%; border-radius:18px; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:13px 16px; border-bottom:.5px solid var(--line); font-size:15px; }
+.row:last-child { border-bottom:none; }
+.tk { font-weight:600; }
+.dim { color:var(--dim); font-size:13px; margin-top:1px; }
+.right { text-align:right; font-variant-numeric:tabular-nums; }
+.res { font-weight:600; font-size:13px; }
+.badge { font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; vertical-align:1px; }
+.badge.buy { background:rgba(10,132,255,.12); color:var(--blue); }
+.badge.sell { background:rgba(255,69,58,.12); color:var(--down); }
+.badge.hold { background:rgba(152,152,157,.12); color:var(--dim); }
+.note { font-size:13px; color:var(--dim); padding:0 4px 24px; line-height:1.5; }
+a { color:var(--blue); text-decoration:none; }
+.stop-row { background:rgba(255,69,58,.06); }
+.divider { height:1px; background:var(--line); margin:8px 0; }
+/* Chart placeholder */
+.chart-wrap { position:relative; width:100%; height:180px; border-radius:18px; overflow:hidden; background:var(--card); display:flex; align-items:center; justify-content:center; }
+.chart-wrap canvas { width:100%!important; }
+.tbl { width:100%; border-collapse:collapse; font-size:14px; }
+.tbl th { text-align:left; color:var(--dim); font-weight:500; font-size:11px; padding:6px 16px; border-bottom:.5px solid var(--line); }
+.tbl td { padding:11px 16px; border-bottom:.5px solid var(--line); vertical-align:top; }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl .num { text-align:right; font-variant-numeric:tabular-nums; }
+.section { margin-bottom:4px; }
+/* Fundamentals grid */
+.fund-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.fund-card { background:var(--card); border-radius:14px; padding:14px; }
+.fund-card .lbl { font-size:11px; color:var(--dim); font-weight:500; }
+.fund-card .val { font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:2px; }
+.fund-card .sub { font-size:12px; color:var(--dim); margin-top:1px; }
+/* Accordion */
+details summary { cursor:pointer; list-style:none; padding:13px 16px; font-size:15px; font-weight:600; display:flex; justify-content:space-between; }
+details summary::-webkit-details-marker { display:none; }
+details summary::after { content:'›'; transform:rotate(90deg); display:inline-block; transition:.2s; color:var(--dim); }
+details[open] summary::after { transform:rotate(270deg); }
+.detail-body { padding:0 16px 16px; font-size:14px; color:var(--dim); line-height:1.6; }
+/* Timeline */
+.tl { list-style:none; padding:0 16px 16px; margin:0; }
+.tl li { padding:8px 0 8px 20px; border-left:1.5px solid var(--line); position:relative; font-size:14px; color:var(--dim); }
+.tl li::before { content:''; position:absolute; left:-4.5px; top:12px; width:7px; height:7px; border-radius:50%; background:var(--blue); }
+.tl li strong { display:block; color:var(--txt); font-size:13px; }
+/* Watchlist dot */
+.wdot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+.section-label { font-size:11px; color:var(--dim); font-weight:600; letter-spacing:.5px; text-transform:uppercase; padding:20px 4px 6px; }
+</style></head>
+<body>
+<div class="wrap">
+
+<!-- ===== NAV ===== -->
+<nav style="margin-bottom:12px">
+  <div class="tabs">
+    <a href="#depot" class="active" onclick="show('depot',this)">Depot</a>
+    <a href="#watchlist" onclick="show('watchlist',this)">Watchlist</a>
+    <a href="#analyse" onclick="show('analyse',this)">Analyse</a>
+    <a href="#log" onclick="show('log',this)">Log</a>
+  </div>
+</nav>
+
+<!-- ===== DEPOT ===== -->
+<section id="depot">
+
+<div class="hero">
+  <div class="label">Depotwert</div>
+  <div class="big" id="total">–</div>
+  <div id="pnl-pill"></div>
+  <div class="stamp" id="stamp"></div>
+</div>
+
+<div class="compare">
+  <div class="chip"><div class="t">Einstand</div><div class="v" id="basis">–</div></div>
+  <div class="chip"><div class="t">Gew./Verl.</div><div class="v" id="pnl-abs">–</div><div class="s" id="pnl-pct"></div></div>
+  <div class="chip"><div class="t">Tagespnl</div><div class="v" id="day-pnl">–</div></div>
+</div>
+
+<h2>Positionen</h2>
+<div class="card">
+  <div id="pos-rows"></div>
+</div>
+
+<h2>Stop-Loss Übersicht</h2>
+<div class="card">
+  <div id="stop-rows"></div>
+</div>
+
+<p class="note">Kurse via <a href="https://finance.yahoo.com" target="_blank">Yahoo Finance</a> · automatisch alle 60 s · Stops sind Richtwerte</p>
+</section>
+
+<!-- ===== WATCHLIST ===== -->
+<section id="watchlist" style="display:none">
+<h2 style="margin-top:16px">Watchlist</h2>
+<div class="card">
+  <div id="watch-rows"></div>
+</div>
+<p class="note">Beobachtungsliste – noch keine aktive Position</p>
+</section>
+
+<!-- ===== ANALYSE ===== -->
+<section id="analyse" style="display:none">
+<h2 style="margin-top:16px">Depot-Analyse</h2>
+
+<div class="section-label">Gewichtung</div>
+<div class="card" style="padding:16px">
+  <canvas id="pieChart" height="220"></canvas>
+</div>
+
+<div class="section-label">Kennzahlen</div>
+<div class="fund-grid" id="fund-grid"></div>
+
+<div class="section-label">Branchen</div>
+<div class="card">
+  <div id="sector-rows"></div>
+</div>
+
+<div class="section-label">Bewertung je Position</div>
+<div class="card">
+  <table class="tbl">
+    <thead><tr><th>Titel</th><th class="num">KGV</th><th class="num">KBV</th><th class="num">Div%</th><th class="num">Score</th></tr></thead>
+    <tbody id="val-tbl"></tbody>
+  </table>
+</div>
+
+<div class="section-label">Szenarien</div>
+<div class="card">
+  <div id="scenario-rows"></div>
+</div>
+
+</section>
+
+<!-- ===== LOG ===== -->
+<section id="log" style="display:none">
+<h2 style="margin-top:16px">Handelstagebuch</h2>
+
+<div class="card">
+  <table class="tbl">
+    <thead><tr><th>Datum</th><th>Titel</th><th>Aktion</th><th class="num">Stk</th><th class="num">Kurs</th><th class="num">Pnl €</th></tr></thead>
+    <tbody id="log-tbl"></tbody>
+  </table>
+</div>
+
+<div class="section-label">Notizen / Thesis</div>
+<div class="card">
+  <details>
+    <summary>NOVO B – GLP-1 Zyklus</summary>
+    <div class="detail-body">
+      Thesis: Ozempic/Wegovy-Nachfrage strukturell stark; Konkurrenz durch Lilly (Zepbound) drückt Preis. Halten solange Marge >35 %. Exit-Trigger: Guidancekürzung oder generischer Eintritt USA.
+      <ul style="margin:8px 0 0;padding-left:18px">
+        <li>Stop angepasst nach Q1-Zahlen (Apr 2025)</li>
+        <li>Nächster Catalyst: H2-Zahlen Aug 2025</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary>ASML – Litho-Monopol</summary>
+    <div class="detail-body">
+      Thesis: EUV-Monopol bis mind. 2030; TSMC/Samsung-Capex stützt Orderbuch. Risiko: China-Exportrestriktionen (~15 % Umsatz). Stop bei 580 €.
+    </div>
+  </details>
+  <details>
+    <summary>RHM – Rüstungszykus Europa</summary>
+    <div class="detail-body">
+      Thesis: NATO-Ziel 3 % BIP treibt Aufträge; Rahmenverträge Bund laufen 2026–2030. Bewertung (KGV ~20) noch moderat vs. US-Peers. Stop 120 €.
+    </div>
+  </details>
+  <details>
+    <summary>BTC – Makro-Hedge</summary>
+    <div class="detail-body">
+      Thesis: Halving Apr 2024 abgeschlossen; institutionelle Allokation steigt (ETF-Zuflüsse). Kein Stop – Position klein (&lt;3 %), Totalverlust einkalkuliert.
+    </div>
+  </details>
+  <details>
+    <summary>IONOS – Hidden Champion</summary>
+    <div class="detail-body">
+      Thesis: Stabiles SME-Hosting-Geschäft, Cloud-Upsell. Niedrige Bewertung (KGV ~15). Stop 17 €. Catalyst: Q2-Zahlen Jul 2025.
+    </div>
+  </details>
+</div>
+
+<div class="section-label">Meilensteine</div>
+<div class="card">
+  <ul class="tl">
+    <li><strong>Jun 2025</strong>Depot auf ~180 k € skaliert; RHM neu aufgenommen</li>
+    <li><strong>Apr 2025</strong>NOVO B Stop auf 67 € nachgezogen nach Q1-Beat</li>
+    <li><strong>Feb 2025</strong>ASML aufgestockt bei 630 € (Dip nach Exportnews)</li>
+    <li><strong>Dez 2024</strong>BTC-Position halbiert bei 95 k $, Gewinn realisiert</li>
+    <li><strong>Sep 2024</strong>IONOS initiiert bei 19,50 €</li>
+    <li><strong>Jan 2024</strong>Depot-Start mit 100 k € Startkapital</li>
+  </ul>
+</div>
+
+</section>
+
+</div><!-- /wrap -->
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+/* ============================================================
+   DATA
+============================================================ */
+const POSITIONS = [
+  // { ticker, name, shares, avgCost, stopLoss, sector, kgv, kbv, div }
+  { ticker:'NOVO-B.CO', name:'Novo Nordisk',  shares:120, avgCost:79.20,  stopLoss:67,  sector:'Healthcare',  kgv:18.2, kbv:11.4, div:1.1 },
+  { ticker:'ASML.AS',   name:'ASML',          shares:18,  avgCost:658.00, stopLoss:580, sector:'Technology',  kgv:32.1, kbv:22.7, div:0.9 },
+  { ticker:'RHM.DE',    name:'Rheinmetall',   shares:55,  avgCost:135.40, stopLoss:120, sector:'Defense',     kgv:20.3, kbv:5.8,  div:1.4 },
+  { ticker:'BTC-USD',   name:'Bitcoin',       shares:0.28,avgCost:61200,  stopLoss:null,sector:'Crypto',      kgv:null, kbv:null, div:0   },
+  { ticker:'IONOS.DE',  name:'IONOS',         shares:320, avgCost:19.50,  stopLoss:17,  sector:'Technology',  kgv:15.1, kbv:3.2,  div:0   },
+];
+
+const WATCHLIST = [
+  { ticker:'SAP.DE',    name:'SAP',           note:'Breakout >240 abwarten' },
+  { ticker:'NVDA',      name:'NVIDIA',        note:'Zu teuer – Pullback <90 $' },
+  { ticker:'^GDAXI',    name:'DAX Index',     note:'Benchmark' },
+  { ticker:'MBG.DE',    name:'Mercedes-Benz', note:'Value-Play bei KGV <5' },
+  { ticker:'ENR.DE',    name:'Siemens Energy',note:'Turnaround – Stop nötig' },
+];
+
+const TRADE_LOG = [
+  { date:'2025-06-02', ticker:'RHM.DE',   action:'Kauf',    shares:55,  price:135.40, pnl:null },
+  { date:'2025-04-28', ticker:'NOVO-B.CO',action:'Aufstk.', shares:30,  price:74.10,  pnl:null },
+  { date:'2025-02-14', ticker:'ASML.AS',  action:'Aufstk.', shares:8,   price:630.00, pnl:null },
+  { date:'2024-12-10', ticker:'BTC-USD',  action:'Verk.',   shares:0.28,price:95100,  pnl:+9408 },
+  { date:'2024-09-15', ticker:'IONOS.DE', action:'Kauf',    shares:320, price:19.50,  pnl:null },
+  { date:'2024-01-10', ticker:'NOVO-B.CO',action:'Kauf',    shares:90,  price:82.00,  pnl:null },
+  { date:'2024-01-10', ticker:'ASML.AS',  action:'Kauf',    shares:10,  price:680.00, pnl:null },
+  { date:'2024-01-10', ticker:'BTC-USD',  action:'Kauf',    shares:0.56,price:42000,  pnl:null },
+];
+
+/* ============================================================
+   HELPERS
+============================================================ */
+const fmt  = (n,d=2)=>n==null?'–':n.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtE = (n,d=2)=>n==null?'–':fmt(n,d)+' €';
+const sign = n=>n>=0?'+':'';
+const cls  = n=>n>=0?'up':'down';
+
+/* ============================================================
+   FETCH PRICES (Yahoo Finance via allorigins proxy)
+============================================================ */
+const prices  = {}; // ticker -> {price, prev}
+const loading = {};
+
+async function fetchPrice(ticker){
+  if(loading[ticker]) return;
+  loading[ticker]=true;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=5d`;
+  const proxy= `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  try{
+    const r  = await fetch(proxy,{cache:'no-store'});
+    const j  = await r.json();
+    const d  = JSON.parse(j.contents);
+    const ch = d?.chart?.result?.[0];
+    if(!ch) throw 'no result';
+    const q  = ch.meta;
+    const closes = ch.indicators?.quote?.[0]?.close?.filter(x=>x!=null);
+    const prev = closes && closes.length>=2 ? closes[closes.length-2] : q.chartPreviousClose;
+    prices[ticker] = { price: q.regularMarketPrice ?? q.previousClose, prev };
+  }catch(e){
+    console.warn('fetch failed',ticker,e);
+    if(!prices[ticker]) prices[ticker]={price:null,prev:null};
+  }
+}
+
+async function fetchAll(){
+  const tickers=[...POSITIONS.map(p=>p.ticker),...WATCHLIST.map(w=>w.ticker)];
+  await Promise.all(tickers.map(fetchPrice));
+  render();
+}
+
+/* ============================================================
+   RENDER DEPOT
+============================================================ */
+function render(){
+  let totalVal=0, totalCost=0, totalDayPnl=0;
+
+  const posHTML = POSITIONS.map(p=>{
+    const pr = prices[p.ticker];
+    const price = pr?.price;
+    const prev  = pr?.prev;
+    const val   = price!=null ? price*p.shares : null;
+    const cost  = p.avgCost*p.shares;
+    const pnl   = val!=null  ? val-cost : null;
+    const pct   = pnl!=null  ? pnl/cost*100 : null;
+    const dayP  = (price!=null&&prev!=null) ? (price-prev)*p.shares : null;
+    const dayPct= (price!=null&&prev!=null) ? (price-prev)/prev*100 : null;
+    if(val!=null)  totalVal +=val;
+    totalCost += cost;
+    if(dayP!=null) totalDayPnl+=dayP;
+
+    const isStop = p.stopLoss && price!=null && price < p.stopLoss*1.05;
+    return `<div class="row${isStop?' stop-row':''}">
+      <div>
+        <div class="tk">${p.name} <span class="badge ${ratingBadge(p)}">${ratingLabel(p)}</span></div>
+        <div class="dim">${p.ticker} · ${p.shares} Stk · Ø ${fmt(p.avgCost)}</div>
+      </div>
+      <div class="right">
+        <div>${price!=null?fmtE(price):'lädt…'}</div>
+        <div class="res ${pnl!=null?cls(pnl):''}">${
+          pnl!=null?`${sign(pnl)}${fmtE(pnl)} (${sign(pct)}${fmt(pct)} %)`:'–'
+        }</div>
+        <div class="dim ${dayP!=null?cls(dayP):''}">Heute: ${dayP!=null?sign(dayP)+fmtE(dayP):''} ${dayPct!=null?'('+sign(dayPct)+fmt(dayPct)+' %)':''}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('pos-rows').innerHTML = posHTML;
+
+  // totals
+  const pnlAbs = totalVal-totalCost;
+  const pnlPct = totalCost?pnlAbs/totalCost*100:0;
+  document.getElementById('total').textContent    = fmtE(totalVal,0);
+  document.getElementById('basis').textContent    = fmtE(totalCost,0);
+  document.getElementById('pnl-abs').textContent  = fmtE(pnlAbs);
+  document.getElementById('pnl-abs').className    = 'v '+(pnlAbs>=0?'up':'down');
+  document.getElementById('pnl-pct').textContent  = sign(pnlPct)+fmt(pnlPct)+' %';
+  document.getElementById('pnl-pct').className    = 's '+(pnlPct>=0?'up':'down');
+  document.getElementById('day-pnl').textContent  = sign(totalDayPnl)+fmtE(totalDayPnl);
+  document.getElementById('day-pnl').className    = 'v '+(totalDayPnl>=0?'up':'down');
+
+  const pill = document.getElementById('pnl-pill');
+  pill.className = `pill ${pnlAbs>=0?'up':'down'}`;
+  pill.textContent = `${sign(pnlAbs)}${fmtE(pnlAbs)} (${sign(pnlPct)}${fmt(pnlPct)} %)`;
+
+  const now = new Date();
+  document.getElementById('stamp').textContent =
+    `Zuletzt: ${now.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}`;
+
+  renderStops();
+  renderWatchlist();
+  renderAnalyse(totalVal);
+}
+
+/* ============================================================
+   RATING LOGIC  (simple rule-based)
+============================================================ */
+function ratingBadge(p){
+  const pr=prices[p.ticker];
+  if(!pr||!pr.price) return 'hold';
+  const pct=(pr.price-p.avgCost)/p.avgCost*100;
+  if(pct> 15) return 'hold';  // already gained a lot → hold
+  if(pct< -8) return 'sell';  // near stop → review
+  return 'buy';
+}
+function ratingLabel(p){
+  const b=ratingBadge(p);
+  return b==='buy'?'HOLD / ADD':b==='sell'?'PRÜFEN':'HOLD';
+}
+
+/* ============================================================
+   STOPS
+============================================================ */
+function renderStops(){
+  const html = POSITIONS.filter(p=>p.stopLoss).map(p=>{
+    const pr=prices[p.ticker];
+    const price=pr?.price;
+    const dist=price!=null?(price-p.stopLoss)/p.stopLoss*100:null;
+    const risk=price!=null?(price-p.stopLoss)*p.shares:null;
+    return `<div class="row">
+      <div><div class="tk">${p.name}</div><div class="dim">Stop: ${fmt(p.stopLoss)} €</div></div>
+      <div class="right">
+        <div>Kurs: ${price!=null?fmtE(price):'–'}</div>
+        <div class="res ${dist!=null?cls(dist):''}">Abstand: ${dist!=null?sign(dist)+fmt(dist)+' %':'–'}</div>
+        <div class="dim">Risiko: ${risk!=null?sign(risk)+fmtE(risk):'–'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('stop-rows').innerHTML=html;
+}
+
+/* ============================================================
+   WATCHLIST
+============================================================ */
+function renderWatchlist(){
+  const COLORS=['#0a84ff','#30d158','#ff9f0a','#ff453a','#bf5af2'];
+  const html=WATCHLIST.map((w,i)=>{
+    const pr=prices[w.ticker];
+    const price=pr?.price;
+    const prev=pr?.prev;
+    const chg=(price!=null&&prev!=null)?(price-prev)/prev*100:null;
+    return `<div class="row">
+      <div>
+        <div class="tk"><span class="wdot" style="background:${COLORS[i%COLORS.length]}"></span>${w.name}</div>
+        <div class="dim">${w.ticker} · ${w.note}</div>
+      </div>
+      <div class="right">
+        <div>${price!=null?fmtE(price):'lädt…'}</div>
+        <div class="res ${chg!=null?cls(chg):''}">${
+          chg!=null?sign(chg)+fmt(chg)+' %':'–'
+        }</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('watch-rows').innerHTML=html;
+}
+
+/* ============================================================
+   ANALYSE
+============================================================ */
+let pieInstance=null;
+function renderAnalyse(totalVal){
+  // Pie
+  const vals=POSITIONS.map(p=>{
+    const pr=prices[p.ticker];
+    return pr?.price!=null ? pr.price*p.shares : p.avgCost*p.shares;
+  });
+  const tv=vals.reduce((a,b)=>a+b,0)||1;
+  const pieData={
+    labels:POSITIONS.map(p=>p.name),
+    datasets:[{data:vals,backgroundColor:['#0a84ff','#30d158','#ff9f0a','#ff453a','#bf5af2'],borderWidth:0}]
+  };
+  if(pieInstance) pieInstance.destroy();
+  pieInstance=new Chart(document.getElementById('pieChart'),{
+    type:'doughnut',
+    data:pieData,
+    options:{
+      plugins:{
+        legend:{labels:{color:'#f5f5f7',font:{size:13}}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.parsed/tv*100,1)} %`}}
+      },
+      cutout:'60%'
+    }
+  });
+
+  // Fund grid
+  const avgKgv=POSITIONS.filter(p=>p.kgv).reduce((a,p)=>a+p.kgv,0)/POSITIONS.filter(p=>p.kgv).length;
+  const avgDiv=POSITIONS.reduce((a,p)=>a+p.div,0)/POSITIONS.length;
+  const nStops=POSITIONS.filter(p=>p.stopLoss).length;
+  document.getElementById('fund-grid').innerHTML=`
+    <div class="fund-card"><div class="lbl">Ø KGV</div><div class="val">${fmt(avgKgv,1)}</div><div class="sub">gewichtet Depot</div></div>
+    <div class="fund-card"><div class="lbl">Ø Dividende</div><div class="val">${fmt(avgDiv,2)} %</div><div class="sub">Rendite p.a.</div></div>
+    <div class="fund-card"><div class="lbl">Positionen</div><div class="val">${POSITIONS.length}</div><div class="sub">${nStops} mit Stop</div></div>
+    <div class="fund-card"><div class="lbl">Depotwert</div><div class="val">${fmt(totalVal/1000,1)} k€</div><div class="sub">aktuell</div></div>
+  `;
+
+  // Sectors
+  const sectors={};
+  POSITIONS.forEach((p,i)=>{ sectors[p.sector]=(sectors[p.sector]||0)+vals[i]; });
+  const secHTML=Object.entries(sectors).map(([s,v])=>{
+    const pct=v/tv*100;
+    return `<div class="row"><div class="tk">${s}</div><div class="right">${fmt(pct,1)} %<br><span class="dim">${fmtE(v,0)}</span></div></div>`;
+  }).join('');
+  document.getElementById('sector-rows').innerHTML=secHTML;
+
+  // Valuation table
+  const valHTML=POSITIONS.map(p=>{
+    const score=valScore(p);
+    return `<tr>
+      <td>${p.name}</td>
+      <td class="num">${p.kgv??'–'}</td>
+      <td class="num">${p.kbv??'–'}</td>
+      <td class="num">${p.div??0} %</td>
+      <td class="num"><span class="badge ${score.cls}">${score.lbl}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('val-tbl').innerHTML=valHTML;
+
+  // Scenarios
+  const scHTML=POSITIONS.map(p=>{
+    const pr=prices[p.ticker];
+    const price=pr?.price??p.avgCost;
+    const bull=price*1.20*p.shares, bear=price*0.80*p.shares;
+    return `<div class="row"><div><div class="tk">${p.name}</div><div class="dim">Basis: ${fmtE(price)} · ${p.shares} Stk</div></div>
+      <div class="right"><span class="up">Bull +20 %: ${fmtE(bull,0)}</span><br><span class="down">Bear −20 %: ${fmtE(bear,0)}</span></div></div>`;
+  }).join('');
+  document.getElementById('scenario-rows').innerHTML=scHTML;
+}
+
+function valScore(p){
+  let s=0;
+  if(p.kgv && p.kgv<20) s++; if(p.kgv && p.kgv>30) s--;
+  if(p.kbv && p.kbv<3)  s++; if(p.kbv && p.kbv>15) s--;
+  if(p.div>1.5) s++;
+  return s>=1?{cls:'buy',lbl:'Günstig'}:s<=-1?{cls:'sell',lbl:'Teuer'}:{cls:'hold',lbl:'Neutral'};
+}
+
+/* ============================================================
+   LOG TABLE
+============================================================ */
+(function(){
+  const html=TRADE_LOG.map(t=>`<tr>
+    <td>${t.date}</td><td>${t.ticker}</td>
+    <td><span class="badge ${t.action==='Verk.'?'sell':t.action==='Kauf'||t.action==='Aufstk.'?'buy':'hold'}">${t.action}</span></td>
+    <td class="num">${t.shares}</td>
+    <td class="num">${fmt(t.price)}</td>
+    <td class="num ${t.pnl!=null?cls(t.pnl):''}">${
+      t.pnl!=null?sign(t.pnl)+fmtE(t.pnl):'–'
+    }</td>
+  </tr>`).join('');
+  document.getElementById('log-tbl').innerHTML=html;
+})();
+
+/* ============================================================
+   NAV
+============================================================ */
+function show(id,el){
+  document.querySelectorAll('section').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='';
+  document.querySelectorAll('.tabs a').forEach(a=>a.classList.remove('active'));
+  el.classList.add('active');
+  return false;
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+fetchAll();
+setInterval(fetchAll,60000);
+</script>
+</body></html>

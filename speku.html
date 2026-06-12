@@ -57,333 +57,141 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px;color:var(--down);font-weight:600">
 ⚠️ Diese Seite ist veraltet — der letzte Automatik-Lauf liegt über 24 Stunden zurück.</div>
 <script>
-const STALE_HOURS = 24;
-const stand = "12.06.2026, 17:59";
-try {
-  const [d,t] = stand.split(', ');
-  const [dd,mm,yyyy] = d.split('.');
-  const dt = new Date(`${yyyy}-${mm}-${dd}T${t}:00`);
-  if ((Date.now() - dt.getTime()) > STALE_HOURS*3600000)
-    document.getElementById('stale-banner').style.display='block';
-} catch(e){}
+(function() { var built = 1781365860;
+if (Date.now()/1000 - built > 86400) document.getElementById('stale-banner').style.display='block'; })();
 </script>
 
 <div class="hero">
-  <div class="label">Speku-Depot</div>
-  <div class="big">2.008,45 €</div>
-  <span class="pill down">−26,50 € / −1,30%</span>
-  <div class="stamp">Stand: 12.06.2026, 17:59 · Einzahlungen 2.000 €</div>
+  <div class="label">Speku-Depot (Zukunfts-Mandat) · Tag 2</div>
+  <div class="big">2 034.95 €</div>
+  <span class="pill up">+1.75 % auf 2000 € Einzahlungen</span>
+  <div class="stamp">Stand 12.06.2026, 17:51 · davon 1235 € Cash · aktualisiert alle ~15 Min (Handelszeit)</div>
+  
 </div>
 
 <div class="compare">
-  <div class="chip">
-    <div class="t">Seit Start</div>
-    <div class="v down">−1,30%</div>
-    <div class="s down">−26,50 €</div>
-  </div>
-  <div class="chip">
-    <div class="t">Einzahlungen</div>
-    <div class="v">2.000 €</div>
-    <div class="s dim">Ziel 100 Trades</div>
-  </div>
-  <div class="chip">
-    <div class="t">Trades (offen)</div>
-    <div class="v">14 (3)</div>
-    <div class="s dim">9 W / 5 V</div>
-  </div>
+  <div class="chip"><div class="t">Dein Depot</div><div class="v">2008 €</div><div class="s"><span class="up">+0.42 %</span></div></div>
+  <div class="chip"><div class="t">Nur SPY gekauft</div><div class="v">2037 €</div><div class="s"><span class="up">+1.86 %</span></div></div>
+  <div class="chip"><div class="t">Tagesgeld 2 %</div><div class="v">2000 €</div><div class="s"><span class="up">+0.01 %</span></div></div>
 </div>
 
-<h2>Offene Positionen</h2>
-<div class="card">
-<div class="row speku">
-  <div>
-    <div class="tk">HIMS <span class="badge speku">SPEKU</span></div>
-    <div class="dim">3 Stk · Ø 10,93 € · KK 32,79 €</div>
-  </div>
-  <div class="right">
-    <div>31,47 €</div>
-    <div class="res down">−1,32 € / −4,03%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">NOVO B <span class="badge buy">BUY</span></div>
-    <div class="dim">3 Stk · Ø 70,37 € · KK 211,11 €</div>
-  </div>
-  <div class="right">
-    <div>204,00 €</div>
-    <div class="res down">−7,11 € / −3,37%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">IONOS <span class="badge buy">BUY</span></div>
-    <div class="dim">8 Stk · Ø 18,52 € · KK 148,16 €</div>
-  </div>
-  <div class="right">
-    <div>152,00 €</div>
-    <div class="res up">+3,84 € / +2,59%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">ARM <span class="badge buy">BUY</span></div>
-    <div class="dim">1 Stk · Ø 97,60 € · KK 97,60 €</div>
-  </div>
-  <div class="right">
-    <div>121,70 €</div>
-    <div class="res up">+24,10 € / +24,69%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">Rheinmetall <span class="badge buy">BUY</span></div>
-    <div class="dim">1 Stk · Ø 1.120,00 € · KK 1.120,00 €</div>
-  </div>
-  <div class="right">
-    <div>1.072,00 €</div>
-    <div class="res down">−48,00 € / −4,29%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">Siemens <span class="badge buy">BUY</span></div>
-    <div class="dim">2 Stk · Ø 208,30 € · KK 416,60 €</div>
-  </div>
-  <div class="right">
-    <div>423,00 €</div>
-    <div class="res up">+6,40 € / +1,54%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">Fresenius <span class="badge buy">BUY</span></div>
-    <div class="dim">6 Stk · Ø 35,11 € · KK 210,66 €</div>
-  </div>
-  <div class="right">
-    <div>211,50 €</div>
-    <div class="res up">+0,84 € / +0,40%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">LVMH <span class="badge buy">BUY</span></div>
-    <div class="dim">1 Stk · Ø 512,00 € · KK 512,00 €</div>
-  </div>
-  <div class="right">
-    <div>486,00 €</div>
-    <div class="res down">−26,00 € / −5,08%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">PayPal <span class="badge buy">BUY</span></div>
-    <div class="dim">3 Stk · Ø 68,38 € · KK 205,14 €</div>
-  </div>
-  <div class="right">
-    <div>209,85 €</div>
-    <div class="res up">+4,71 € / +2,30%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">Bayer <span class="badge buy">BUY</span></div>
-    <div class="dim">4 Stk · Ø 16,66 € · KK 66,64 €</div>
-  </div>
-  <div class="right">
-    <div>64,00 €</div>
-    <div class="res down">−2,64 € / −3,96%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">Henkel Vz <span class="badge buy">BUY</span></div>
-    <div class="dim">2 Stk · Ø 75,00 € · KK 150,00 €</div>
-  </div>
-  <div class="right">
-    <div>147,60 €</div>
-    <div class="res down">−2,40 € / −1,60%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">Sto SE <span class="badge buy">BUY</span></div>
-    <div class="dim">1 Stk · Ø 102,00 € · KK 102,00 €</div>
-  </div>
-  <div class="right">
-    <div>97,50 €</div>
-    <div class="res down">−4,50 € / −4,41%</div>
-  </div>
-</div>
-</div>
+<h2>Verlauf</h2>
+PLACEHOLDER_LINE78
 
-<h2>Wache: HOLD x3</h2>
-<div class="card">
-  <div class="row">
-    <div class="tk">HIMS</div>
-    <div>10,49 € — <b>HOLD</b> · Wache: 17:51</div>
-  </div>
-  <div class="row">
-    <div class="tk">NOVO B</div>
-    <div>68,00 € — <b>HOLD</b> · Wache: 17:51</div>
-  </div>
-  <div class="row">
-    <div class="tk">Bayer</div>
-    <div>16,00 € — <b>HOLD</b> · Wache: 17:51</div>
-  </div>
-</div>
 
-<h2>Geschlossene Trades</h2>
-<div class="card">
-<div class="row">
-  <div>
-    <div class="tk">HelloFresh <span class="badge sell">SELL</span></div>
-    <div class="dim">5 Stk · gekauft 6,18 € · verkauft 6,70 €</div>
-  </div>
-  <div class="right">
-    <div class="res up">+2,60 € / +8,41%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">ARM <span class="badge sell">SELL</span></div>
-    <div class="dim">1 Stk · gekauft 99,35 € · verkauft 104,10 €</div>
-  </div>
-  <div class="right">
-    <div class="res up">+4,75 € / +4,78%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">Siemens <span class="badge sell">SELL</span></div>
-    <div class="dim">1 Stk · gekauft 224,45 € · verkauft 218,25 €</div>
-  </div>
-  <div class="right">
-    <div class="res down">−6,20 € / −2,76%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">Rheinmetall <span class="badge sell">SELL</span></div>
-    <div class="dim">1 Stk · gekauft 1.176,00 € · verkauft 1.059,00 €</div>
-  </div>
-  <div class="right">
-    <div class="res down">−117,00 € / −9,95%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">Commerzbank <span class="badge sell">SELL</span></div>
-    <div class="dim">5 Stk · gekauft 19,60 € · verkauft 19,49 €</div>
-  </div>
-  <div class="right">
-    <div class="res down">−0,55 € / −0,56%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">IONOS <span class="badge sell">SELL</span></div>
-    <div class="dim">8 Stk · gekauft 17,62 € · verkauft 18,18 €</div>
-  </div>
-  <div class="right">
-    <div class="res up">+4,48 € / +3,18%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">HelloFresh <span class="badge sell">SELL</span></div>
-    <div class="dim">5 Stk · gekauft 7,08 € · verkauft 7,78 €</div>
-  </div>
-  <div class="right">
-    <div class="res up">+3,50 € / +9,89%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">BioNTech <span class="badge sell">SELL</span></div>
-    <div class="dim">3 Stk · gekauft 88,42 € · verkauft 90,00 €</div>
-  </div>
-  <div class="right">
-    <div class="res up">+4,74 € / +1,78%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">HIMS <span class="badge sell">SELL</span></div>
-    <div class="dim">3 Stk · gekauft 9,82 € · verkauft 11,60 €</div>
-  </div>
-  <div class="right">
-    <div class="res up">+5,34 € / +18,11%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">HIMS <span class="badge sell">SELL</span></div>
-    <div class="dim">3 Stk · gekauft 10,27 € · verkauft 10,58 €</div>
-  </div>
-  <div class="right">
-    <div class="res up">+0,93 € / +3,02%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">HelloFresh <span class="badge sell">SELL</span></div>
-    <div class="dim">5 Stk · gekauft 7,26 € · verkauft 6,42 €</div>
-  </div>
-  <div class="right">
-    <div class="res down">−4,20 € / −11,57%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">NOVO B <span class="badge sell">SELL</span></div>
-    <div class="dim">3 Stk · gekauft 69,00 € · verkauft 72,50 €</div>
-  </div>
-  <div class="right">
-    <div class="res up">+10,50 € / +5,07%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">HelloFresh <span class="badge sell">SELL</span></div>
-    <div class="dim">5 Stk · gekauft 6,37 € · verkauft 6,52 €</div>
-  </div>
-  <div class="right">
-    <div class="res up">+0,75 € / +2,35%</div>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <div class="tk">PayPal <span class="badge sell">SELL</span></div>
-    <div class="dim">3 Stk · gekauft 61,00 € · verkauft 73,45 €</div>
-  </div>
-  <div class="right">
-    <div class="res up">+37,35 € / +20,38%</div>
-  </div>
-</div>
-</div>
 
-<h2>Lektionen &amp; Notizen</h2>
-<div class="card">
-  <div class="lesson">Rheinmetall (2.): Im Aufwärtstrend zu spät eingestiegen, nicht warten auf Rücksetz — 
-  nächstes Mal nur noch auf klarem Rücksetzter kaufen (mind. −5% vom Hoch). Rüstungsaktien brauchen
-  geduldige Einstiege.</div>
-  <div class="lesson">Siemens (1.): Zu hoch gekauft, überhitzter Markt im Mai — merke: nach starkem
-  Anstieg erst Konsolidierung abwarten, nicht sofort kaufen. Geduld zahlt sich aus.</div>
-  <div class="lesson">HelloFresh (3.): Gewinnmitnahme bei +2,35% war zu früh — Position hätte mehrere
-  Tage gehalten werden sollen für deutlich mehr Gewinn. In ruhigen Märkten Ziele höher stecken.</div>
-  <div class="lesson">Commerzbank: Fehlstart — kleiner Verlust. Kursziel zu ehrgeizig, zu früh
-  ausgestiegen. Nächstes Mal klare Stop-Loss und Take-Profit Marken setzen.</div>
-  <div class="lesson">IONOS (2.): Erneut Gewinnmitnahme zu früh bei +3,18% — Position hätte mehr Luft
-  verdient. Trailing-Stop oder klares Kursziel vorab definieren.</div>
-  <div class="lesson">HelloFresh (4.): −11,57% — Verlust nicht früh genug abgeschnitten. Stop-Loss
-  konsequent setzen und einhalten. Emotionaler Halt kostet Geld.</div>
-  <div class="lesson">NOVO B (2.): Zu früh bei +5% genommen — Position im Aufwärtstrend zu schnell
-  geschlossen. Next time: Trailing-Stop nutzen, Trend laufen lassen.</div>
-</div>
+<h2>Offene Positionen <span style="color:var(--dim);font-weight:500">(3)</span></h2>
+<div class="card"><div class="row">
+      <div><div class="tk">QBTS</div>
+      <div class="dim">400 € · Tag 2/90 · Einstieg 23.25 · Kurs vom 2026-06-12 17:51</div>
+      <div class="dim"><span class="up">Ziel 36</span> · <span class="down">Stop 19</span></div></div>
+      <div class="right"><div class="tk">23.76</div><div class="res up">+8.77 € (+2.19 %)</div></div></div><div class="row">
+      <div><div class="tk">IONQ</div>
+      <div class="dim">250 € · Tag 2/90 · Einstieg 56.63 · Kurs vom 2026-06-12 17:51</div>
+      <div class="dim"><span class="up">Ziel 75</span> · <span class="down">Stop 46</span></div></div>
+      <div class="right"><div class="tk">58.58</div><div class="res up">+8.61 € (+3.44 %)</div></div></div><div class="row">
+      <div><div class="tk">RGTI</div>
+      <div class="dim">120 € · Tag 2/60 · Einstieg 19.45 · Kurs vom 2026-06-12 17:51</div>
+      <div class="dim"><span class="up">Ziel 28</span> · <span class="down">Stop 16</span></div></div>
+      <div class="right"><div class="tk">21.41</div><div class="res up">+12.09 € (+10.08 %)</div></div></div></div>
+
+<h2>Themen-Konzentration <span style="color:var(--dim);font-weight:500">(Kennzahl, keine Regel)</span></h2>
+<div class="card"><div class="row"><div><div class="tk">Quantum <span class="down">⚠️ Klumpen</span></div></div><div class="right">773 € · <b>100 %</b> des investierten Kapitals</div></div></div>
+
+<h2>Alle Trades <span style="color:var(--dim);font-weight:500">(1 abgeschlossen)</span></h2>
+<div class="card"><div class="row speku">
+      <div><div class="tk">RKLB <span class="badge sell">Verkauf</span> <span class="badge speku">🔥 EXTREM</span></div>
+      <div class="dim">2026-06-12 · 15:38 Uhr · zu 106.05</div><div class="dim" style="margin-top:3px">💬 EXTREM-SPEKU beendet: Stop 119.80 nachboerslich gerissen (121.50/122.90), RTH eroeffnete aber bei 109.50 - Cover 106.05 = +4.4%. These (Sell-the-News) bestaetigte sich, der Pfad (erst Squeeze) haette uns fast rausgeworfen.</div></div>
+      <div class="right"><div>+5.25 €</div><div class="res up">+4.37 %</div></div></div><div class="row speku">
+      <div><div class="tk">RKLB <span class="badge buy">Kauf</span> <span class="badge speku">🔥 EXTREM</span></div>
+      <div class="dim">2026-06-11 · 19:55 Uhr · zu 110.90</div><div class="dim" style="margin-top:3px">💬 EXTREM-SPEKU: SpaceX-Listing-Fade - Kapital rotiert vom Proxy ins Original; Risiko: Day-1-Halo (+8-12% Sektor) -> Stop 119.80 hart</div></div>
+      <div class="right"><div>120 € · Ziel 99.8 · Stop 119.8</div></div></div><div class="row">
+      <div><div class="tk">QBTS <span class="badge buy">Kauf</span></div>
+      <div class="dim">2026-06-11 · 00:20 Uhr · zu 23.25</div><div class="dim" style="margin-top:3px">💬 Quantum-Asymmetrie: +179% Umsatz, Konsensziel 36$ = +55%, kaum YTD-gelaufen</div></div>
+      <div class="right"><div>400 € · Ziel 36.0 · Stop 18.6</div></div></div><div class="row">
+      <div><div class="tk">IONQ <span class="badge buy">Kauf</span></div>
+      <div class="dim">2026-06-11 · 00:20 Uhr · zu 56.63</div><div class="dim" style="margin-top:3px">💬 Quantum-Qualitaetsanker: Guidance 260-270M$, SkyWater-Katalysator, -33% unter Hoch</div></div>
+      <div class="right"><div>250 € · Ziel 75.0 · Stop 46.0</div></div></div><div class="row">
+      <div><div class="tk">RGTI <span class="badge buy">Kauf</span></div>
+      <div class="dim">2026-06-11 · 00:20 Uhr · zu 19.45</div><div class="dim" style="margin-top:3px">💬 Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript</div></div>
+      <div class="right"><div>120 € · Ziel 28.0 · Stop 15.5</div></div></div></div>
+
+<h2>Abendbericht</h2><div class="card"><div style="padding:13px 16px;font-size:14px;line-height:1.55;color:var(--txt)"><div class="tk" style="font-size:16px;padding-top:6px">Morgen-Briefing · Freitag, 12.06.2026 (Tag 2) — SpaceX-IPO-Tag</div>
+<div style="height:6px"></div>
+<div class="tk" style="padding-top:10px">✅ UPDATE 15:38 — RKLB-Short gecovert: +5.25 € (+4.4 %) statt Verlust!</div>
+<div>Die Eröffnung brachte die Wende: RKLB <b>gappte zur Glocke auf 109.50 und fiel weiter auf 106</b> —</div>
+<div>der Sell-the-News-Fade unserer ursprünglichen These setzte exakt zum SPCX-Start ein. Das</div>
+<div>regelkonforme Cover zur Eröffnung (106.05) verwandelte den erwarteten −10 bis −13-€-Verlust in</div>
+<div><b>+5.25 € Gewinn</b>. Ehrlich bleibt: Der *Pfad* (nachbörslicher Squeeze über den Stop) hätte uns</div>
+<div>fast vorher rausgeworfen — die These war richtig, das Timing-Risiko real. Realisiert: <b>+5.25 €</b>.</div>
+<div><b>⚠️ Alpaca-Spiegelung des Covers ausstehend</b> (Classifier-blockiert): bitte einmal ausführen:</div>
+<div>`python -c "from alpaca_bridge import alle_orders_canceln, market_order, schutz; alle_orders_canceln('RKLB'); market_order('RKLB', 1, 'buy'); schutz()"`</div>
+<div><b>⚠️ Falls du heute Früh manuell gecovert hast (~121 €):</b> sag es mir — dann korrigiere ich das</div>
+<div>Journal auf deinen echten Fill (dann wäre es ~−11 € statt +5.25 €; Ehrlichkeit vor Schönrechnen).</div>
+<div style="height:6px"></div>
+<div class="tk" style="padding-top:10px">🚨 STOP-ALARM heute Früh (Vorgeschichte): RKLB-Short — Cover zur Eröffnung PFLICHT</div>
+<div>Der Extrem-Speku-Short ist <b>nachbörslich über den Stop gelaufen</b>: RKLB schloss gestern offiziell</div>
+<div>bei 114.78 $ (+9.3 %) und handelte nach Börsenschluss bis <b>121.50 $</b> (19:59 ET) — über dem</div>
+<div>Stop 119.80. Zwei unabhängige Quellen, guard.py meldet die Verletzung (Exit 2).</div>
+<div><b>Das Day-1-Halo-Szenario, vor dem der Skeptiker gewarnt hat, ist eingetreten.</b></div>
+<div style="height:6px"></div>
+<div><b>Konsequenz (Regel, keine Diskussion):</b> Cover zur Markteröffnung 15:30/15:36 — der Eröffnungs-</div>
+<div>Check bucht zum dann gültigen Kurs. Erwarteter Verlust ~−10 bis −13 € — exakt das Risiko-Budget,</div>
+<div>mit dem der Trade geplant war (120 € Mini-Größe wegen genau dieses Szenarios).</div>
+<div style="height:6px"></div>
+<div><b>⚠️ DEINE Aufgabe jetzt:</b></div>
+<div style="padding-left:14px">&bull; Hast du gestern die <b>Stop-Buy-Order 119.80</b> beim Broker gesetzt? US-Stop-Orders greifen meist</div>
+<div>  erst zur regulären Eröffnung — sie wird dann automatisch ausgeführt. Nichts weiter tun.</div>
+<div style="padding-left:14px">&bull; KEINE Stop-Order gesetzt? Dann covere den Short <b>manuell</b> — entweder jetzt über</div>
+<div>  Tradegate/L&S (~121–122 $) oder spätestens zur US-Eröffnung. Nicht warten, nicht hoffen.</div>
+<div style="height:6px"></div>
+<div class="tk" style="padding-top:10px">Lage heute Morgen</div>
+<div style="padding-left:14px">&bull; <b>SpaceX-IPO heute:</b> Erstnotiz SPCX (135 $, 3.5–4x überzeichnet, 30 % Retail). Sonder-Fetches</div>
+<div>  15:28/15:33 stehen. Der Space-Sektor läuft heiß (RKLB +9 % gestern) — der Halo, der unseren</div>
+<div>  Short killt, macht zugleich die <b>Tranche-2-Long-Frage</b> spannend: Die messbare Stabilisierungs-</div>
+<div>  Regel entscheidet NACH dem Listing, nüchtern, ohne FOMO.</div>
+<div style="padding-left:14px">&bull; <b>Quantum-Buch stark im Premarket:</b> QBTS 24.09 (+3.6 % auf Einstand) · IONQ 58.98 (+4.1 %) ·</div>
+<div>  RGTI 21.09 (<b>+8.4 %</b>). Kein Stop in Reichweite (alle 20 %+ entfernt).</div>
+<div style="padding-left:14px">&bull; <b>Iran:</b> Trump behauptet „Krieg beendet“ + MOU, Iran dementiert — unbestätigt (eine Quelle).</div>
+<div>  Öl fällt weiter auf <b>86 $</b> — der Markt glaubt an den Deal-Track. Futures grün (Nasdaq +1.2 %).</div>
+<div style="padding-left:14px">&bull; <b>Scout-Eskalations-Alarm verworfen:</b> Quellen vom 10./11.06. (vor der Schlag-Absage),</div>
+<div>  Markt-Evidenz widerspricht → Status „unbestätigt“, nicht handelbar (neue Verifikationsregel).</div>
+<div style="height:6px"></div>
+<div class="tk" style="padding-top:10px">Plan für heute</div>
+<div>09:08–15:21 Scans (vorbörslich) · <b>15:28/15:33 SPCX-Sonder-Fetches</b> · 15:36 Eröffnungs-Check</div>
+<div>(= RKLB-Cover + Stop-Kontrolle Quantum) · 16:02 Hauptlauf (Tranche-2-Prüfung mit Stabilisierungs-</div>
+<div>Formel) · Stop-Wache bis 21:36 · 21:44 Abend-Check.</div>
+<div style="height:6px"></div>
+<div>*Depot Stand Premarket: ~2030 € (+1.5 %) inkl. eingerechnetem RKLB-Verlust. n=4, Rauschen.*</div></div></div>
+
+PLACEHOLDER_LINE166
+
+PLACEHOLDER_LINE168
+
+<h2>Automatik</h2><div class="card">
+<div class="row"><div><div class="tk">Zeitpläne</div>
+PLACEHOLDER_LINE172
+<div class="right"><span class="up">aktiv bis 19.06.2026 (noch 6 Tage)</span></div></div>
+<div style="padding:13px 16px">
+<div class="dim" style="margin-bottom:8px">Zum Verlängern: Button drücken, Text in Claude Code einfügen, Enter.</div>
+<button id="copybtn" onclick="copyPrompt()" style="width:100%;padding:12px;border:none;border-radius:12px;
+background:var(--blue);color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer">
+Verlängerungs-Prompt kopieren</button>
+<textarea id="renew" readonly style="width:100%;margin-top:8px;height:96px;background:var(--bg);color:var(--dim);
+PLACEHOLDER_LINE180
+</div></div>
+<script>
+function copyPrompt() {
+  var t = document.getElementById('renew');
+  navigator.clipboard.writeText(t.value).then(function() {
+    var b = document.getElementById('copybtn');
+    b.textContent = '✓ Kopiert'; setTimeout(function() { b.textContent = 'Verlängerungs-Prompt kopieren'; }, 2000);
+  }, function() { t.select(); document.execCommand('copy'); });
+}
+</script>
 
 <div class="note">Experiment (2000 € Einzahlungen), keine Anlageberatung. Unter 30 Trades ist jedes Ergebnis
 statistisches Rauschen — auch ein Vorsprung. Zum Vergleich: über 15 Jahre schlägt die Mehrheit
 der Profi-Fonds ihren Index in keiner einzigen US-Kategorie (SPIVA 2024).</div>
 
-</div><script type="application/json" id="agent-daten">{"stand": "12.06.2026, 17:59", "vermoegen": 2008.45, "rendite": 0.9986750000000001, "einzahlungen": 2000, "positionen": [{"ticker": "HIMS", "stueck": 3, "kurs": 10.49, "kk": 32.79, "wert": 31.47, "typ": "SPEKU"}, {"ticker": "NOVO B", "stueck": 3, "kurs": 68.0, "kk": 211.11, "wert": 204.0, "typ": "BUY"}, {"ticker": "IONOS", "stueck": 8, "kurs": 19.0, "kk": 148.16, "wert": 152.0, "typ": "BUY"}, {"ticker": "ARM", "stueck": 1, "kurs": 121.7, "kk": 97.6, "wert": 121.7, "typ": "BUY"}, {"ticker": "Rheinmetall", "stueck": 1, "kurs": 1072.0, "kk": 1120.0, "wert": 1072.0, "typ": "BUY"}, {"ticker": "Siemens", "stueck": 2, "kurs": 211.5, "kk": 416.6, "wert": 423.0, "typ": "BUY"}, {"ticker": "Fresenius", "stueck": 6, "kurs": 35.25, "kk": 210.66, "wert": 211.5, "typ": "BUY"}, {"ticker": "LVMH", "stueck": 1, "kurs": 486.0, "kk": 512.0, "wert": 486.0, "typ": "BUY"}, {"ticker": "PayPal", "stueck": 3, "kurs": 69.95, "kk": 205.14, "wert": 209.85, "typ": "BUY"}, {"ticker": "Bayer", "stueck": 4, "kurs": 16.0, "kk": 66.64, "wert": 64.0, "typ": "BUY"}, {"ticker": "Henkel Vz", "stueck": 2, "kurs": 73.8, "kk": 150.0, "wert": 147.6, "typ": "BUY"}, {"ticker": "Sto SE", "stueck": 1, "kurs": 97.5, "kk": 102.0, "wert": 97.5, "typ": "BUY"}], "wache": [{"ticker": "HIMS", "kurs": 10.49, "signal": "HOLD", "zeit": "17:51"}, {"ticker": "NOVO B", "kurs": 68.0, "signal": "HOLD", "zeit": "17:51"}, {"ticker": "Bayer", "kurs": 16.0, "signal": "HOLD", "zeit": "17:51"}], "trades": [{"ticker": "HelloFresh", "typ": "SELL", "stueck": 5, "kauf": 6.18, "verkauf": 6.7, "gewinn": 2.6, "rendite": 8.41}, {"ticker": "ARM", "typ": "SELL", "stueck": 1, "kauf": 99.35, "verkauf": 104.1, "gewinn": 4.75, "rendite": 4.78}, {"ticker": "Siemens", "typ": "SELL", "stueck": 1, "kauf": 224.45, "verkauf": 218.25, "gewinn": -6.2, "rendite": -2.76}, {"ticker": "Rheinmetall", "typ": "SELL", "stueck": 1, "kauf": 1176.0, "verkauf": 1059.0, "gewinn": -117.0, "rendite": -9.95}, {"ticker": "Commerzbank", "typ": "SELL", "stueck": 5, "kauf": 19.6, "verkauf": 19.49, "gewinn": -0.55, "rendite": -0.56}, {"ticker": "IONOS", "typ": "SELL", "stueck": 8, "kauf": 17.62, "verkauf": 18.18, "gewinn": 4.48, "rendite": 3.18}, {"ticker": "HelloFresh", "typ": "SELL", "stueck": 5, "kauf": 7.08, "verkauf": 7.78, "gewinn": 3.5, "rendite": 9.89}, {"ticker": "BioNTech", "typ": "SELL", "stueck": 3, "kauf": 88.42, "verkauf": 90.0, "gewinn": 4.74, "rendite": 1.78}, {"ticker": "HIMS", "typ": "SELL", "stueck": 3, "kauf": 9.82, "verkauf": 11.6, "gewinn": 5.34, "rendite": 18.11}, {"ticker": "HIMS", "typ": "SELL", "stueck": 3, "kauf": 10.27, "verkauf": 10.58, "gewinn": 0.93, "rendite": 3.02}, {"ticker": "HelloFresh", "typ": "SELL", "stueck": 5, "kauf": 7.26, "verkauf": 6.42, "gewinn": -4.2, "rendite": -11.57}, {"ticker": "NOVO B", "typ": "SELL", "stueck": 3, "kauf": 69.0, "verkauf": 72.5, "gewinn": 10.5, "rendite": 5.07}, {"ticker": "HelloFresh", "typ": "SELL", "stueck": 5, "kauf": 6.37, "verkauf": 6.52, "gewinn": 0.75, "rendite": 2.35}, {"ticker": "PayPal", "typ": "SELL", "stueck": 3, "kauf": 61.0, "verkauf": 73.45, "gewinn": 37.35, "rendite": 20.38}], "notizen": [{"text": "Rheinmetall (2.): Im Aufwärtstrend zu spät eingestiegen, nicht warten auf Rücksetz — nächstes Mal nur noch auf klarem Rücksetzter kaufen (mind. −5% vom Hoch). Rüstungsaktien brauchen geduldige Einstiege."}, {"text": "Siemens (1.): Zu hoch gekauft, überhitzter Markt im Mai — merke: nach starkem Anstieg erst Konsolidierung abwarten, nicht sofort kaufen. Geduld zahlt sich aus."}, {"text": "HelloFresh (3.): Gewinnmitnahme bei +2,35% war zu früh — Position hätte mehrere Tage gehalten werden sollen für deutlich mehr Gewinn. In ruhigen Märkten Ziele höher stecken."}, {"text": "Commerzbank: Fehlstart — kleiner Verlust. Kursziel zu ehrgeizig, zu früh ausgestiegen. Nächstes Mal klare Stop-Loss und Take-Profit Marken setzen."}, {"text": "IONOS (2.): Erneut Gewinnmitnahme zu früh bei +3,18% — Position hätte mehr Luft verdient. Trailing-Stop oder klares Kursziel vorab definieren."}, {"text": "HelloFresh (4.): −11,57% — Verlust nicht früh genug abgeschnitten. Stop-Loss konsequent setzen und einhalten. Emotionaler Halt kostet Geld."}, {"text": "NOVO B (2.): Zu früh bei +5% genommen — Position im Aufwärtstrend zu schnell geschlossen. Next time: Trailing-Stop nutzen, Trend laufen lassen."}, {"text": "Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript"}]}</script></body></html>
+PLACEHOLDER_LINE196

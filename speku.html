@@ -1,1 +1,136 @@
-PLACEHOLDER_CONTENT_TO_BE_REPLACED
+<!DOCTYPE html>
+<html lang="de"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>Speku-Depot</title>
+<style>
+:root { --bg:#000000; --card:#1c1c1e; --txt:#f5f5f7; --dim:#98989d; --line:#2c2c2e;
+        --up:#30d158; --down:#ff453a; --blue:#0a84ff; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { margin:0; background:var(--bg); color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+  padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased; }
+.wrap { max-width:1000px; margin:0 auto; }
+.tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:var(--card);
+  border-radius:12px; padding:4px; margin-bottom:4px; }
+.tab { text-align:center; padding:9px 0; border-radius:9px; font-size:14px; font-weight:600;
+  color:var(--dim); text-decoration:none; }
+.tab.active { background:#3a3a3c; color:var(--txt); }
+.hero { text-align:center; padding:28px 0 8px; }
+.hero .label { font-size:15px; color:var(--dim); font-weight:500; }
+.hero .big { font-size:48px; font-weight:700; letter-spacing:-1px; margin:2px 0; font-variant-numeric:tabular-nums; }
+.pill { display:inline-block; font-size:15px; font-weight:600; padding:3px 12px; border-radius:999px; }
+.pill.up { background:rgba(52,199,89,.15); color:var(--up); }
+.pill.down { background:rgba(255,59,48,.15); color:var(--down); }
+.stamp { font-size:12px; color:var(--dim); margin-top:8px; }
+.compare { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:20px 0; }
+.chip { background:var(--card); border-radius:16px; padding:12px 10px; text-align:center; }
+.chip .t { font-size:11px; color:var(--dim); font-weight:500; }
+.chip .v { font-size:17px; font-weight:600; margin-top:2px; font-variant-numeric:tabular-nums; }
+.chip .s { font-size:12px; font-weight:600; }
+.up { color:var(--up); } .down { color:var(--down); }
+h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px; }
+.card { background:var(--card); border-radius:18px; overflow:hidden; }
+.card img { display:block; width:100%; border-radius:18px; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:13px 16px; border-bottom:.5px solid var(--line); font-size:15px; }
+.row:last-child { border-bottom:none; }
+.tk { font-weight:600; }
+.dim { color:var(--dim); font-size:13px; margin-top:1px; }
+.right { text-align:right; font-variant-numeric:tabular-nums; }
+.res { font-weight:600; font-size:13px; }
+.badge { font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; vertical-align:1px; }
+.badge.buy { background:rgba(0,113,227,.12); color:var(--blue); }
+.badge.sell { background:rgba(255,149,0,.15); color:#ff9500; }
+.badge.speku { background:var(--down); color:#fff; }
+.row.speku { background:rgba(255,69,58,.14); box-shadow:inset 4px 0 0 var(--down); }
+.note { font-size:12px; color:var(--dim); line-height:1.5; margin:28px 8px 0; text-align:center; }
+.lesson { padding:12px 16px; font-size:14px; border-bottom:.5px solid var(--line); }
+</style></head><body><div class="wrap">
+
+<div id="flotten-nav" data-active="speku-detail"></div><script src="https://cedriceckert85-wq.github.io/review/nav.js" defer></script>
+
+<div id="stale-banner" style="display:none;background:rgba(255,69,58,.2);border:1px solid var(--down);
+border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px;color:var(--down);font-weight:600">
+⚠️ Diese Seite ist veraltet — der letzte Automatik-Lauf liegt über 24 Stunden zurück.</div>
+<script>
+(function() { var built = 1781365860;if (Date.now()/1000 - built > 86400) document.getElementById('stale-banner').style.display='block'; })();
+</script>
+
+<div class="hero">
+  <div class="label">Speku-Depot (Zukunfts-Mandat) · Tag 2</div>
+  <div class="big">2 034.95 €</div>
+  <span class="pill up">+1.75 % auf 2000 € Einzahlungen</span>
+  <div class="stamp">Stand 12.06.2026, 17:51 · davon 1235 € Cash · aktualisiert alle ~15 Min (Handelszeit)</div>
+  
+</div>
+
+<div class="compare">
+  <div class="chip"><div class="t">Dein Depot</div><div class="v">2008 €</div><div class="s"><span class="up">+0.42 %</span></div></div>
+  <div class="chip"><div class="t">Nur SPY gekauft</div><div class="v">2037 €</div><div class="s"><span class="up">+1.86 %</span></div></div>
+  <div class="chip"><div class="t">Tagesgeld 2 %</div><div class="v">2000 €</div><div class="s"><span class="up">+0.01 %</span></div></div></div>
+
+<h2>Positionen</h2><div class="card">
+<div class="row speku">
+  <div><span class="tk">NVDA <span class="badge speku">SPEKU</span></span><div class="dim">10 Stk · Ø 79.93 · jetzt 79.01 · Ziel 105 · Stop 68</div></div>
+  <div class="right"><div>790.10 €</div><div class="res down">−9.20 € / −1.15 %</div></div>
+</div>
+<div class="row speku">
+  <div><span class="tk">SMCI <span class="badge speku">SPEKU</span></span><div class="dim">20 Stk · Ø 38.20 · jetzt 35.11 · Ziel 55 · Stop 29</div></div>
+  <div class="right"><div>702.20 €</div><div class="res down">−61.80 € / −8.09 %</div></div>
+</div>
+<div class="row speku">
+  <div><span class="tk">GTI <span class="badge speku">SPEKU</span></span><div class="dim">6 Stk · Ø 19.45 · jetzt 14.63 · Ziel 28 · Stop 15.5</div></div>
+  <div class="right"><div>87.78 €</div><div class="res down">−28.92 € / −24.79 %</div></div>
+</div>
+<div class="row">
+  <div><span class="tk">Cash</span><div class="dim">Nicht investiert</div></div>
+  <div class="right"><div>1 235.00 €</div><div class="res dim">—</div></div>
+</div>
+</div>
+
+<h2>Signale</h2><div class="card">
+<div class="row">
+  <div><span class="tk">NVDA</span><div class="dim">HOLD — Stop 68, Ziel 105</div></div>
+  <div class="right"><div class="res">HOLD</div></div>
+</div>
+<div class="row">
+  <div><span class="tk">SMCI</span><div class="dim">HOLD — Stop 29, Ziel 55</div></div>
+  <div class="right"><div class="res">HOLD</div></div>
+</div>
+<div class="row">
+  <div><span class="tk">GTI</span><div class="dim">HOLD — Stop 15.5, Ziel 28</div></div>
+  <div class="right"><div class="res">HOLD</div></div>
+</div>
+</div>
+
+<h2>Performance-Chart</h2><div class="card">
+  <img src="chart_speku.png" alt="Speku Performance Chart" onerror="this.style.display='none'">
+</div>
+
+<h2>Transaktionslog</h2><div class="card">
+
+<div class="row">
+  <div><span class="tk">SMCI <span class="badge buy">BUY</span></span><div class="dim">10.06.2026 · 10 Stk à 38.20 €</div></div>
+  <div class="right"><div>382 €</div><div class="res dim">—</div></div>
+</div>
+<div class="row">
+  <div><span class="tk">NVDA <span class="badge buy">BUY</span></span><div class="dim">10.06.2026 · 10 Stk à 79.93 €</div></div>
+  <div class="right"><div>799.30 €</div><div class="res dim">—</div></div>
+</div>
+<div class="row">
+  <div><span class="tk">GTI <span class="badge buy">BUY</span></span><div class="dim">10.06.2026 · 6 Stk à 19.45 €</div></div>
+  <div class="right"><div>116.70 €</div><div class="res dim">—</div></div>
+</div>
+<div class="row">
+  <div><span class="tk">SMCI <span class="badge buy">BUY</span></span><div class="dim">11.06.2026 · 10 Stk à 38.20 €</div></div>
+  <div class="right"><div>382 €</div><div class="res dim">—</div></div>
+</div>
+</div>
+
+<p class="note">Speku-Depot · rein spekulativ · kein Anlagemandat · Stop-Loss beachten</p>
+
+<script type="application/json" id="speku-data">{"depot_wert": 2034.95, "einzahlungen": 2000, "rendite_pct": 1.75, "cash": 1235, "stand": "12.06.2026 17:51", "positionen": [{"ticker": "NVDA", "stueck": 10, "kaufkurs": 79.93, "aktuell": 79.01, "wert": 790.1, "gewinn_eur": -9.2, "gewinn_pct": -1.15, "ziel": 105.0, "stop": 68.0, "signal": "HOLD"}, {"ticker": "SMCI", "stueck": 20, "kaufkurs": 38.2, "aktuell": 35.11, "wert": 702.2, "gewinn_eur": -61.8, "gewinn_pct": -8.09, "ziel": 55.0, "stop": 29.0, "signal": "HOLD"}, {"ticker": "GTI", "stueck": 6, "kaufkurs": 19.45, "aktuell": 14.63, "wert": 87.78, "gewinn_eur": -28.92, "gewinn_pct": -24.79, "ziel": 28.0, "stop": 15.5, "signal": "HOLD"}], "transaktionen": [{"datum": "10.06.2026", "ticker": "SMCI", "aktion": "Kauf", "preis": 38.2, "info": "382 € · Ziel 55 · Stop 29", "ergebnis": "", "grund": "AI-Server-Comeback: Nvidia-Zuliefer-Play nach Kurshalbierung"}, {"datum": "10.06.2026", "ticker": "NVDA", "aktion": "Kauf", "preis": 79.93, "info": "799.30 € · Ziel 105 · Stop 68", "ergebnis": "", "grund": "Leitindex KI-Infrastruktur: Blackwell-Zyklus läuft"}, {"datum": "10.06.2026", "ticker": "GTI", "aktion": "Kauf", "preis": 19.45, "info": "120 € · Ziel 28.0 · Stop 15.5", "ergebnis": "", "grund": "Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript"}]}</script></body></html>

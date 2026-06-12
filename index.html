@@ -1,1 +1,498 @@
-PLACEHOLDER_WILL_BE_REPLACED
+<!DOCTYPE html>
+<html lang="de"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>Depot</title>
+<style>
+:root { --bg:#000000; --card:#1c1c1e; --txt:#f5f5f7; --dim:#98989d; --line:#2c2c2e;
+        --up:#30d158; --down:#ff453a; --blue:#0a84ff; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { margin:0; background:var(--bg); color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+  padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased; }
+.wrap { max-width:1000px; margin:0 auto; }
+.tabs { display:flex; background:#161618; border-radius:14px; padding:4px; gap:4px; }
+.tabs a { flex:1; text-align:center; padding:10px 4px; border-radius:10px; color:var(--dim);
+  text-decoration:none; font-size:14px; font-weight:600; }
+.tabs a.active { background:#2f2f31; color:var(--txt); }
+.hero { text-align:center; padding:24px 0 8px; }
+.hero .label { font-size:15px; color:var(--dim); font-weight:500; }
+.hero .big { font-size:48px; font-weight:700; letter-spacing:-1px; margin:2px 0; font-variant-numeric:tabular-nums; }
+.pill { display:inline-block; font-size:15px; font-weight:600; padding:3px 12px; border-radius:999px; }
+.pill.up { background:rgba(48,209,88,.15); color:var(--up); }
+.pill.down { background:rgba(255,69,58,.15); color:var(--down); }
+.stamp { font-size:12px; color:var(--dim); margin-top:8px; }
+.compare { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:20px 0; }
+.chip { background:var(--card); border-radius:16px; padding:12px 10px; text-align:center; }
+.chip .t { font-size:11px; color:var(--dim); font-weight:500; }
+.chip .v { font-size:17px; font-weight:600; margin-top:2px; font-variant-numeric:tabular-nums; }
+.chip .s { font-size:12px; font-weight:600; }
+.up { color:var(--up); } .down { color:var(--down); }
+h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px; }
+.card { background:var(--card); border-radius:18px; overflow:hidden; }
+.card img { display:block; width:100%; border-radius:18px; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:13px 16px; border-bottom:.5px solid var(--line); font-size:15px; }
+.row:last-child { border-bottom:none; }
+.tk { font-weight:600; }
+.dim { color:var(--dim); font-size:13px; margin-top:1px; }
+.right { text-align:right; font-variant-numeric:tabular-nums; }
+.res { font-weight:600; font-size:13px; }
+.badge { font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; vertical-align:1px; }
+.badge.buy { background:rgba(10,132,255,.12); color:var(--blue); }
+.badge.sell { background:rgba(255,69,58,.12); color:var(--down); }
+.badge.hold { background:rgba(152,152,157,.12); color:var(--dim); }
+.s-up { background:rgba(48,209,88,.12); color:var(--up); }
+.s-down { background:rgba(255,69,58,.12); color:var(--down); }
+.sec { margin-top:12px; }
+/* News */
+.news-item { padding:13px 16px; border-bottom:.5px solid var(--line); }
+.news-item:last-child { border-bottom:none; }
+.news-item .hl { font-size:15px; font-weight:600; line-height:1.35; }
+.news-item .meta { font-size:12px; color:var(--dim); margin-top:4px; }
+/* Watchlist */
+.wl-row { display:flex; justify-content:space-between; align-items:center;
+  padding:13px 16px; border-bottom:.5px solid var(--line); font-size:15px; gap:10px; }
+.wl-row:last-child { border-bottom:none; }
+.wl-name { font-weight:600; }
+.wl-sub { font-size:12px; color:var(--dim); margin-top:1px; }
+.wl-right { text-align:right; font-variant-numeric:tabular-nums; }
+.wl-price { font-weight:600; }
+.wl-chg { font-size:13px; font-weight:600; }
+/* Signals */
+.sig-row { display:flex; align-items:flex-start; gap:12px;
+  padding:13px 16px; border-bottom:.5px solid var(--line); }
+.sig-row:last-child { border-bottom:none; }
+.sig-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center;
+  justify-content:center; font-size:17px; flex-shrink:0; }
+.sig-icon.buy-bg { background:rgba(10,132,255,.12); }
+.sig-icon.sell-bg { background:rgba(255,69,58,.12); }
+.sig-icon.hold-bg { background:rgba(152,152,157,.12); }
+.sig-body { flex:1; }
+.sig-top { display:flex; justify-content:space-between; align-items:center; }
+.sig-tk { font-weight:700; font-size:15px; }
+.sig-price { font-variant-numeric:tabular-nums; font-size:15px; font-weight:600; }
+.sig-info { font-size:13px; color:var(--dim); margin-top:3px; }
+.sig-meta { font-size:12px; color:var(--dim); margin-top:4px; }
+/* Analyse */
+.an-row { display:flex; align-items:flex-start; gap:12px;
+  padding:13px 16px; border-bottom:.5px solid var(--line); }
+.an-row:last-child { border-bottom:none; }
+.an-icon { width:36px; height:36px; border-radius:10px; background:rgba(10,132,255,.1);
+  display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+.an-body { flex:1; }
+.an-top { display:flex; justify-content:space-between; align-items:center; }
+.an-tk { font-weight:700; font-size:15px; }
+.an-act { font-size:13px; font-weight:600; }
+.an-info { font-size:13px; color:var(--dim); margin-top:3px; }
+.an-meta { font-size:12px; color:var(--dim); margin-top:4px; }
+/* Gauge */
+.gauge-wrap { text-align:center; padding:20px 0 12px; }
+.gauge-label { font-size:13px; color:var(--dim); margin-top:10px; font-weight:600; }
+.gauge-val { font-size:28px; font-weight:700; margin-top:4px; }
+/* Bar */
+.bar-row { display:flex; align-items:center; gap:10px; padding:7px 16px; font-size:13px; }
+.bar-lbl { width:80px; color:var(--dim); flex-shrink:0; }
+.bar-bg { flex:1; height:6px; background:var(--line); border-radius:3px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:3px; }
+.bar-val { width:40px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
+/* Toggle tabs */
+.seg { display:flex; background:#161618; border-radius:12px; padding:3px; gap:3px; margin-bottom:16px; }
+.seg button { flex:1; padding:8px 4px; border:none; background:none; color:var(--dim);
+  font-size:13px; font-weight:600; border-radius:9px; cursor:pointer; }
+.seg button.active { background:#2f2f31; color:var(--txt); }
+/* Positions table */
+.pos-tbl { width:100%; border-collapse:collapse; font-size:13px; }
+.pos-tbl th { text-align:right; color:var(--dim); font-weight:500; padding:6px 10px; border-bottom:.5px solid var(--line); }
+.pos-tbl th:first-child { text-align:left; }
+.pos-tbl td { text-align:right; padding:10px 10px; border-bottom:.5px solid var(--line);
+  font-variant-numeric:tabular-nums; }
+.pos-tbl td:first-child { text-align:left; font-weight:600; }
+.pos-tbl tr:last-child td { border-bottom:none; }
+</style>
+</head><body>
+<div class="wrap">
+
+<!-- TABS -->
+<nav class="tabs" style="margin-bottom:18px">
+  <a href="#" class="active" onclick="show('depot');return false">Depot</a>
+  <a href="#" onclick="show('markt');return false">Markt</a>
+  <a href="#" onclick="show('signale');return false">Signale</a>
+  <a href="#" onclick="show('analyse');return false">Analyse</a>
+  <a href="#" onclick="show('news');return false">News</a>
+</nav>
+
+<!-- ═══════════════════════ DEPOT ═══════════════════════ -->
+<div id="depot">
+
+  <div class="hero">
+    <div class="label">Depotwert</div>
+    <div class="big" id="dv">–</div>
+    <div id="dpill"></div>
+    <div class="stamp" id="dstamp"></div>
+  </div>
+
+  <div class="compare" id="compare"></div>
+
+  <div class="seg">
+    <button class="active" onclick="depotSeg('positionen',this)">Positionen</button>
+    <button onclick="depotSeg('verlauf',this)">Verlauf</button>
+    <button onclick="depotSeg('allokation',this)">Allokation</button>
+  </div>
+
+  <!-- Positionen -->
+  <div id="seg-positionen">
+    <h2>Positionen</h2>
+    <div class="card">
+      <table class="pos-tbl" id="pos-tbl"></table>
+    </div>
+  </div>
+
+  <!-- Verlauf -->
+  <div id="seg-verlauf" style="display:none">
+    <h2>Performance-Verlauf</h2>
+    <div class="card" style="padding:16px">
+      <canvas id="perfChart" height="200"></canvas>
+    </div>
+    <h2>Transaktionen</h2>
+    <div class="card" id="tx-list"></div>
+  </div>
+
+  <!-- Allokation -->
+  <div id="seg-allokation" style="display:none">
+    <h2>Allokation</h2>
+    <div class="card" style="padding:16px">
+      <canvas id="allocChart" height="260"></canvas>
+    </div>
+  </div>
+
+</div><!-- /depot -->
+
+<!-- ═══════════════════════ MARKT ═══════════════════════ -->
+<div id="markt" style="display:none">
+
+  <div class="hero" style="padding-bottom:4px">
+    <div class="label">Marktüberblick</div>
+    <div class="stamp" id="mstamp"></div>
+  </div>
+
+  <div class="seg">
+    <button class="active" onclick="marktSeg('indizes',this)">Indizes</button>
+    <button onclick="marktSeg('sentiment',this)">Sentiment</button>
+    <button onclick="marktSeg('watchlist',this)">Watchlist</button>
+  </div>
+
+  <div id="seg-indizes">
+    <h2>Indizes & Futures</h2>
+    <div class="card" id="idx-list"></div>
+    <h2>Sektoren (1W)</h2>
+    <div class="card" id="sect-list"></div>
+  </div>
+
+  <div id="seg-sentiment" style="display:none">
+    <h2>Fear & Greed</h2>
+    <div class="card">
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 200 110" width="200">
+          <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#2c2c2e" stroke-width="16" stroke-linecap="round"/>
+          <path id="gaugePath" d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#30d158" stroke-width="16" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="125"/>
+          <text id="gaugeText" x="100" y="95" text-anchor="middle" fill="#f5f5f7" font-size="28" font-weight="700">–</text>
+        </svg>
+        <div class="gauge-label" id="gaugeLabel">–</div>
+      </div>
+      <div class="row" style="border-top:.5px solid var(--line)">
+        <span class="dim" style="color:var(--dim)">Vorwoche</span><span id="fgPrev">–</span>
+      </div>
+      <div class="row"><span class="dim" style="color:var(--dim)">Vormonat</span><span id="fgMonth">–</span></div>
+    </div>
+    <h2>VIX</h2>
+    <div class="card" id="vix-card"></div>
+    <h2>Put/Call-Ratio</h2>
+    <div class="card" id="pcr-card"></div>
+    <h2>Marktbreite</h2>
+    <div class="card" id="breadth-card"></div>
+  </div>
+
+  <div id="seg-watchlist" style="display:none">
+    <h2>Watchlist</h2>
+    <div class="card" id="wl-list"></div>
+  </div>
+
+</div><!-- /markt -->
+
+<!-- ═══════════════════════ SIGNALE ═══════════════════════ -->
+<div id="signale" style="display:none">
+  <h2 style="margin-top:8px">Handelssignale</h2>
+  <div class="card" id="sig-list"></div>
+</div>
+
+<!-- ═══════════════════════ ANALYSE ═══════════════════════ -->
+<div id="analyse" style="display:none">
+  <h2 style="margin-top:8px">Analyse-Ideen</h2>
+  <div class="card" id="an-list"></div>
+</div>
+
+<!-- ═══════════════════════ NEWS ═══════════════════════ -->
+<div id="news" style="display:none">
+  <h2 style="margin-top:8px">Aktuelle News</h2>
+  <div class="card" id="news-list"></div>
+</div>
+
+</div><!-- /wrap -->
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const DATA = {"depot":{"wert":19707.15,"einstand":17953.71,"pnl_abs":1753.44,"pnl_pct":9.77,"vortag_abs":29.19,"vortag_pct":0.15,"stand":"12.06.2025 18:13","positionen":[{"tk":"NVDA","name":"Nvidia","stueck":35,"kurs":131.43,"kurs_eur":115.5,"einstand":109.5,"pnl_pct":5.48,"pnl_abs":210.0,"wert":4042.5,"anteil":20.51},{"tk":"MSFT","name":"Microsoft","stueck":12,"kurs":452.72,"kurs_eur":397.98,"einstand":390.0,"pnl_pct":2.05,"pnl_abs":95.76,"wert":4775.76,"anteil":24.23},{"tk":"AMZN","name":"Amazon","stueck":18,"kurs":209.9,"kurs_eur":184.5,"einstand":175.0,"pnl_pct":5.43,"pnl_abs":171.0,"wert":3321.0,"anteil":16.85},{"tk":"GOOGL","name":"Alphabet","stueck":22,"kurs":176.08,"kurs_eur":154.74,"einstand":145.0,"pnl_pct":6.72,"pnl_abs":214.28,"wert":3404.28,"anteil":17.27},{"tk":"AAPL","name":"Apple","stueck":20,"kurs":201.45,"kurs_eur":177.0,"einstand":170.0,"pnl_pct":4.12,"pnl_abs":140.0,"wert":3540.0,"anteil":17.96},{"tk":"Cash","name":"Liquidität","stueck":1,"kurs":623.61,"kurs_eur":623.61,"einstand":623.61,"pnl_pct":0.0,"pnl_abs":0.0,"wert":623.61,"anteil":3.16}],"verlauf":[{"d":"31.03","v":16800},{"d":"07.04","v":15900},{"d":"14.04","v":17200},{"d":"22.04","v":17800},{"d":"30.04","v":18200},{"d":"07.05","v":18600},{"d":"14.05","v":19100},{"d":"21.05","v":19300},{"d":"28.05","v":19500},{"d":"04.06","v":19550},{"d":"11.06","v":19678},{"d":"12.06","v":19707}],"transaktionen":[{"datum":"10.06.2025","tk":"NVDA","aktion":"Kauf","stueck":5,"preis":112.5,"eur":562.5,"info":"Nachkauf nach Rücksetzer"},{"datum":"05.06.2025","tk":"AAPL","aktion":"Halten","stueck":20,"preis":201.45,"eur":null,"info":"Stop auf 185 € nachgezogen"},{"datum":"28.05.2025","tk":"MSFT","aktion":"Halten","stueck":12,"preis":397.98,"eur":null,"info":"Kein Handlungsbedarf"},{"datum":"14.05.2025","tk":"AMZN","aktion":"Kauf","stueck":3,"preis":171.0,"eur":513.0,"info":"Breakout über 170"},{"datum":"02.05.2025","tk":"GOOGL","aktion":"Kauf","stueck":5,"preis":148.0,"eur":740.0,"info":"Einstieg nach Earnings"}]},"markt":{"stand":"12.06.2025 18:13","indizes":[{"name":"S&P 500","wert":5956.06,"chg_pct":0.57,"ytd":1.0,"trend":"▲"},{"name":"Nasdaq 100","wert":21609.59,"chg_pct":0.73,"ytd":2.4,"trend":"▲"},{"name":"Dow Jones","wert":42863.86,"chg_pct":0.24,"ytd":-1.8,"trend":"▲"},{"name":"DAX","wert":24064.26,"chg_pct":0.09,"ytd":18.6,"trend":"▲"},{"name":"MDAX","wert":27814.28,"chg_pct":0.74,"ytd":14.2,"trend":"▲"},{"name":"TecDAX","wert":3782.34,"chg_pct":0.3,"ytd":12.5,"trend":"▲"},{"name":"Russell 2000","wert":2119.55,"chg_pct":0.34,"ytd":-5.6,"trend":"▲"},{"name":"EUR/USD","wert":1.1381,"chg_pct":-0.28,"ytd":8.3,"trend":"▼"},{"name":"Gold","wert":3348.7,"chg_pct":0.24,"ytd":27.0,"trend":"▲"},{"name":"Crude Oil WTI","wert":73.68,"chg_pct":0.12,"ytd":-8.5,"trend":"▲"},{"name":"US 10Y Yield","wert":4.48,"chg_pct":0.02,"ytd":0.0,"trend":"▲"},{"name":"Bitcoin","wert":105663,"chg_pct":0.66,"ytd":13.6,"trend":"▲"}],"sektoren":[{"name":"Technologie","chg":3.2,"etf":"XLK"},{"name":"Kommunikation","chg":2.1,"etf":"XLC"},{"name":"Nicht-Basiskons.","chg":1.4,"etf":"XLY"},{"name":"Finanzen","chg":0.8,"etf":"XLF"},{"name":"Industrie","chg":0.3,"etf":"XLI"},{"name":"Gesundheit","chg":-0.4,"etf":"XLV"},{"name":"Versorger","chg":-0.7,"etf":"XLU"},{"name":"Basiskonsumgüter","chg":-1.1,"etf":"XLP"},{"name":"Immobilien","chg":-1.5,"etf":"XLRE"},{"name":"Energie","chg":-1.8,"etf":"XLE"},{"name":"Rohstoffe","chg":-2.1,"etf":"XLB"}],"sentiment":{"fg":72,"fg_label":"Gier","fg_prev":68,"fg_month":55,"vix":{"wert":17.84,"chg_pct":-3.2,"interpretation":"Entspannt — Markt in Risk-on-Modus"},"pcr":{"wert":0.72,"interpretation":"Neutral-bullish"},"breadth":{"sp500_above_200d":64,"sp500_above_50d":58,"new_highs":87,"new_lows":12}},"watchlist":[{"tk":"CEG","name":"Constellation Energy","kurs":252.69,"kurs_eur":222.04,"chg_pct":1.23},{"tk":"PLTR","name":"Palantir","kurs":143.28,"kurs_eur":125.91,"chg_pct":2.87},{"tk":"TSM","name":"TSMC ADR","kurs":196.81,"kurs_eur":172.94,"chg_pct":0.54},{"tk":"ASML","name":"ASML Holding","kurs":726.3,"kurs_eur":726.3,"chg_pct":1.11},{"tk":"SAP","name":"SAP SE","kurs":285.2,"kurs_eur":285.2,"chg_pct":0.62},{"tk":"LIN","name":"Linde","kurs":468.5,"kurs_eur":411.6,"chg_pct":-0.33}]},"signale":[{"tk":"NVDA","aktion":"HOLD","preis":115.5,"info":"Stop 104 · Ziel 135","ergebnis":"+5.5 %","grund":"Kurs hält 50-Tage-Linie, KI-Nachfrage stabil"},{"tk":"MSFT","aktion":"HOLD","preis":397.98,"info":"Stop 375 · Ziel 430","ergebnis":"+2.0 %","grund":"Copilot-Monetarisierung trägt; keine Überhitzung"},{"tk":"AMZN","aktion":"HOLD","preis":184.5,"info":"Stop 168 · Ziel 205","ergebnis":"+5.4 %","grund":"AWS-Wachstum beschleunigt, Breakout bestätigt"},{"tk":"GOOGL","aktion":"HOLD","preis":154.74,"info":"Stop 140 · Ziel 175","ergebnis":"+6.7 %","grund":"Gemini-Integration treibt Search-Monetarisierung"},{"tk":"AAPL","aktion":"HOLD","preis":177.0,"info":"Stop 185 (nachgezogen)","ergebnis":"+4.1 %","grund":"Services wachsen, iPhone-Upgrade-Zyklus rückt näher"},{"tk":"PLTR","aktion":"BEOBACHTEN","preis":125.91,"info":"Einstieg > 130","ergebnis":"","grund":"KI-Behördenaufträge; Kurs über 200-Tage-Linie"},{"tk":"CEG","aktion":"BEOBACHTEN","preis":222.04,"info":"Einstieg > 228","ergebnis":"","grund":"Nuklear-Comeback; Microsoft-Datencenter-Deal"},{"tk":"CASH","aktion":"HALTEN","preis":null,"info":"3 % Liquiditätspuffer","ergebnis":"","grund":"Kein attraktiver Neueinstieg unter aktuellen Bewertungen"}],"analyse":[{"tk":"NVDA","titel":"Nvidia – KI-Superzyklus intakt","aktion":"Übergewichten","tp":135.0,"stop":104.0,"info":"Blackwell-Chip-Familie treibt Rechenzentrum-Umsatz; Margin-Expansion erwartet. H20-Exportrestriktion bleibt Risiko.","quelle":"Interne Analyse","datum":"11.06.2025"},{"tk":"MSFT","titel":"Microsoft – Copilot-ROI sichtbar","aktion":"Übergewichten","tp":430.0,"stop":375.0,"info":"Azure-Wachstum 33 % YoY; Copilot-ARPU steigt. KGV 32 fair bei 15 %+ Gewinnwachstum.","quelle":"Interne Analyse","datum":"10.06.2025"},{"tk":"AMZN","titel":"Amazon – AWS beschleunigt","aktion":"Übergewichten","tp":205.0,"stop":168.0,"info":"AWS Q1 +17 % YoY; GenAI-Backlog 3× YoY. Retail-Margen verbessern sich strukturell.","quelle":"Interne Analyse","datum":"09.06.2025"},{"tk":"GOOGL","titel":"Alphabet – Search bleibt dominant","aktion":"Übergewichten","tp":175.0,"stop":140.0,"info":"AI Overviews steigern CTR; YouTube Premium wächst. Bewertung: KGV 21 günstig vs. Peers.","quelle":"Interne Analyse","datum":"08.06.2025"},{"tk":"CEG","titel":"Constellation Energy – Nuklear-Thema","aktion":"Beobachten","tp":273.0,"stop":237.0,"info":"50 € · Ziel 273.0 · Stop 237.0","ergebnis":"","grund":"KI-Rechenzentren brauchen Strom: Nuklear-Thema (TMI/Microsoft)"}],"news":[{"hl":"Fed hält Zinsen stabil – Powell signalisiert keine Eile bei Senkungen","quelle":"Reuters","zeit":"12.06.2025, 14:22","tag":"Makro"},{"hl":"Nvidia übertrifft Erwartungen: Blackwell-Nachfrage höher als erwartet","quelle":"Bloomberg","zeit":"12.06.2025, 11:05","tag":"NVDA"},{"hl":"Amazon Web Services kündigt neue KI-Infrastrukturregion in Frankfurt an","quelle":"CNBC","zeit":"12.06.2025, 09:30","tag":"AMZN"},{"hl":"DAX auf Rekordhoch: Exportstärke trotz Euro-Anstieg","quelle":"Handelsblatt","zeit":"12.06.2025, 08:15","tag":"DAX"},{"hl":"Apple WWDC: KI-Features für iPhone 17 angekündigt","quelle":"The Verge","zeit":"11.06.2025, 22:10","tag":"AAPL"},{"hl":"Microsoft Copilot+ PCs: Surface-Reihe mit Snapdragon X Elite","quelle":"Microsoft Blog","zeit":"11.06.2025, 18:00","tag":"MSFT"},{"hl":"Alphabet: Google I/O zeigt Gemini-Integration in alle Produkte","quelle":"TechCrunch","zeit":"11.06.2025, 15:30","tag":"GOOGL"},{"hl":"Ölpreis steigt nach überraschendem Lagerabbau in den USA","quelle":"Reuters","zeit":"11.06.2025, 12:00","tag":"Öl"},{"hl":"EZB-Protokoll: Mehrheit für weitere Zinssenkung im Juli","quelle":"FT","zeit":"10.06.2025, 16:45","tag":"EZB"},{"hl":"Palantir gewinnt Milliardenvertrag mit US-Verteidigungsministerium","quelle":"WSJ","zeit":"10.06.2025, 14:20","tag":"PLTR"},{"hl":"Constellation Energy: Microsoft verlängert Nuklear-Stromvertrag um 20 Jahre","quelle":"Bloomberg","zeit":"10.06.2025, 10:00","tag":"CEG"},{"hl":"VIX fällt auf 17 – Risk-on-Stimmung dominiert die Märkte","quelle":"MarketWatch","zeit":"09.06.2025, 18:30","tag":"Sentiment"}]};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmt = (v,d=2) => v==null?'–':v.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtEur = v => v==null?'–':'€ '+fmt(v);
+const chgClass = v => v>0?'up':v<0?'down':'';
+const arrow = v => v>0?'▲':v<0?'▼':'–';
+
+// ─── NAV ─────────────────────────────────────────────────────────────────────
+const sections = ['depot','markt','signale','analyse','news'];
+function show(id){
+  sections.forEach(s=>{ $(s).style.display = s===id?'block':'none'; });
+  document.querySelectorAll('.tabs a').forEach((a,i)=>{
+    a.classList.toggle('active', sections[i]===id);
+  });
+}
+
+// ─── DEPOT ───────────────────────────────────────────────────────────────────
+function renderDepot(){
+  const d = DATA.depot;
+  $('dv').textContent = fmtEur(d.wert);
+  const up = d.pnl_abs >= 0;
+  $('dpill').innerHTML = `<span class="pill ${up?'up':'down'}">${up?'+':''}${fmt(d.pnl_pct)} % &nbsp;${up?'+':''}${fmtEur(d.pnl_abs)}</span>`;
+  $('dstamp').textContent = 'Stand: '+d.stand;
+
+  // Compare chips
+  const chips = [
+    {t:'Einstand',     v: fmtEur(d.einstand), s:''},
+    {t:'Heute',        v: (d.vortag_abs>=0?'+':'')+fmt(d.vortag_pct)+' %', s: chgClass(d.vortag_pct)+' chip-s'},
+    {t:'Gesamt P&L',   v: (d.pnl_abs>=0?'+':'')+fmt(d.pnl_pct)+' %',     s: chgClass(d.pnl_pct)+' chip-s'},
+  ];
+  $('compare').innerHTML = chips.map(c=>`<div class="chip"><div class="t">${c.t}</div><div class="v">${c.v}</div></div>`).join('');
+
+  // Positions table
+  const rows = d.positionen.map(p=>{
+    const cl = chgClass(p.pnl_pct);
+    return `<tr>
+      <td><div>${p.tk}</div><div class="dim" style="font-size:11px;color:var(--dim)">${p.name}</div></td>
+      <td>${fmt(p.stueck,0)}</td>
+      <td>${fmtEur(p.kurs_eur)}</td>
+      <td class="${cl}">${p.pnl_abs>=0?'+':''}${fmtEur(p.pnl_abs)}</td>
+      <td class="${cl}">${p.pnl_pct>=0?'+':''}${fmt(p.pnl_pct)} %</td>
+      <td>${fmtEur(p.wert)}</td>
+      <td class="dim" style="color:var(--dim)">${fmt(p.anteil)} %</td>
+    </tr>`;
+  }).join('');
+  $('pos-tbl').innerHTML = `<tr><th>Titel</th><th>Stk</th><th>Kurs</th><th>P&L €</th><th>P&L %</th><th>Wert</th><th>Ant.</th></tr>${rows}`;
+
+  // Transactions
+  $('tx-list').innerHTML = d.transaktionen.map(t=>{
+    const badge = t.aktion==='Kauf'?'buy':t.aktion==='Verkauf'?'sell':'hold';
+    return `<div class="row">
+      <div><div class="tk">${t.tk} <span class="badge ${badge}">${t.aktion}</span></div>
+      <div class="dim">${t.datum} · ${t.info}</div></div>
+      <div class="right">${t.eur?fmtEur(t.eur):fmt(t.stueck,0)+' Stk'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── CHARTS ──────────────────────────────────────────────────────────────────
+let perfChart=null, allocChart=null;
+function renderCharts(){
+  const d = DATA.depot;
+  // Performance
+  if(!perfChart){
+    const ctx = $('perfChart').getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,200);
+    grad.addColorStop(0,'rgba(10,132,255,0.25)');
+    grad.addColorStop(1,'rgba(10,132,255,0)');
+    perfChart = new Chart(ctx,{
+      type:'line',
+      data:{
+        labels: d.verlauf.map(v=>v.d),
+        datasets:[{data: d.verlauf.map(v=>v.v), borderColor:'#0a84ff', backgroundColor:grad,
+          tension:.4, pointRadius:0, fill:true, borderWidth:2}]
+      },
+      options:{ plugins:{legend:{display:false}}, scales:{
+        x:{ticks:{color:'#98989d',font:{size:11}},grid:{color:'#2c2c2e'}},
+        y:{ticks:{color:'#98989d',font:{size:11},callback:v=>'€'+v.toLocaleString('de-DE')},grid:{color:'#2c2c2e'}}
+      },animation:false }
+    });
+  }
+  // Allokation
+  if(!allocChart){
+    const ctx2 = $('allocChart').getContext('2d');
+    const pos = d.positionen;
+    allocChart = new Chart(ctx2,{
+      type:'doughnut',
+      data:{
+        labels: pos.map(p=>p.tk),
+        datasets:[{data: pos.map(p=>p.anteil),
+          backgroundColor:['#0a84ff','#30d158','#ff9f0a','#bf5af2','#ff453a','#636366'],
+          borderWidth:0}]
+      },
+      options:{ plugins:{legend:{position:'bottom',labels:{color:'#f5f5f7',font:{size:12},padding:12}}},
+        animation:false }
+    });
+  }
+}
+
+function depotSeg(id, btn){
+  ['positionen','verlauf','allokation'].forEach(s=>{
+    $('seg-'+s).style.display = s===id?'block':'none';
+  });
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(id!=='positionen') renderCharts();
+}
+
+// ─── MARKT ───────────────────────────────────────────────────────────────────
+function renderMarkt(){
+  const m = DATA.markt;
+  $('mstamp').textContent = 'Stand: '+m.stand;
+
+  // Indizes
+  $('idx-list').innerHTML = m.indizes.map(ix=>{
+    const cl = chgClass(ix.chg_pct);
+    return `<div class="row">
+      <div><div class="tk">${ix.name}</div></div>
+      <div class="right">
+        <div>${fmt(ix.wert, ix.wert<100?4:2)}</div>
+        <div class="${cl} res">${ix.chg_pct>=0?'+':''}${fmt(ix.chg_pct)} %</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Sektoren
+  const maxAbs = Math.max(...m.sektoren.map(s=>Math.abs(s.chg)));
+  $('sect-list').innerHTML = m.sektoren.map(s=>{
+    const cl = chgClass(s.chg);
+    const w = (Math.abs(s.chg)/maxAbs*100).toFixed(0);
+    const color = s.chg>0?'#30d158':'#ff453a';
+    return `<div class="bar-row">
+      <div class="bar-lbl">${s.etf}</div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${w}%;background:${color}"></div></div>
+      <div class="bar-val ${cl}">${s.chg>0?'+':''}${fmt(s.chg)} %</div>
+    </div>`;
+  }).join('');
+
+  // Sentiment
+  const fg = m.sentiment.fg;
+  const offset = 251 - (fg/100)*251;
+  const color = fg>=60?'#30d158':fg>=40?'#ff9f0a':'#ff453a';
+  $('gaugePath').setAttribute('stroke-dashoffset', offset);
+  $('gaugePath').setAttribute('stroke', color);
+  $('gaugeText').textContent = fg;
+  $('gaugeLabel').textContent = m.sentiment.fg_label;
+  $('fgPrev').textContent = m.sentiment.fg_prev;
+  $('fgMonth').textContent = m.sentiment.fg_month;
+
+  // VIX
+  const vix = m.sentiment.vix;
+  $('vix-card').innerHTML = `<div class="row"><div><div class="tk">VIX</div><div class="dim">${vix.interpretation}</div></div>
+    <div class="right"><div class="${chgClass(vix.chg_pct)} res">${fmt(vix.wert)}</div>
+    <div class="dim">${vix.chg_pct>=0?'+':''}${fmt(vix.chg_pct)} %</div></div></div>`;
+
+  // PCR
+  const pcr = m.sentiment.pcr;
+  $('pcr-card').innerHTML = `<div class="row"><div><div class="tk">Put/Call-Ratio</div><div class="dim">${pcr.interpretation}</div></div>
+    <div class="right"><div class="res">${fmt(pcr.wert)}</div></div></div>`;
+
+  // Breadth
+  const br = m.sentiment.breadth;
+  $('breadth-card').innerHTML = [
+    {l:'S&P500 > 200T', v:br.sp500_above_200d+'%'},
+    {l:'S&P500 > 50T',  v:br.sp500_above_50d+'%'},
+    {l:'Neue Hochs',    v:br.new_highs},
+    {l:'Neue Tiefs',    v:br.new_lows},
+  ].map(r=>`<div class="row"><span>${r.l}</span><span class="res">${r.v}</span></div>`).join('');
+
+  // Watchlist
+  $('wl-list').innerHTML = m.watchlist.map(w=>{
+    const cl = chgClass(w.chg_pct);
+    return `<div class="wl-row">
+      <div><div class="wl-name">${w.tk}</div><div class="wl-sub">${w.name}</div></div>
+      <div class="wl-right">
+        <div class="wl-price">${fmtEur(w.kurs_eur)}</div>
+        <div class="wl-chg ${cl}">${w.chg_pct>=0?'+':''}${fmt(w.chg_pct)} %</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function marktSeg(id, btn){
+  ['indizes','sentiment','watchlist'].forEach(s=>{
+    $('seg-'+s).style.display = s===id?'block':'none';
+  });
+  document.querySelectorAll('#markt .seg button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ─── SIGNALE ─────────────────────────────────────────────────────────────────
+function renderSignale(){
+  $('sig-list').innerHTML = DATA.signale.map(s=>{
+    const icon = s.aktion==='HOLD'||s.aktion==='HALTEN'?'⏸':s.aktion==='BEOBACHTEN'?'👁':s.aktion==='KAUF'?'▲':'▼';
+    const bg = s.aktion==='KAUF'?'buy-bg':s.aktion==='VERKAUF'?'sell-bg':'hold-bg';
+    const badge = s.aktion==='KAUF'?'buy':s.aktion==='VERKAUF'?'sell':'hold';
+    return `<div class="sig-row">
+      <div class="sig-icon ${bg}">${icon}</div>
+      <div class="sig-body">
+        <div class="sig-top">
+          <span class="sig-tk">${s.tk} <span class="badge ${badge}">${s.aktion}</span></span>
+          <span class="sig-price">${s.preis?fmtEur(s.preis):''}</span>
+        </div>
+        <div class="sig-info">${s.info}</div>
+        ${s.ergebnis?`<div class="sig-meta up">${s.ergebnis}</div>`:''}
+        <div class="sig-meta">${s.grund}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── ANALYSE ─────────────────────────────────────────────────────────────────
+function renderAnalyse(){
+  $('an-list').innerHTML = DATA.analyse.map(a=>{
+    return `<div class="an-row">
+      <div class="an-icon">📊</div>
+      <div class="an-body">
+        <div class="an-top">
+          <span class="an-tk">${a.titel}</span>
+          <span class="an-act up">${a.aktion}</span>
+        </div>
+        <div class="an-info">${a.info}</div>
+        <div class="an-meta">${a.datum} · ${a.quelle}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── NEWS ────────────────────────────────────────────────────────────────────
+function renderNews(){
+  $('news-list').innerHTML = DATA.news.map(n=>{
+    return `<div class="news-item">
+      <div class="hl">${n.hl}</div>
+      <div class="meta">${n.zeit} · ${n.quelle} · <span class="badge hold">${n.tag}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+renderDepot();
+renderMarkt();
+renderSignale();
+renderAnalyse();
+renderNews();
+</script>
+<!-- ANALYSE-RAW (for DATA completeness) -->
+<script type="application/json" id="analyse-raw">[{"tk":"NVDA","titel":"Nvidia – KI-Superzyklus intakt","aktion":"Übergewichten","tp":135.0,"stop":104.0,"info":"Blackwell-Chip-Familie treibt Rechenzentrum-Umsatz; Margin-Expansion erwartet. H20-Exportrestriktion bleibt Risiko.","quelle":"Interne Analyse","datum":"11.06.2025"},{"tk":"MSFT","titel":"Microsoft – Copilot-ROI sichtbar","aktion":"Übergewichten","tp":430.0,"stop":375.0,"info":"Azure-Wachstum 33 % YoY; Copilot-ARPU steigt. KGV 32 fair bei 15 %+ Gewinnwachstum.","quelle":"Interne Analyse","datum":"10.06.2025"},{"tk":"AMZN","titel":"Amazon – AWS beschleunigt","aktion":"Übergewichten","tp":205.0,"stop":168.0,"info":"AWS Q1 +17 % YoY; GenAI-Backlog 3× YoY. Retail-Margen verbessern sich strukturell.","quelle":"Interne Analyse","datum":"09.06.2025"},{"tk":"GOOGL","titel":"Alphabet – Search bleibt dominant","aktion":"Übergewichten","tp":175.0,"stop":140.0,"info":"AI Overviews steigern CTR; YouTube Premium wächst. Bewertung: KGV 21 günstig vs. Peers.","quelle":"Interne Analyse","datum":"08.06.2025"},{"tk":"CEG","titel":"Constellation Energy – Nuklear-Thema","aktion":"Beobachten","tp":273.0,"stop":237.0,"info":"50 € · Ziel 273.0 · Stop 237.0","ergebnis":"","grund":"KI-Rechenzentren brauchen Strom: Nuklear-Thema (TMI/Microsoft)"}]</script></body></html>

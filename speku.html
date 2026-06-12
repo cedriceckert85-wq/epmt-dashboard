@@ -2,222 +2,51 @@
 <html lang="de"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Spekulative Positionen – Echtzeit-Dashboard</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>Speku-Depot</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; }
-.header { background: linear-gradient(135deg, #161b22 0%, #1c2128 100%); border-bottom: 1px solid #30363d; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
-.header h1 { font-size: 1.1rem; font-weight: 600; color: #f0f6fc; }
-.header .meta { font-size: 0.75rem; color: #8b949e; }
-.depot-summary { background: #161b22; border-bottom: 1px solid #30363d; padding: 12px 20px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
-.depot-val { font-size: 1.4rem; font-weight: 700; color: #3fb950; }
-.depot-label { font-size: 0.7rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
-.depot-change { font-size: 0.9rem; color: #3fb950; font-weight: 600; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; padding: 16px; }
-.card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px; position: relative; overflow: hidden; }
-.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-.card.hold::before { background: #f0883e; }
-.card.watch::before { background: #58a6ff; }
-.card.entry::before { background: #3fb950; }
-.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-.ticker { font-size: 1.2rem; font-weight: 700; color: #f0f6fc; }
-.badge { font-size: 0.65rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
-.badge.hold { background: rgba(240,136,62,0.2); color: #f0883e; border: 1px solid rgba(240,136,62,0.4); }
-.badge.watch { background: rgba(88,166,255,0.2); color: #58a6ff; border: 1px solid rgba(88,166,255,0.4); }
-.badge.entry { background: rgba(63,185,80,0.2); color: #3fb950; border: 1px solid rgba(63,185,80,0.4); }
-.company { font-size: 0.75rem; color: #8b949e; margin-bottom: 8px; }
-.price-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
-.price { font-size: 1.1rem; font-weight: 600; color: #f0f6fc; }
-.change-pos { color: #3fb950; font-size: 0.85rem; font-weight: 500; }
-.change-neg { color: #f85149; font-size: 0.85rem; font-weight: 500; }
-.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-bottom: 10px; }
-.metric { font-size: 0.72rem; }
-.metric-label { color: #8b949e; }
-.metric-val { color: #e6edf3; font-weight: 500; }
-.thesis { font-size: 0.72rem; color: #8b949e; line-height: 1.5; border-top: 1px solid #21262d; padding-top: 8px; margin-top: 4px; }
-.thesis strong { color: #58a6ff; }
-.stop-line { display: flex; gap: 12px; margin-top: 6px; }
-.stop-item { font-size: 0.7rem; }
-.stop-label { color: #8b949e; }
-.stop-val { font-weight: 600; }
-.stop-val.stop { color: #f85149; }
-.stop-val.target { color: #3fb950; }
-.wl-section { padding: 0 16px 16px; }
-.wl-title { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 0; border-bottom: 1px solid #21262d; margin-bottom: 10px; }
-.wl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
-.wl-card { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 12px; }
-.timestamp { text-align: center; font-size: 0.65rem; color: #484f58; padding: 12px; }
-</style></head><body>
-<div class="header">
-  <div>
-    <h1>Spekulative Positionen</h1>
-    <div class="meta">Echtzeit-Dashboard · Wache 17:51</div>
-  </div>
-</div>
-
-<div class="depot-summary">
-  <div>
-    <div class="depot-label">Depot-Wert</div>
-    <div class="depot-val">2 034,95 EUR</div>
-  </div>
-  <div>
-    <div class="depot-label">Heute</div>
-    <div class="depot-change">+1,75 %</div>
-  </div>
-  <div>
-    <div class="depot-label">Positionen</div>
-    <div style="font-size:1rem;font-weight:600;color:#e6edf3">3 HOLD</div>
-  </div>
-</div>
-
-<div class="cards">
-
-<!-- CARD 1: KULR -->
-<div class="card hold">
-  <div class="card-header">
-    <div>
-      <div class="ticker">KULR</div>
-      <div class="company">KULR Technology Group</div>
-    </div>
-    <span class="badge hold">HOLD</span>
-  </div>
-  <div class="price-row">
-    <span class="price" id="kulr-price">–</span>
-    <span id="kulr-change" class="change-pos">lädt…</span>
-  </div>
-  <div class="metrics">
-    <div class="metric"><span class="metric-label">Einstand: </span><span class="metric-val">0,8763 USD</span></div>
-    <div class="metric"><span class="metric-label">Stück: </span><span class="metric-val">162</span></div>
-    <div class="metric"><span class="metric-label">Invest: </span><span class="metric-val">153,65 USD</span></div>
-    <div class="metric"><span class="metric-label">Währung: </span><span class="metric-val">USD</span></div>
-  </div>
-  <div class="stop-line">
-    <div class="stop-item"><span class="stop-label">Stop: </span><span class="stop-val stop">0,62 USD</span></div>
-    <div class="stop-item"><span class="stop-label">Ziel: </span><span class="stop-val target">2,50 USD</span></div>
-  </div>
-  <div class="thesis"><strong>These:</strong> Bitcoin-Treasury-Play + Thermomanagement für KI-Chips. Hochspekulativ, aber Hebel auf BTC-Zyklus und Datacenter-Cooling vorhanden.</div>
-</div>
-
-<!-- CARD 2: UAVS -->
-<div class="card hold">
-  <div class="card-header">
-    <div>
-      <div class="ticker">UAVS</div>
-      <div class="company">AgEagle Aerial Systems</div>
-    </div>
-    <span class="badge hold">HOLD</span>
-  </div>
-  <div class="price-row">
-    <span class="price" id="uavs-price">–</span>
-    <span id="uavs-change" class="change-pos">lädt…</span>
-  </div>
-  <div class="metrics">
-    <div class="metric"><span class="metric-label">Einstand: </span><span class="metric-val">2,7338 USD</span></div>
-    <div class="metric"><span class="metric-label">Stück: </span><span class="metric-val">50</span></div>
-    <div class="metric"><span class="metric-label">Invest: </span><span class="metric-val">147,23 USD</span></div>
-    <div class="metric"><span class="metric-label">Währung: </span><span class="metric-val">USD</span></div>
-  </div>
-  <div class="stop-line">
-    <div class="stop-item"><span class="stop-label">Stop: </span><span class="stop-val stop">1,80 USD</span></div>
-    <div class="stop-item"><span class="stop-label">Ziel: </span><span class="stop-val target">6,00 USD</span></div>
-  </div>
-  <div class="thesis"><strong>These:</strong> Drohnen-Infrastruktur für Landwirtschaft &amp; Verteidigung. NATO-Nachfrage + US-Agrarsubventionen als Katalysator. Restrukturierung läuft.</div>
-</div>
-
-<!-- CARD 3: HPNN -->
-<div class="card hold">
-  <div class="card-header">
-    <div>
-      <div class="ticker">HPNN</div>
-      <div class="company">Hop-On Inc.</div>
-    </div>
-    <span class="badge hold">HOLD</span>
-  </div>
-  <div class="price-row">
-    <span class="price" id="hpnn-price">–</span>
-    <span id="hpnn-change" class="change-pos">lädt…</span>
-  </div>
-  <div class="metrics">
-    <div class="metric"><span class="metric-label">Einstand: </span><span class="metric-val">0,0094 USD</span></div>
-    <div class="metric"><span class="metric-label">Stück: </span><span class="metric-val">10 000</span></div>
-    <div class="metric"><span class="metric-label">Invest: </span><span class="metric-val">94,00 USD</span></div>
-    <div class="metric"><span class="metric-label">Währung: </span><span class="metric-val">USD</span></div>
-  </div>
-  <div class="stop-line">
-    <div class="stop-item"><span class="stop-label">Stop: </span><span class="stop-val stop">0,005 USD</span></div>
-    <div class="stop-item"><span class="stop-label">Ziel: </span><span class="stop-val target">0,05 USD</span></div>
-  </div>
-  <div class="thesis"><strong>These:</strong> Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript. Maximales Risiko, minimaler Einsatz.</div>
-</div>
-
-</div>
-
-<div class="timestamp" id="ts">Preise werden geladen…</div>
-
-<script>
-const tickers = [
-  { id: 'kulr', symbol: 'KULR', einstand: 0.8763, stueck: 162, currency: 'USD' },
-  { id: 'uavs', symbol: 'UAVS', einstand: 2.7338, stueck: 50, currency: 'USD' },
-  { id: 'hpnn', symbol: 'HPNN', einstand: 0.0094, stueck: 10000, currency: 'USD' }
-];
-
-const EUR_RATE = 0.92; // approximate USD→EUR
-
-async function fetchPrice(symbol) {
-  try {
-    const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=2d`, {mode:'cors'});
-    if (!r.ok) return null;
-    const d = await r.json();
-    const meta = d?.chart?.result?.[0]?.meta;
-    if (!meta) return null;
-    return { price: meta.regularMarketPrice, prev: meta.previousClose };
-  } catch { return null; }
-}
-
-async function update() {
-  let totalEUR = 0;
-  let totalInvestEUR = 0;
-  let anyLoaded = false;
-
-  for (const t of tickers) {
-    const data = await fetchPrice(t.symbol);
-    const priceEl = document.getElementById(t.id + '-price');
-    const changeEl = document.getElementById(t.id + '-change');
-    if (data && data.price) {
-      anyLoaded = true;
-      const chg = ((data.price - data.prev) / data.prev * 100).toFixed(2);
-      const sign = chg >= 0 ? '+' : '';
-      priceEl.textContent = data.price.toFixed(4) + ' ' + t.currency;
-      changeEl.textContent = sign + chg + '%';
-      changeEl.className = chg >= 0 ? 'change-pos' : 'change-neg';
-      const valEUR = data.price * t.stueck * EUR_RATE;
-      totalEUR += valEUR;
-    } else {
-      priceEl.textContent = 'n/v';
-      changeEl.textContent = '';
-      // fallback: use einstand
-      totalEUR += t.einstand * t.stueck * EUR_RATE;
-    }
-    totalInvestEUR += t.einstand * t.stueck * EUR_RATE;
-  }
-
-  // Update depot summary dynamically
-  const depotVal = document.querySelector('.depot-val');
-  const depotChg = document.querySelector('.depot-change');
-  if (depotVal && anyLoaded) {
-    depotVal.textContent = totalEUR.toFixed(2).replace('.', ',') + ' EUR';
-    const pct = ((totalEUR - totalInvestEUR) / totalInvestEUR * 100).toFixed(2);
-    const sign = pct >= 0 ? '+' : '';
-    depotChg.textContent = sign + pct.replace('.', ',') + ' %';
-    depotChg.style.color = pct >= 0 ? '#3fb950' : '#f85149';
-  }
-
-  document.getElementById('ts').textContent = 'Zuletzt aktualisiert: ' + new Date().toLocaleTimeString('de-DE');
-}
-
-update();
-setInterval(update, 60000);
-</script>
-
-<script type="application/json" id="speku-data">
-{"version":"2026-06-12T17:51:00","depot_eur":2034.95,"depot_change_pct":1.75,"signal":"HOLD x3","positionen":[{"ticker":"KULR","status":"HOLD","einstand":0.8763,"stueck":162,"invest_usd":153.65,"stop":0.62,"ziel":2.50,"these":"Bitcoin-Treasury-Play + Thermomanagement für KI-Chips. Hochspekulativ, aber Hebel auf BTC-Zyklus und Datacenter-Cooling vorhanden."},{"ticker":"UAVS","status":"HOLD","einstand":2.7338,"stueck":50,"invest_usd":147.23,"stop":1.80,"ziel":6.00,"these":"Drohnen-Infrastruktur für Landwirtschaft & Verteidigung. NATO-Nachfrage + US-Agrarsubventionen als Katalysator. Restrukturierung läuft."},{"ticker":"HPNN","status":"HOLD","einstand":0.0094,"stueck":10000,"invest_usd":94.00,"stop":0.005,"ziel":0.05,"these":"Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript"}]}</script></body></html>
+:root { --bg:#000000; --card:#1c1c1e; --txt:#f5f5f7; --dim:#98989d; --line:#2c2c2e;
+        --up:#30d158; --down:#ff453a; --blue:#0a84ff; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { margin:0; background:var(--bg); color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+  padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased; }
+.wrap { max-width:1000px; margin:0 auto; }
+.tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:var(--card);
+  border-radius:12px; padding:4px; margin-bottom:4px; }
+.tab { text-align:center; padding:9px 0; border-radius:9px; font-size:14px; font-weight:600;
+  color:var(--dim); text-decoration:none; }
+.tab.active { background:#3a3a3c; color:var(--txt); }
+.hero { text-align:center; padding:28px 0 8px; }
+.hero .label { font-size:15px; color:var(--dim); font-weight:500; }
+.hero .big { font-size:48px; font-weight:700; letter-spacing:-1px; margin:2px 0; font-variant-numeric:tabular-nums; }
+.pill { display:inline-block; font-size:15px; font-weight:600; padding:3px 12px; border-radius:999px; }
+.pill.up { background:rgba(52,199,89,.15); color:var(--up); }
+.pill.down { background:rgba(255,59,48,.15); color:var(--down); }
+.stamp { font-size:12px; color:var(--dim); margin-top:8px; }
+.compare { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:20px 0; }
+.chip { background:var(--card); border-radius:16px; padding:12px 10px; text-align:center; }
+.chip .t { font-size:11px; color:var(--dim); font-weight:500; }
+.chip .v { font-size:17px; font-weight:600; margin-top:2px; font-variant-numeric:tabular-nums; }
+.chip .s { font-size:12px; font-weight:600; }
+.up { color:var(--up); } .down { color:var(--down); }
+h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px; }
+.card { background:var(--card); border-radius:18px; overflow:hidden; }
+.card img { display:block; width:100%; border-radius:18px; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:13px 16px; border-bottom:.5px solid var(--line); font-size:15px; }
+.row:last-child { border-bottom:none; }
+.tk { font-weight:600; }
+.dim { color:var(--dim); font-size:13px; margin-top:1px; }
+.right { text-align:right; font-variant-numeric:tabular-nums; }
+.res { font-weight:600; font-size:13px; }
+.badge { font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; vertical-align:1px; }
+.badge.buy { background:rgba(0,113,227,.12); color:var(--blue); }
+.badge.sell { background:rgba(255,149,0,.15); color:#ff9500; }
+.badge.speku { background:var(--down); color:#fff; }
+.row.speku { background:rgba(255,69,58,.14); box-shadow:inset 4px 0 0 var(--down); }
+.note { font-size:12px; color:var(--dim); line-height:1.5; margin:28px 8px 0; text-align:center; }
+.lesson { padding:12px 16px; font-size:14px; border-bottom:.5px solid var(--line); }
+</style></head><body><div class="wrap">

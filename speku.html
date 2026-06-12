@@ -29,174 +29,50 @@ body { margin:0; background:var(--bg); color:var(--txt);
 .compare { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:20px 0; }
 .chip { background:var(--card); border-radius:16px; padding:12px 10px; text-align:center; }
 .chip .t { font-size:11px; color:var(--dim); font-weight:500; }
-.chip .v { font-size:18px; font-weight:700; margin-top:2px; }
-.section { margin:16px 0 6px; font-size:11px; font-weight:600; color:var(--dim);
-  text-transform:uppercase; letter-spacing:.06em; }
-.card { background:var(--card); border-radius:20px; margin-bottom:8px; overflow:hidden; }
-.row { display:flex; align-items:center; padding:14px 16px; gap:12px;
-  border-bottom:1px solid var(--line); }
+.chip .v { font-size:17px; font-weight:600; margin-top:2px; font-variant-numeric:tabular-nums; }
+.chip .s { font-size:12px; font-weight:600; }
+.up { color:var(--up); } .down { color:var(--down); }
+h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px; }
+.card { background:var(--card); border-radius:18px; overflow:hidden; }
+.card img { display:block; width:100%; border-radius:18px; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:13px 16px; border-bottom:.5px solid var(--line); font-size:15px; }
 .row:last-child { border-bottom:none; }
-.logo { width:40px; height:40px; border-radius:50%; display:flex; align-items:center;
-  justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;
-  background:#2c2c2e; overflow:hidden; }
-.logo img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
-.info { flex:1; min-width:0; }
-.info .name { font-size:16px; font-weight:600; }
-.info .sub  { font-size:13px; color:var(--dim); margin-top:1px; white-space:nowrap;
-  overflow:hidden; text-overflow:ellipsis; }
-.right { text-align:right; flex-shrink:0; }
-.right .price { font-size:16px; font-weight:600; font-variant-numeric:tabular-nums; }
-.right .chg   { font-size:13px; font-weight:500; margin-top:1px; }
-.up   { color:var(--up); }
-.down { color:var(--down); }
-.neutral { color:var(--dim); }
-/* detail overlay */
-.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7);
-  backdrop-filter:blur(6px); z-index:100; align-items:flex-end; justify-content:center; }
-.overlay.open { display:flex; }
-.sheet { background:#1c1c1e; border-radius:24px 24px 0 0; width:100%; max-width:640px;
-  padding:20px 20px max(28px,env(safe-area-inset-bottom)); }
-.sheet h2 { margin:0 0 4px; font-size:22px; }
-.sheet .meta { font-size:14px; color:var(--dim); margin-bottom:16px; }
-.dl { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.dd { background:#2c2c2e; border-radius:14px; padding:12px; }
-.dd .k { font-size:11px; color:var(--dim); font-weight:500; }
-.dd .v { font-size:17px; font-weight:700; margin-top:3px; }
-.btn-close { margin-top:18px; width:100%; padding:14px; border-radius:14px;
-  background:#3a3a3c; color:var(--txt); font-size:16px; font-weight:600;
-  border:none; cursor:pointer; }
-/* journal */
-.jcard { background:var(--card); border-radius:20px; padding:16px;
-  margin-bottom:8px; }
-.jtop { display:flex; justify-content:space-between; align-items:flex-start;
-  margin-bottom:8px; }
-.jtkr { font-size:16px; font-weight:700; }
-.jaktion { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px;
-  background:#2c2c2e; color:var(--dim); }
-.jaktion.kauf  { background:rgba(52,199,89,.15); color:var(--up); }
-.jaktion.verk  { background:rgba(255,59,48,.15); color:var(--down); }
-.jaktion.hold  { background:rgba(10,132,255,.15); color:var(--blue); }
-.jinfo { font-size:13px; color:var(--dim); margin-bottom:6px; }
-.jgrund { font-size:13px; color:var(--txt); line-height:1.45; }
-.jergebnis { font-size:13px; font-weight:600; margin-top:6px; }
-.jzeit { font-size:11px; color:var(--dim); margin-top:8px; }
-/* watchlist */
-.wcard { background:var(--card); border-radius:20px; padding:16px; margin-bottom:8px; }
-.wtop { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
-.wtkr { font-size:17px; font-weight:700; }
-.wprio { font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; }
-.wprio.hoch { background:rgba(255,159,10,.15); color:#ff9f0a; }
-.wprio.mittel { background:rgba(10,132,255,.15); color:var(--blue); }
-.wprio.niedrig { background:rgba(152,152,157,.15); color:var(--dim); }
-.winfo { font-size:13px; color:var(--dim); margin-bottom:4px; }
-.wgrund { font-size:13px; color:var(--txt); line-height:1.45; }
-.wkurs { font-size:13px; font-weight:600; margin-top:6px; }
-</style>
-</head><body>
-<div class="wrap">
-<nav class="tabs">
-  <a href="#" class="tab active" onclick="showTab('depot',this)">Depot</a>
-  <a href="#" class="tab" onclick="showTab('journal',this)">Journal</a>
-  <a href="#" class="tab" onclick="showTab('watchlist',this)">Watchlist</a>
-</nav>
+.tk { font-weight:600; }
+.dim { color:var(--dim); font-size:13px; margin-top:1px; }
+.right { text-align:right; font-variant-numeric:tabular-nums; }
+.res { font-weight:600; font-size:13px; }
+.badge { font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; vertical-align:1px; }
+.badge.buy { background:rgba(0,113,227,.12); color:var(--blue); }
+.badge.sell { background:rgba(255,149,0,.15); color:#ff9500; }
+.badge.speku { background:var(--down); color:#fff; }
+.row.speku { background:rgba(255,69,58,.14); box-shadow:inset 4px 0 0 var(--down); }
+.note { font-size:12px; color:var(--dim); line-height:1.5; margin:28px 8px 0; text-align:center; }
+.lesson { padding:12px 16px; font-size:14px; border-bottom:.5px solid var(--line); }
+</style></head><body><div class="wrap">
 
-<!-- DEPOT TAB -->
-<div id="tab-depot">
-<div class="hero">
-  <div class="label">Speku-Depot</div>
-  <div class="big" id="total">–</div>
-  <div><span class="pill" id="totalPill">–</span></div>
-  <div class="stamp" id="stamp">Stand: –</div>
-</div>
-<div class="compare">
-  <div class="chip"><div class="t">Einstand</div><div class="v" id="einstand">–</div></div>
-  <div class="chip"><div class="t">Heute</div><div class="v" id="heute">–</div></div>
-  <div class="chip"><div class="t">Bestes</div><div class="v" id="bestes">–</div></div>
-</div>
-<div class="section">Positionen</div>
-<div class="card" id="posCards"></div>
-</div>
+<div id="flotten-nav" data-active="speku-detail"></div><script src="https://cedriceckert85-wq.github.io/review/nav.js" defer></script>
 
-<!-- JOURNAL TAB -->
-<div id="tab-journal" style="display:none">
-  <div class="hero" style="padding-bottom:4px">
-    <div class="label">Handels-Journal</div>
-  </div>
-  <div id="journalCards"></div>
-</div>
-
-<!-- WATCHLIST TAB -->
-<div id="tab-watchlist" style="display:none">
-  <div class="hero" style="padding-bottom:4px">
-    <div class="label">Watchlist</div>
-  </div>
-  <div id="watchCards"></div>
-</div>
-
-</div><!-- /wrap -->
-
-<!-- DETAIL OVERLAY -->
-<div class="overlay" id="overlay" onclick="closeOverlay(event)">
-  <div class="sheet" id="sheet">
-    <h2 id="d-name"></h2>
-    <div class="meta" id="d-meta"></div>
-    <div class="dl">
-      <div class="dd"><div class="k">Aktueller Kurs</div><div class="v" id="d-kurs"></div></div>
-      <div class="dd"><div class="k">Einstand</div><div class="v" id="d-einstand"></div></div>
-      <div class="dd"><div class="k">Stück</div><div class="v" id="d-stueck"></div></div>
-      <div class="dd"><div class="k">Positionswert</div><div class="v" id="d-poswert"></div></div>
-      <div class="dd"><div class="k">G/V €</div><div class="v" id="d-gv"></div></div>
-      <div class="dd"><div class="k">G/V %</div><div class="v" id="d-gvp"></div></div>
-      <div class="dd"><div class="k">Zielkurs</div><div class="v" id="d-ziel"></div></div>
-      <div class="dd"><div class="k">Stop-Loss</div><div class="v" id="d-stop"></div></div>
-    </div>
-    <div style="margin-top:14px;font-size:13px;color:var(--dim)" id="d-grund"></div>
-    <button class="btn-close" onclick="closeSheet()">Schließen</button>
-  </div>
-</div>
-
+<div id="stale-banner" style="display:none;background:rgba(255,69,58,.2);border:1px solid var(--down);
+border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px;color:var(--down);font-weight:600">
+⚠️ Diese Seite ist veraltet — der letzte Automatik-Lauf liegt über 24 Stunden zurück.</div>
 <script>
-const FMT  = v => v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
-const FMTP = v => (v>=0?'+':'')+v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
-
-function showTab(name, el){
-  ['depot','journal','watchlist'].forEach(t=>{
-    document.getElementById('tab-'+t).style.display = t===name?'':'none';
-  });
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  return false;
-}
-
-function openSheet(d){
-  const kurs = d.kurs;
-  const gv   = (kurs - d.einstand) * d.stueck;
-  const gvp  = (kurs / d.einstand - 1)*100;
-  document.getElementById('d-name').textContent    = d.name;
-  document.getElementById('d-meta').textContent    = d.ticker + (d.broker?' · '+d.broker:'');
-  document.getElementById('d-kurs').textContent    = FMT(kurs)+' '+d.währung;
-  document.getElementById('d-einstand').textContent= FMT(d.einstand)+' '+d.währung;
-  document.getElementById('d-stueck').textContent  = d.stueck;
-  document.getElementById('d-poswert').textContent = FMT(kurs*d.stueck)+' '+d.währung;
-  const gvEl = document.getElementById('d-gv');
-  gvEl.textContent = (gv>=0?'+':'')+FMT(gv)+' '+d.währung;
-  gvEl.className   = 'v '+(gv>=0?'up':'down');
-  const gvpEl = document.getElementById('d-gvp');
-  gvpEl.textContent = FMTP(gvp);
-  gvpEl.className   = 'v '+(gvp>=0?'up':'down');
-  document.getElementById('d-ziel').textContent = d.ziel ? FMT(d.ziel)+' '+d.währung : '–';
-  document.getElementById('d-stop').textContent = d.stop ? FMT(d.stop)+' '+d.währung : '–';
-  document.getElementById('d-grund').textContent= d.grund||'';
-  document.getElementById('overlay').classList.add('open');
-}
-function closeOverlay(e){ if(e.target===document.getElementById('overlay')) closeSheet(); }
-function closeSheet(){ document.getElementById('overlay').classList.remove('open'); }
-
-// ── DATA ──────────────────────────────────────────────────────────────────────
-const DEPOT = ["placeholder"];
-
-const JOURNAL = ["placeholder"];
-
-const WATCHLIST = ["placeholder"];
+(function() { var built = 1781365860;
+if (Date.now()/1000 - built > 86400) document.getElementById('stale-banner').style.display='block'; })();
 </script>
-</body></html>
+
+<div class="hero">
+  <div class="label">Speku-Depot (Zukunfts-Mandat) · Tag 2</div>
+  <div class="big">2 034.95 €</div>
+  <span class="pill up">+1.75 % auf 2000 € Einzahlungen</span>
+  <div class="stamp">Stand 12.06.2026, 17:51 · davon 1235 € Cash · aktualisiert alle ~15 Min (Handelszeit)</div>
+  
+</div>
+
+<div class="compare">
+  <div class="chip"><div class="t">Dein Depot</div><div class="v">2008 €</div><div class="s"><span class="up">+0.42 %</span></div></div>
+  <div class="chip"><div class="t">Nur SPY gekauft</div><div class="v">2037 €</div><div class="s"><span class="up">+1.86 %</span></div></div>
+  <div class="chip"><div class="t">Tagesgeld 2 %</div><div class="v">2000 €</div><div class="s"><span class="up">+0.01 %</span></div></div>
+</div>
+
+<h2>Verlauf</h2>

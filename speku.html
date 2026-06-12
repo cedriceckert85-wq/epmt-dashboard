@@ -57,74 +57,133 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px;color:var(--down);font-weight:600">
 ⚠️ Diese Seite ist veraltet — der letzte Automatik-Lauf liegt über 24 Stunden zurück.</div>
 <script>
-(function() { var built = 1781365860; var now = Math.floor(Date.now()/1000); if(now - built > 86400) { document.getElementById('stale-banner').style.display='block'; } })();
+(function() { var built = 1781365860;
+if (Date.now()/1000 - built > 86400) document.getElementById('stale-banner').style.display='block'; })();
 </script>
 
 <div class="hero">
-  <div class="label">Speku-Depot</div>
-  <div class="big">2.034,95 €</div>
-  <span class="pill up">+35,00 € · +1,75%</span>
-  <div class="stamp">Stand: 12.06.2026, 17:51 · nächste Prüfung: ~18:51</div>
+  <div class="label">Speku-Depot (Zukunfts-Mandat) · Tag 2</div>
+  <div class="big">2 034.95 €</div>
+  <span class="pill up">+1.75 % auf 2000 € Einzahlungen</span>
+  <div class="stamp">Stand 12.06.2026, 17:51 · davon 1235 € Cash · aktualisiert alle ~15 Min (Handelszeit)</div>
+  
 </div>
 
 <div class="compare">
-  <div class="chip"><div class="t">Eingesetzt</div><div class="v">2.000,00 €</div></div>
-  <div class="chip"><div class="t">Gewinn/Verlust</div><div class="v up">+35,00 €</div></div>
-  <div class="chip"><div class="t">Positionen</div><div class="v">3</div></div>
+  <div class="chip"><div class="t">Dein Depot</div><div class="v">2008 €</div><div class="s"><span class="up">+0.42 %</span></div></div>
+  <div class="chip"><div class="t">Nur SPY gekauft</div><div class="v">2037 €</div><div class="s"><span class="up">+1.86 %</span></div></div>
+  <div class="chip"><div class="t">Tagesgeld 2 %</div><div class="v">2000 €</div><div class="s"><span class="up">+0.01 %</span></div></div>
 </div>
+
+<h2>Verlauf</h2>
+<div class="card"><img src="https://cedriceckert85-wq.github.io/epmt-dashboard/equity_chart.png?v=1781365860" alt="Verlaufschart"></div>
 
 <h2>Offene Positionen</h2>
-<div class="card">
-<div class="row speku">
-  <div>
-    <span class="tk">VOW3</span>
-    <span class="badge speku">SPEKU</span>
-    <div class="dim">VW Vz. · 100 Stk · Kauf 80,82 €</div>
-  </div>
-  <div class="right">
-    <div>84,10 €</div>
-    <div class="res up">+328,00 € · +4,06%</div>
-  </div>
-</div>
-<div class="row speku">
-  <div>
-    <span class="tk">ALV</span>
-    <span class="badge speku">SPEKU</span>
-    <div class="dim">Allianz · 3 Stk · Kauf 316,60 €</div>
-  </div>
-  <div class="right">
-    <div>312,40 €</div>
-    <div class="res down">-12,60 € · -1,33%</div>
-  </div>
-</div>
-<div class="row speku">
-  <div>
-    <span class="tk">DHL</span>
-    <span class="badge speku">SPEKU</span>
-    <div class="dim">DHL Group · 20 Stk · Kauf 35,80 €</div>
-  </div>
-  <div class="right">
-    <div>36,21 €</div>
-    <div class="res up">+8,20 € · +1,14%</div>
-  </div>
-</div>
-</div>
+<div class="card"><div class="row">
+      <div><div class="tk">QBTS</div>
+      <div class="dim">Kauf 23.25 · Ziel 36.00 · Stop 18.60</div></div>
+      <div class="right"><div>23.76 $</div><div class="res up">+2.19 %</div><div class="dim">400 €</div></div></div><div class="row">
+      <div><div class="tk">IONQ</div>
+      <div class="dim">Kauf 56.63 · Ziel 75.00 · Stop 46.00</div></div>
+      <div class="right"><div>58.58 $</div><div class="res up">+3.44 %</div><div class="dim">250 €</div></div></div><div class="row">
+      <div><div class="tk">RGTI</div>
+      <div class="dim">Kauf 19.45 · Ziel 28.00 · Stop 15.50</div></div>
+      <div class="right"><div>21.41 $</div><div class="res up">+10.08 %</div><div class="dim">120 €</div></div></div></div>
 
-<h2>Wach-Protokoll</h2>
-<div class="card">
-<div class="row"><div><span class="tk">VOW3</span><div class="dim">HOLD — 84,10 € · Ziel 95,0 · Stop 72,0</div></div><div class="right"><span class="badge buy">HOLD</span></div></div>
-<div class="row"><div><span class="tk">ALV</span><div class="dim">HOLD — 312,40 € · Ziel 350,0 · Stop 290,0</div></div><div class="right"><span class="badge buy">HOLD</span></div></div>
-<div class="row"><div><span class="tk">DHL</span><div class="dim">HOLD — 36,21 € · Ziel 42,0 · Stop 31,0</div></div><div class="right"><span class="badge buy">HOLD</span></div></div>
-</div>
+<h2>Alle Trades <span style="color:var(--dim);font-weight:500">(1 abgeschlossen)</span></h2>
+<div class="card"><div class="row speku">
+      <div><div class="tk">RKLB <span class="badge sell">Verkauf</span> <span class="badge speku">🔥 EXTREM</span></div>
+      <div class="dim">2026-06-12 · 15:38 Uhr · zu 106.05</div><div class="dim" style="margin-top:3px">💬 EXTREM-SPEKU beendet: Stop 119.80 nachboerslich gerissen (121.50/122.90), RTH eroeffnete aber bei 109.50 - Cover 106.05 = +4.4%. These (Sell-the-News) bestaetigte sich, der Pfad (erst Squeeze) haette uns fast rausgeworfen.</div></div>
+      <div class="right"><div>+5.25 €</div><div class="res up">+4.37 %</div></div></div><div class="row speku">
+      <div><div class="tk">RKLB <span class="badge buy">Kauf</span> <span class="badge speku">🔥 EXTREM</span></div>
+      <div class="dim">2026-06-11 · 19:55 Uhr · zu 110.90</div><div class="dim" style="margin-top:3px">💬 EXTREM-SPEKU: SpaceX-Listing-Fade - Kapital rotiert vom Proxy ins Original; Risiko: Day-1-Halo (+8-12% Sektor) -> Stop 119.80 hart</div></div>
+      <div class="right"><div>120 € · Ziel 99.8 · Stop 119.8</div></div></div><div class="row">
+      <div><div class="tk">QBTS <span class="badge buy">Kauf</span></div>
+      <div class="dim">2026-06-11 · 00:20 Uhr · zu 23.25</div><div class="dim" style="margin-top:3px">💬 Quantum-Asymmetrie: +179% Umsatz, Konsensziel 36$ = +55%, kaum YTD-gelaufen</div></div>
+      <div class="right"><div>400 € · Ziel 36.0 · Stop 18.6</div></div></div><div class="row">
+      <div><div class="tk">IONQ <span class="badge buy">Kauf</span></div>
+      <div class="dim">2026-06-11 · 00:20 Uhr · zu 56.63</div><div class="dim" style="margin-top:3px">💬 Quantum-Qualitaetsanker: Guidance 260-270M$, SkyWater-Katalysator, -33% unter Hoch</div></div>
+      <div class="right"><div>250 € · Ziel 75.0 · Stop 46.0</div></div></div><div class="row">
+      <div><div class="tk">RGTI <span class="badge buy">Kauf</span></div>
+      <div class="dim">2026-06-11 · 00:20 Uhr · zu 19.45</div><div class="dim" style="margin-top:3px">💬 Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript</div></div>
+      <div class="right"><div>120 € · Ziel 28.0 · Stop 15.5</div></div></div></div>
 
-<h2>Lektionen</h2>
-<div class="card">
-<div class="lesson">📌 <b>Positionsgröße beachten:</b> Nie mehr als 20% des Depots in eine Position.</div>
-<div class="lesson">📌 <b>Stop-Loss einhalten:</b> Stop ist gesetzt — konsequent einhalten, keine Ausnahmen.</div>
-<div class="lesson">📌 <b>Gewinne laufen lassen:</b> Ziel nicht zu früh nehmen, Trend respektieren.</div>
-<div class="lesson">📌 <b>Geduld:</b> Speku braucht Zeit — kein tägliches Umschichten.</div>
-</div>
+<h2>Abendbericht</h2><div class="card"><div style="padding:13px 16px;font-size:14px;line-height:1.55;color:var(--txt)"><div class="tk" style="font-size:16px;padding-top:6px">Morgen-Briefing · Freitag, 12.06.2026 (Tag 2) — SpaceX-IPO-Tag</div>
+<div style="height:6px"></div>
+<div class="tk" style="padding-top:10px">✅ UPDATE 15:38 — RKLB-Short gecovert: +5.25 € (+4.4 %) statt Verlust!</div>
+<div>Die Eröffnung brachte die Wende: RKLB <b>gappte zur Glocke auf 109.50 und fiel weiter auf 106</b> —</div>
+<div>der Sell-the-News-Fade unserer ursprünglichen These setzte exakt zum SPCX-Start ein. Das</div>
+<div>regelkonforme Cover zur Eröffnung (106.05) verwandelte den erwarteten −10-bis-−13-€-Verlust in</div>
+<div><b>+5.25 € Gewinn</b>. Ehrlich bleibt: Der *Pfad* (nachbörslicher Squeeze über den Stop) hätte uns</div>
+<div>fast vorher rausgeworfen — die These war richtig, das Timing-Risiko real. Realisiert: <b>+5.25 €</b>.</div>
+<div><b>⚠️ Alpaca-Spiegelung des Covers ausstehend</b> (Classifier-blockiert): bitte einmal ausführen:</div>
+<div>`python -c "from alpaca_bridge import alle_orders_canceln, market_order, schutz; alle_orders_canceln('RKLB'); market_order('RKLB', 1, 'buy'); schutz()"`</div>
+<div><b>⚠️ Falls du heute Früh manuell gecovert hast (~121 €):</b> sag es mir — dann korrigiere ich das</div>
+<div>Journal auf deinen echten Fill (dann wäre es ~−11 € statt +5.25 €; Ehrlichkeit vor Schönrechnen).</div>
+<div style="height:6px"></div>
+<div class="tk" style="padding-top:10px">🚨 STOP-ALARM heute Früh (Vorgeschichte): RKLB-Short — Cover zur Eröffnung PFLICHT</div>
+<div>Der Extrem-Speku-Short ist <b>nachbörslich über den Stop gelaufen</b>: RKLB schloss gestern offiziell</div>
+<div>bei 114.78 $ (+9.3 %) und handelte nach Börsenschluss bis <b>121.50 $</b> (19:59 ET) — über dem</div>
+<div>Stop 119.80. Zwei unabhängige Quellen, guard.py meldet die Verletzung (Exit 2).</div>
+<div><b>Das Day-1-Halo-Szenario, vor dem der Skeptiker gewarnt hat, ist eingetreten.</b></div>
+<div style="height:6px"></div>
+<div><b>Konsequenz (Regel, keine Diskussion):</b> Cover zur Markteröffnung 15:30/15:36 — der Eröffnungs-</div>
+<div>Check bucht zum dann gültigen Kurs. Erwarteter Verlust ~−10 bis −13 € — exakt das Risiko-Budget,</div>
+<div>mit dem der Trade geplant war (120 € Mini-Größe wegen genau dieses Szenarios).</div>
+<div style="height:6px"></div>
+<div><b>⚠️ DEINE Aufgabe jetzt:</b></div>
+<div style="padding-left:14px">&bull; Hast du gestern die <b>Stop-Buy-Order 119.80</b> beim Broker gesetzt? US-Stop-Orders greifen meist</div>
+<div>  erst zur regulären Eröffnung — sie wird dann automatisch ausgeführt. Nichts weiter tun.</div>
+<div style="padding-left:14px">&bull; KEINE Stop-Order gesetzt? Dann covere den Short <b>manuell</b> — entweder jetzt über</div>
+<div>  Tradegate/L&amp;S (~121–122 $) oder spätestens zur US-Eröffnung. Nicht warten, nicht hoffen.</div>
+<div style="height:6px"></div>
+<div class="tk" style="padding-top:10px">Lage heute Morgen</div>
+<div style="padding-left:14px">&bull; <b>SpaceX-IPO heute:</b> Erstnotiz SPCX (135 $, 3.5–4x überzeichnet, 30 % Retail). Sonder-Fetches</div>
+<div>  15:28/15:33 stehen. Der Space-Sektor läuft heiß (RKLB +9 % gestern) — der Halo, der unseren</div>
+<div>  Short killt, macht zugleich die <b>Tranche-2-Long-Frage</b> spannend: Die messbare Stabilisierungs-</div>
+<div>  Regel entscheidet NACH dem Listing, nüchtern, ohne FOMO.</div>
+<div style="padding-left:14px">&bull; <b>Quantum-Buch stark im Premarket:</b> QBTS 24.09 (+3.6 % auf Einstand) · IONQ 58.98 (+4.1 %) ·</div>
+<div>  RGTI 21.09 (<b>+8.4 %</b>). Kein Stop in Reichweite (alle 20 %+ entfernt).</div>
+<div style="padding-left:14px">&bull; <b>Iran:</b> Trump behauptet „Krieg beendet“ + MOU, Iran dementiert — unbestätigt (eine Quelle).</div>
+<div>  Öl fällt weiter auf <b>86 $</b> — der Markt glaubt an den Deal-Track. Futures grün (Nasdaq +1.2 %).</div>
+<div style="padding-left:14px">&bull; <b>Scout-Eskalations-Alarm verworfen:</b> Quellen vom 10./11.06. (vor der Schlag-Absage),</div>
+<div>  Markt-Evidenz widerspricht → Status „unbestätigt“, nicht handelbar (neue Verifikationsregel).</div>
+<div style="height:6px"></div>
+<div class="tk" style="padding-top:10px">Plan für heute</div>
+<div>09:08–15:21 Scans (vorbörslich) · <b>15:28/15:33 SPCX-Sonder-Fetches</b> · 15:36 Eröffnungs-Check</div>
+<div>(= RKLB-Cover + Stop-Kontrolle Quantum) · 16:02 Hauptlauf (Tranche-2-Prüfung mit Stabilisierungs-</div>
+<div>Formel) · Stop-Wache bis 21:36 · 21:44 Abend-Check.</div>
+<div style="height:6px"></div>
+<div>*Depot Stand Premarket: ~2030 € (+1.5 %) inkl. eingerechnetem RKLB-Verlust. n=4, Rauschen.*</div></div></div>
 
-<p class="note">Speku-Depot · Automatischer Wächter · Stand 12.06.2026 17:51</p>
+<h2>Markt-News <span style="color:var(--dim);font-weight:500">(● = handelsrelevant)</span></h2><div class="card"><div class="lesson"><span style="color:var(--dim)">○</span> <b>06.12 · 17:51</b> &nbsp;<span class="badge buy">QBTS</span><span class="badge buy">IONQ</span><span class="badge buy">RGTI</span><br>Wache 17:51: HOLD x3. QBTS 23.76 (+2.2%), IONQ 58.58 (+3.4%), RGTI 21.41 (+10.1%). Iran-MOU pending (Khamenei-Zustimmung ausstehend), kein neues Material. Alle Stops sicher (Abstände 21-38%).</div><div class="lesson"><span style="color:var(--dim)">○</span> <b>06.12 · 17:09</b> &nbsp;<span class="badge buy">QBTS</span> <span class="badge buy">IONQ</span> <span class="badge buy">RGTI</span> <span class="badge buy">RKLB</span><br><span style="color:var(--txt)">Stop-Wache 17:06: HOLD x3. QBTS 24.32 (+4.6% auf Einstand), IONQ 59.61 (+5.3%), RGTI 21.84 (+12.3%). Kein Material: Iran-Waffenruhe fragil+unsigned (bekannt), SPCX laeuft (~171+, bekannt). NEU geloggt: RKLB Nasdaq-100-Aufnahme 22.06. (bullish Tranche-2-Kontext, Stabilisierung heute klar verfehlt -6.2% — kein Kauf). Quantum ohne neue Treiber.</span><span class="dim"> — Stop-Wache + WebSearch (Yahoo/FastCo Quantum-Sektor + StockTwits/Yahoo RKLB-Nasdaq100-22.06. + 247WallSt Markt)</span></div><div class="lesson"><span style="color:var(--dim)">○</span> <b>06.12 · 16:54</b> &nbsp;<span class="badge buy">QBTS</span> <span class="badge buy">IONQ</span> <span class="badge buy">RGTI</span> <span class="badge buy">SPY</span><br><span style="color:var(--txt)">Stop-Wache 16:51: HOLD x3, SPY auf Tageshoch (742.59). Quantum-Treiber laut Scout = bekannte CHIPS-LOIs + Wedbush-Ziel 40$ fuer RGTI. MOU-Reibung (Trump vs. iranische Darstellung) - pending, kein Material.</span><span class="dim"> — Stop-Wache + Haiku-Scout 16:51</span></div><div class="lesson"><span style="color:var(--dim)">○</span> <b>06.12 · 16:39</b> &nbsp;<span class="badge buy">QBTS</span> <span class="badge buy">IONQ</span> <span class="badge buy">RGTI</span><br><span style="color:var(--txt)">Stop-Wache 16:36: HOLD x3, alle nahe Tageshochs (QBTS 24.07 +3.5%, IONQ 59.03 +4.2%, RGTI 21.46 +10.3% auf Einstand!). Iran-Deal weiter pending (neue Uran-Bedingungen verzoegern). Kein Material.</span><span class="dim"> — Stop-Wache + Haiku-Scout 16:36</span></div><div class="lesson"><span style="color:var(--dim)">○</span> <b>06.12 · 16:24</b> &nbsp;<span class="badge buy">QBTS</span> <span class="badge buy">IONQ</span> <span class="badge buy">RGTI</span> <span class="badge buy">SPCX</span><br><span style="color:var(--txt)">Stop-Wache 16:21: HOLD x3, alles gruen (RGTI Tageshoch 21.40). SPCX haelt den Pop (~171-176, Hyperliquid +30%), Proxies bleiben schwach (RKLB 106). Rohstoffe rallyen auf Deal (Gold +2%, Kupfer/Materials +2%). Kein Material.</span><span class="dim"> — Stop-Wache + Haiku-Scout 16:21</span></div><div class="lesson"><span class="up">●</span> <b>06.12 · 16:11</b> &nbsp;<span class="badge buy">SPCX</span> <span class="badge buy">RKLB</span> <span class="badge buy">UFO</span> <span class="badge buy">QBTS</span><br><span style="color:var(--txt)">SPCX-ERSTPRINT ~171 (+27%, oberes Polymarket-Band) - Proxies fallen weiter (RKLB Tief 103.27, UFO -5.3%): Rotations-These der Research bestaetigt. HAUPTLAUF kompakt: HOLD x3, KEINE Tranche 2 (Stabilisierungs-Regel klar verfehlt), keine Aufstockungen. Cover-Timing (106.05) war nahe Tagestief.</span><span class="dim"> — Stop-Wache 16:06 + Hauptlauf kompakt (CNBC/TradingKey + Yahoo-Kurse)</span></div><div class="lesson"><span style="color:var(--dim)">○</span> <b>06.12 · 16:05</b> &nbsp;<span class="badge buy">SPY</span> <span class="badge buy">QBTS</span> <span class="badge buy">IONQ</span> <span class="badge buy">RGTI</span><br><span style="color:var(--txt)">UMich T+1: Exakte Juni-Zahl in Quellen widerspruechlich (Monats-Vermischung) - NARRATIV konsistent: Sentiment-Erholung + nachlassende Inflationserwartungen. MARKT-REAKTION eindeutig positiv: SPY 737.1->738.3, QBTS 23.56, IONQ 58.21, RGTI 20.82 (alle hoeher nach Print). Kein Material, kein Zins-Gegenwind heute.</span><span class="dim"> — UMich-T+1-Sonderlauf (Zahlen unbestaetigt, Reaktion verifiziert via Kurse)</span></div><div class="lesson"><span style="color:var(--dim)">○</span> <b>06.12 · 15:59</b> &nbsp;<span class="badge buy">SPY</span> <span class="badge buy">QBTS</span> <span class="badge buy">IONQ</span> <span class="badge buy">RGTI</span><br><span style="color:var(--txt)">UMich T-2: Basis Vormonat: 1J-Inflationserwartung 4.8% (von 4.7), Sentiment nahe Rekordtief, 57% nennen Preise als Belastung. Kurse vor Print: SPY 737.14, QBTS 23.32, IONQ 57.42, RGTI 20.60, RKLB 105.55 (Fade laeuft). Heisse Erwartungszahl >5% waere Gegenwind fuer Growth.</span><span class="dim"> — UMich-T-2-Sonderlauf (FRED/TradingEconomics-Basis + Yahoo-Kurse)</span></div><div class="lesson"><span class="up">●</span> <b>06.12 · 15:39</b> &nbsp;<span class="badge buy">RKLB</span> <span class="badge buy">QBTS</span> <span class="badge buy">IONQ</span> <span class="badge buy">RGTI</span><br><span style="color:var(--txt)">EROEFFNUNGS-CHECK: RKLB-Short GECOVERT @ 106.05 -> +5.25 EUR (+4.4%) statt erwartetem Verlust - Sell-the-News-Gap rettete den Trade. Quantum HALTEN x3 (alle weit ueber Stops). Realisiert jetzt +5.25 EUR.</span><span class="dim"> — Eroeffnungs-Check 15:38 (Yahoo RTH)</span></div><div class="lesson"><span class="up">●</span> <b>06.12 · 15:34</b> &nbsp;<span class="badge buy">SPCX</span> <span class="badge buy">RKLB</span> <span class="badge buy">UFO</span><br><span style="color:var(--txt)">SPCX T+3: Kein Print (Platzhalter 135; Quotes 15:50, handelbar 16:00). SELL-THE-NEWS LIVE: RKLB eroeffnet 109.50 (-8% vs T-2 119.00, UNTER unserem Stop 119.80 - Broker-Stop haette in RTH nie ausgeloest, Short ist +1.3% im Gewinn), UFO 55.39 (-2.9%). Formale Cover-Entscheidung beim Eroeffnungs-Check 15:36.</span><span class="dim"> — T+3-Sonderlauf (Yahoo RTH-Eroeffnungsdaten vs. T-2-Referenz)</span></div></div>
 
-</div><script type="application/json" id="agent-daten">{"stand": "12.06.2026, 17:51", "depot_wert": 2034.95, "eingesetzt": 2000.0, "gewinn_verlust": 35.0, "gewinn_verlust_pct": 1.75, "positionen": [{"ticker": "VOW3", "name": "VW Vz.", "stueck": 100, "kaufkurs": 80.82, "aktuell": 84.1, "wert": 8410.0, "pnl": 328.0, "pnl_pct": 4.06, "aktion": "HOLD", "ziel": 95.0, "stop": 72.0}, {"ticker": "ALV", "name": "Allianz", "stueck": 3, "kaufkurs": 316.6, "aktuell": 312.4, "wert": 937.2, "pnl": -12.6, "pnl_pct": -1.33, "aktion": "HOLD", "ziel": 350.0, "stop": 290.0}, {"ticker": "DHL", "name": "DHL Group", "stueck": 20, "kaufkurs": 35.8, "aktuell": 36.21, "wert": 724.2, "pnl": 8.2, "pnl_pct": 1.14, "aktion": "HOLD", "ziel": 42.0, "stop": 31.0}], "watchlist": [{"ticker": "NKE", "name": "Nike", "aktion": "Beobachten", "preis": 62.5, "info": "Rebound-Kandidat", "ergebnis": "", "grund": ""}, {"ticker": "BNTX", "name": "BioNTech", "aktion": "Beobachten", "preis": 89.2, "info": "Pipeline-Katalysator", "ergebnis": "", "grund": ""}, {"ticker": "GTI", "name": "Graftech GTI", "aktion": "Kauf", "preis": 19.45, "info": "120 € · Ziel 28.0 · Stop 15.5", "ergebnis": "", "grund": "Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript"}]}</script></body></html>
+<h2>Erkenntnisse</h2><div class="card"><div class="lesson">(noch keine Lessons — n=4, RAUSCHEN)</div><div class="lesson">- [2026-06-12] Themen-Konzentration: ~87 % des investierten Kapitals im Thema Quantum (Rest Space-Short).</div><div class="lesson">  Die eigene Research warnt (research_zukunftsaktien_2026-06-11.md, Caveat 7): Zinssensitivität</div><div class="lesson">  trifft ALLE drei Titel gleichzeitig — die effektive Stichprobe ist kleiner als 3 Positionen.</div><div class="lesson">  Dashboard zeigt die Kennzahl jetzt laufend. Eine Begrenzungs-REGEL ist bewusst NICHT eingeführt</div><div class="lesson">  (Mandat des Nutzers: maximaler Gewinn, bewusstes Klumpenrisiko, registry 11.06.).</div></div>
+
+<h2>Automatik</h2><div class="card">
+<div class="row"><div><div class="tk">Zeitpläne</div>
+<div class="dim">Morgen-Briefing Mo-Fr 09:08 · Vorboerslicher Medien-Scan Mo-Fr 10:06-15:51 alle 15 Min (nur Alarm, kein Trade) · Eroeffnungs-Check Mo-Fr 15:36 (Stop/Gap -> sofort verkaufen) · Hauptlauf Mo-Fr 16:02 (Exit-Check, 5 Agenten, Tranche-2-Plan) · Stop-Wache + Medien-Scan Mo-Fr 16:06-21:36 alle 15 Min (Kurse GEGEN Stops + Seite aktuell + News; versetzt zum Original-Agenten) · Speku-Slot Mo+Do 16:34 (max 1, max 120 EUR) · Deep-Speku-Research alle 3 Tage ~16:45 (1 Aktie, 2-Tage-Move, long/short, max 120 EUR) · Abend-Check Mo-Fr 21:44 · Wochen-Reflexion Sa 11:03</div></div>
+<div class="right"><span class="up">aktiv bis 19.06.2026 (noch 6 Tage)</span></div></div>
+<div style="padding:13px 16px">
+<div class="dim" style="margin-bottom:8px">Zum Verlängern: Button drücken, Text in Claude Code einfügen, Enter.</div>
+<button id="copybtn" onclick="copyPrompt()" style="width:100%;padding:12px;border:none;border-radius:12px;
+background:var(--blue);color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer">
+Verlängerungs-Prompt kopieren</button>
+<textarea id="renew" readonly style="width:100%;margin-top:8px;height:96px;background:var(--bg);color:var(--dim);
+border:1px solid var(--line);border-radius:10px;padding:8px;font-size:11px;font-family:inherit">verlängern — Lies zuerst PROJEKT_GEDAECHTNIS.md, registry.md und coach_state.json des Speku-Depot-Projekts (Ordner 'epmt - Copy' — eigenständiger Fork, Tag-1-Start 11.06.2026) und lege alle Automatik-Jobs für 7 Tage neu an: Mo-Fr 09:08 Morgen-Briefing (Overnight-News, Futures, Stop-Risiken; kein Trading; erstellt die EVENT-LISTE des Tages und legt je Top-Event zwei einmalige Sonder-Jobs an: 2 Min vor dem Event Erwartungen+Kurse, 1 Min danach Ist-Zahlen+Reaktion mit 30-60s-Retries bis ~5 Min — danach gilt wieder das normale 15-Min-Intervall; Duplikat-Schutz via 'event-job angelegt'-Zeilen in news_log.jsonl; auch jeder Scan legt solche Sonder-Jobs an, wenn er ein neues Fix-Termin-Ereignis entdeckt) · Mo-Fr 10:06–15:51 alle 15 Min (Minuten 6/21/36/51 — bewusst VERSETZT zum Original-Agenten, der zu :13/:28/:43/:58 ins selbe Repo pusht) vorbörslicher Medien-Scan (Haiku-Scout; bei MATERIAL nur Alarm, nie buchen) · Mo-Fr 15:36 Eröffnungs-Check (nur offene Positionen: Stop/Gap-Down → sofort verkaufen, keine Käufe) · Mo-Fr 16:02 autonomer Hauptlauf (Live-Kurse Positionen + Watchlist aus coach_state, Exit-Check, 5 Agenten + PM, autonom buchen; dabei pending_plan beachten: Tranche 2 Space RKLB/UFO ~250 € NACH SpaceX-IPO nur bei Stabilisierung, IONQ-Aufstockung <50 $, QBTS <21 $, je max 500 € Gesamt; Research-Berichte research_zukunftsaktien_*.md + research_news_playbook.md als Kontext lesen) · Mo-Fr 16:06–21:36 alle 15 Min (Minuten 6/21/36/51, um 21 Uhr 6/21/36) STOP-WACHE + Medien-Scan bei offenem Markt (DREI Pflichten: 1. Live-Kurse der offenen Positionen gegen Stop UND Ziel prüfen — Stop gerissen → sofort ganze Position verkaufen ohne Aufweichen, Ziel erreicht → verkaufen oder Trailing-Stop; 2. die geholten Kurse IMMER als last_price/last_price_time in coach_state.json schreiben, damit die Online-Seite alle 15 Min aktuelle Kurse zeigt — aber auf bloße Kursbewegungen wird NIE gehandelt, nur auf Stop/Ziel/MATERIAL (15-Min-Zappeln ist Rauschen, Übertraden ist der dokumentierte Anfängerfehler); 3. Haiku-Scout mit strikter MATERIAL-Schwelle, bei ja Blitz-Check mit Playbook und autonom handeln, aber nie Panik-Verkauf bei intakter These; Headline immer an news_log.jsonl) · Mo+Do 16:34 Speku-Slot (Multi-Agenten-Research, max 1 Speku-Position GLEICHZEITIG, max 120 €, max 4 Tage Zeit-Exit, Stop ~−8 %; keine Earnings-Print-Wetten, keine Microcaps; nächste Abdeckungslücke: Nuklear/AI-Strom, Robotik) · ALLE 3 TAGE ~16:45 Deep-Speku-Research (Workflow ~20 Agenten, 5 Finder-Winkel + adversariale Skeptiker): genau 1 spekulative Aktie mit großem erwartetem Move in den nächsten 2 Handelstagen, Long ODER Short, gleiche Speku-Regeln (max 120 €, Stop −8 %, max 4 Tage), teilt sich das Max-1-Limit mit dem Speku-Slot; am Wochenende nur vormerken, nicht buchen; Speku-Positionen werden im Dashboard ROT hervorgehoben (Extrem-Experiment) · Mo-Fr 21:44 Abend-Check (Schlusskurse, Stops final prüfen, equity_history heutige Zeile ersetzen, equity_chart.py, Abendbericht) · Sa 11:03 Wochen-Reflexion (Lessons mit n-Gate, user_profile, Korrelations-Check Quantum-Cluster, Erinnerung an Verlängerung). Exit-Check heißt IMMER alle vier Auslöser: Stop / Ziel / max. Haltedauer / These-Bruch. Nach JEDEM Lauf und JEDEM Trade: dashboard.py ausführen und im Ordner site/ NUR speku.html und spec.html committen und pushen — index.html gehört einem ANDEREN Agenten und wird NIEMALS geschrieben, gestaged oder gepusht (vor dem Push git pull --rebase, der andere Agent pusht ins selbe Repo)! SCOUT-VERIFIKATIONSPFLICHT: Ein MATERIAL-Alarm ist erst handelbar bei Quellendatum < 24 h UND zwei unabhängigen Quellen (Markt-Evidenz zählt als Quelle); sonst Status unbestätigt = nur loggen, nie handeln; neue news_log-Einträge mit Feld verified:true/false. GUARD-PFLICHT: vor jeder Buchung und nach jeder State-Änderung python guard.py (Exit 2 = Verletzung → keine Buchung, Alarm in daily_report.md); fremde Kurse vor Übernahme mit python guard.py --check-price TICKER PREIS prüfen; Abend-Check schreibt die Tageszeile mit python equity_append.py --spy <Schluss>. Leitplanken unverhandelbar: max 500 €/Position, min 200 € Cash, max 8 Positionen, Stops nie aufweichen. In JEDEM Trade-Bericht den Nutzer erinnern: reale Order am Broker nachziehen UND für jede Position eine ECHTE Stop-Loss-Order im Broker hinterlegen (aktuelle Stops stehen in coach_state.json) — das ist die einzige Absicherung, die auch greift, wenn die Automatik ausfällt. Danach in automation.json jobs_created/expires aktualisieren und das Dashboard neu pushen. Hinweis: Jobs leben in der Claude-Session — Session offen lassen; nach 7 Tagen oder Session-Ende diesen Prompt erneut ausführen.</textarea>
+</div></div>
+<script>
+function copyPrompt() {
+  var t = document.getElementById('renew');
+  navigator.clipboard.writeText(t.value).then(function() {
+    var b = document.getElementById('copybtn');
+    b.textContent = '✓ Kopiert'; setTimeout(function() { b.textContent = 'Verlängerungs-Prompt kopieren'; }, 2000);
+  }, function() { t.select(); document.execCommand('copy'); });
+}
+</script>
+
+<div class="note">Experiment (2000 € Einzahlungen), keine Anlageberatung. Unter 30 Trades ist jedes Ergebnis
+statistisches Rauschen — auch ein Vorsprung. Zum Vergleich: über 15 Jahre schlägt die Mehrheit
+der Profi-Fonds ihren Index in keiner einzigen US-Kategorie (SPIVA 2024).</div>
+
+</div><script type="application/json" id="agent-daten">{"stand": "12.06.2026, 17:59", "vermoegen": 2008.45, "rendite": 0.42, "cashQuote": 61.5, "realisiert": 5.25, "vsSpyPp": -1.43, "positionen": [{"ticker": "QBTS", "side": "long", "eur": 400.0, "entry": 23.25, "kurs": 22.94, "stop": 18.6, "ziel": 36.0, "maxTage": 90, "speku": false}, {"ticker": "IONQ", "side": "long", "eur": 250.0, "entry": 56.63, "kurs": 56.77, "stop": 46.0, "ziel": 75.0, "maxTage": 90, "speku": false}, {"ticker": "RGTI", "side": "long", "eur": 120.0, "entry": 19.45, "kurs": 20.73, "stop": 15.5, "ziel": 28.0, "maxTage": 60, "speku": false}], "trades": [{"zeit": "2026-06-12T15:38+02:00", "ticker": "RKLB", "aktion": "Verkauf", "preis": 106.05, "info": "+5.25 €", "ergebnis": "+4.37 %", "grund": "EXTREM-SPEKU beendet: Stop 119.80 nachboerslich gerissen (121.50/122.90), RTH eroeffnete aber bei 109.50 - Cover 106.05 = +4.4%. These (Sell-the-News) bestaetigte sich, der Pfad (erst Squeeze) haette uns fast rausgeworfen."}, {"zeit": "2026-06-11T19:55+02:00", "ticker": "RKLB", "aktion": "Kauf", "preis": 110.9, "info": "120 € · Ziel 99.8 · Stop 119.8", "ergebnis": "", "grund": "EXTREM-SPEKU: SpaceX-Listing-Fade - Kapital rotiert vom Proxy ins Original; Risiko: Day-1-Halo (+8-12% Sektor) -> Stop 119.80 hart"}, {"zeit": "2026-06-11T00:20+02:00", "ticker": "QBTS", "aktion": "Kauf", "preis": 23.25, "info": "400 € · Ziel 36.0 · Stop 18.6", "ergebnis": "", "grund": "Quantum-Asymmetrie: +179% Umsatz, Konsensziel 36$ = +55%, kaum YTD-gelaufen"}, {"zeit": "2026-06-11T00:20+02:00", "ticker": "IONQ", "aktion": "Kauf", "preis": 56.63, "info": "250 € · Ziel 75.0 · Stop 46.0", "ergebnis": "", "grund": "Quantum-Qualitaetsanker: Guidance 260-270M$, SkyWater-Katalysator, -33% unter Hoch"}, {"zeit": "2026-06-11T00:20+02:00", "ticker": "RGTI", "aktion": "Kauf", "preis": 19.45, "info": "120 € · Ziel 28.0 · Stop 15.5", "ergebnis": "", "grund": "Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript"}]}</script></body></html>

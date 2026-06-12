@@ -1,1 +1,126 @@
-PLACEHOLDER_WILL_BE_REPLACED
+<!DOCTYPE html>
+<html lang="de"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>Speku-Depot</title>
+<style>
+:root { --bg:#000000; --card:#1c1c1e; --txt:#f5f5f7; --dim:#98989d; --line:#2c2c2e;
+        --up:#30d158; --down:#ff453a; --blue:#0a84ff; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { margin:0; background:var(--bg); color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+  padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased; }
+.wrap { max-width:1000px; margin:0 auto; }
+.tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:var(--card);
+  border-radius:12px; padding:4px; margin-bottom:4px; }
+.tab { text-align:center; padding:9px 0; border-radius:9px; font-size:14px; font-weight:600;
+  color:var(--dim); text-decoration:none; }
+.tab.active { background:#3a3a3c; color:var(--txt); }
+.hero { text-align:center; padding:28px 0 8px; }
+.hero .label { font-size:15px; color:var(--dim); font-weight:500; }
+.hero .big { font-size:48px; font-weight:700; letter-spacing:-1px; margin:2px 0; font-variant-numeric:tabular-nums; }
+.pill { display:inline-block; font-size:15px; font-weight:600; padding:3px 12px; border-radius:999px; }
+.pill.up { background:rgba(52,199,89,.15); color:var(--up); }
+.pill.down { background:rgba(255,59,48,.15); color:var(--down); }
+.stamp { font-size:12px; color:var(--dim); margin-top:8px; }
+.compare { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:20px 0; }
+.chip { background:var(--card); border-radius:16px; padding:12px 10px; text-align:center; }
+.chip .t { font-size:11px; color:var(--dim); font-weight:500; }
+.chip .v { font-size:17px; font-weight:600; margin-top:2px; font-variant-numeric:tabular-nums; }
+.chip .s { font-size:12px; font-weight:600; }
+.up { color:var(--up); } .down { color:var(--down); }
+h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px; }
+.card { background:var(--card); border-radius:18px; overflow:hidden; }
+.card img { display:block; width:100%; border-radius:18px; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:13px 16px; border-bottom:.5px solid var(--line); font-size:15px; }
+.row:last-child { border-bottom:none; }
+.tk { font-weight:600; }
+.dim { color:var(--dim); font-size:13px; margin-top:1px; }
+.right { text-align:right; font-variant-numeric:tabular-nums; }
+.res { font-weight:600; font-size:13px; }
+.badge { font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; vertical-align:1px; }
+.badge.buy { background:rgba(0,113,227,.12); color:var(--blue); }
+.badge.sell { background:rgba(255,149,0,.15); color:#ff9500; }
+.badge.speku { background:var(--down); color:#fff; }
+.row.speku { background:rgba(255,69,58,.14); box-shadow:inset 4px 0 0 var(--down); }
+.note { font-size:12px; color:var(--dim); line-height:1.5; margin:28px 8px 0; text-align:center; }
+.lesson { padding:12px 16px; font-size:14px; border-bottom:.5px solid var(--line); }
+</style></head><body><div class="wrap">
+
+<div id="flotten-nav" data-active="speku-detail"></div><script src="https://cedriceckert85-wq.github.io/review/nav.js" defer></script>
+
+<div id="stale-banner" style="display:none;background:rgba(255,69,58,.2);border:1px solid var(--down);
+border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px;color:var(--down);font-weight:600">
+⚠️ Diese Seite ist veraltet — der letzte Automatik-Lauf liegt über 24 Stunden zurück.</div>
+<script>
+const _ts = "2026-06-12T17:51:00+02:00";
+const _age = (Date.now() - new Date(_ts)) / 3600000;
+if (_age > 24) document.getElementById('stale-banner').style.display = 'block';
+</script>
+
+<div class="hero">
+  <div class="label">Speku-Depot</div>
+  <div class="big">2.034,95 €</div>
+  <div><span class="pill up">+35,00 € heute</span></div>
+  <div class="stamp">Stand 12.06.2026 · 17:51 Uhr · Wache aktiv</div>
+</div>
+
+<div class="compare">
+  <div class="chip"><div class="t">Einstand</div><div class="v">2.000,00 €</div></div>
+  <div class="chip"><div class="t">Gesamt-P&L</div><div class="v up">+34,95 €</div><div class="s up">+1,75 %</div></div>
+  <div class="chip"><div class="t">Positionen</div><div class="v">3</div><div class="s dim">alle HOLD</div></div>
+</div>
+
+<h2>Positionen</h2>
+<div class="card" id="positions-card"></div>
+
+<div id="lessons-section" style="display:none">
+  <h2>Lektionen</h2>
+  <div class="card" id="lessons-card"></div>
+</div>
+
+<p class="note" id="bottom-note"></p>
+
+</div>
+
+<script>
+const DATA = {"depot": {"stand": "2026-06-12T17:51:00+02:00", "wert": 2034.95, "einstand": 2000.0, "pnl_eur": 34.95, "pnl_pct": 1.75}, "positionen": [{"ticker": "IONQ", "name": "IonQ Inc.", "aktion": "HOLD", "preis": 37.82, "preis_ref": 36.15, "pnl_pct": 4.62, "info": "600 € · Ziel 55.0 · Stop 28.0", "ergebnis": "+27,65 €", "grund": "Quantum-Computing-Leader, NV25-Run läuft, Catalyst-Reich"}, {"ticker": "KULR", "name": "KULR Technology", "aktion": "HOLD", "preis": 2.87, "preis_ref": 3.02, "pnl_pct": -4.97, "info": "300 € · Ziel 5.5 · Stop 2.2", "ergebnis": "-14,90 €", "grund": "NASA-Tech Thermal Mgmt, Bitcoin-Treasury-Play, hohes Beta"}, {"ticker": "RGTI", "name": "Rigetti Computing", "aktion": "HOLD", "preis": 19.45, "preis_ref": 18.15, "pnl_pct": 7.16, "info": "120 € · Ziel 28.0 · Stop 15.5", "ergebnis": "+8,59 €", "grund": "Lottery-Ticket: 590M$ Cash-Polster, Gov-Katalysator round-getript"}], "lektionen": [], "meta": {"notiz": "Wache 17:51 — alle Positionen HOLD, kein Handlungsbedarf."}}
+
+const pos = DATA.positionen;
+const pc = document.getElementById('positions-card');
+pos.forEach(p => {
+  const up = p.pnl_pct >= 0;
+  const aClass = p.aktion === 'Kauf' ? 'buy' : p.aktion === 'Verkauf' ? 'sell' : 'speku';
+  const rowClass = p.aktion === 'Verkauf' ? ' speku' : '';
+  pc.innerHTML += `
+  <div class="row${rowClass}">
+    <div><span class="tk">${p.ticker}</span> <span class="badge ${aClass}">${p.aktion}</span>
+      <div class="dim">${p.name}</div>
+      <div class="dim">${p.info}</div>
+    </div>
+    <div class="right">
+      <div>${p.preis.toFixed(2)} $</div>
+      <div class="res ${up?'up':'down'}">${p.ergebnis || (up?'+':'')+p.pnl_pct.toFixed(2)+'%'}</div>
+      <div class="dim ${up?'up':'down'}">${up?'+':''}${p.pnl_pct.toFixed(2)} %</div>
+    </div>
+  </div>`;
+});
+
+const lessons = DATA.lektionen || [];
+if (lessons.length) {
+  document.getElementById('lessons-section').style.display = 'block';
+  const lc = document.getElementById('lessons-card');
+  lessons.forEach(l => {
+    lc.innerHTML += `<div class="lesson">${l}</div>`;
+  });
+}
+
+const note = DATA.meta?.notiz || '';
+if (note) document.getElementById('bottom-note').textContent = note;
+</script>
+
+</body></html>

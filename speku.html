@@ -57,22 +57,22 @@ h2 { font-size:20px; font-weight:700; letter-spacing:-.3px; margin:28px 4px 10px
 border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:14px;color:var(--down);font-weight:600">
 ⚠️ Diese Seite ist veraltet — der letzte Automatik-Lauf liegt über 24 Stunden zurück.</div>
 <script>
-(function() { var built = 1782137310;
+(function() { var built = 1782138261;
 if (Date.now()/1000 - built > 86400) document.getElementById('stale-banner').style.display='block'; })();
 </script>
 
 <div class="hero">
   <div class="label">Speku-Depot (Zukunfts-Mandat) · Tag 1</div>
-  <div class="big">100000.00 €</div>
-  <span class="pill up">+4900.00 % auf 2000 € Einzahlungen</span>
-  <div class="stamp">Stand 22.06.2026, 16:08 · davon 100000 € Cash · aktualisiert alle ~15 Min (Handelszeit)</div>
+  <div class="big">99948.15 €</div>
+  <span class="pill down">-0.05 % auf 100000 € Einzahlungen</span>
+  <div class="stamp">Stand 22.06.2026, 16:24 · davon 92491 € Cash · aktualisiert alle ~15 Min (Handelszeit)</div>
   
 </div>
 
 <div class="compare">
-  <div class="chip"><div class="t">Dein Depot</div><div class="v">100000 €</div><div class="s"><span class="up">+4900.00 %</span></div></div>
-  <div class="chip"><div class="t">Nur SPY gekauft</div><div class="v">3 €</div><div class="s"><span class="down">-99.86 %</span></div></div>
-  <div class="chip"><div class="t">Tagesgeld 2 %</div><div class="v">2001 €</div><div class="s"><span class="up">+0.06 %</span></div></div>
+  <div class="chip"><div class="t">Dein Depot</div><div class="v">99948 €</div><div class="s"><span class="down">-0.05 %</span></div></div>
+  <div class="chip"><div class="t">Nur SPY gekauft</div><div class="v">133 €</div><div class="s"><span class="down">-99.87 %</span></div></div>
+  <div class="chip"><div class="t">Tagesgeld 2 %</div><div class="v">100000 €</div><div class="s"><span class="up">+0.00 %</span></div></div>
 </div>
 
 <h2>Verlauf</h2>
@@ -80,11 +80,15 @@ if (Date.now()/1000 - built > 86400) document.getElementById('stale-banner').sty
 
 
 
-<h2>Offene Positionen <span style="color:var(--dim);font-weight:500">(0)</span></h2>
-<div class="card"><div class="row">keine</div></div>
+<h2>Offene Positionen <span style="color:var(--dim);font-weight:500">(1)</span></h2>
+<div class="card"><div class="row">
+      <div><div class="tk">IONQ</div>
+      <div class="dim">7509 € · Tag 1/30 · Einstieg 57.76 · Kurs vom 2026-06-22 16:24</div>
+      <div class="dim"><span class="up">Ziel 69</span> · <span class="down">Stop 51</span></div></div>
+      <div class="right"><div class="tk">57.36</div><div class="res down">-52.00 € (-0.69 %)</div></div></div></div>
 
 <h2>Themen-Konzentration <span style="color:var(--dim);font-weight:500">(Kennzahl, keine Regel)</span></h2>
-<div class="card"><div class="row">nichts investiert</div></div>
+<div class="card"><div class="row"><div><div class="tk">Quantum <span class="down">⚠️ Klumpen</span></div></div><div class="right">7457 € · <b>100 %</b> des investierten Kapitals</div></div></div>
 
 <h2>Alle Trades <span style="color:var(--dim);font-weight:500">(0 abgeschlossen)</span></h2>
 <div class="card"></div>
@@ -122,7 +126,25 @@ if (Date.now()/1000 - built > 86400) document.getElementById('stale-banner').sty
 <div><b>Bemerkung:</b> Depot ist leer; jeder Trade von Neuanlage an läuft unter voller Disziplin (Leitplanken, Guard-Check, Verifikation). Erste Hauptlauf-Gelegenheit heute 16:02 MESZ nach Markt-Open 15:30.</div>
 <div style="height:6px"></div>
 <div>---</div>
-<div>Briefing endet hier. Weitere Updates nach Market-Open.</div></div></div>
+<div>Briefing endet hier. Weitere Updates nach Market-Open.</div>
+<div style="height:6px"></div>
+<div class="tk" style="padding-top:10px">Autonomer Hauptlauf (16:2x MESZ) — Tag 1 nach RESET</div>
+<div style="height:6px"></div>
+<div><b>Setup:</b> Erster Hauptlauf auf dem sauberen 1:1-$100k-Buch. Reconcile (Broker 100000/0 Pos.), Tick, Baseline gesetzt: `benchmark_spy_start=749.52` (SPY live +0.37%), `deposit_tranches`/`pending_plan` auf $100k rekonziliert (EUR-Strategiebetraege ×50; %-Leitplanken maßgeblich). Markt benign, <b>PCE Do 25.06.</b> als naechstes Binaer-Risiko.</div>
+<div style="height:6px"></div>
+<div><b>5-Agenten-Research + PM (Opus):</b> Live-Kurse — IONQ 57.68 <b>(+2%, einziger gruen)</b>, QBTS 24.10 (−2.4%), RGTI 21.21 (−0.7%), RKLB 98.70 <b>(−8%)</b>, SPCX 169 (−8.6%), OKLO 58.30 (−4.7%), SMR 11.49 (−2.1%).</div>
+<div style="padding-left:14px">&bull; A1 Momentum: IONQ Long (relative Staerke), klein. A2 Value: IONQ Long Conv.4 (einziger Quantum mit echtem Umsatz +335% TTM). A3 Sentiment: IONQ Long; <b>RKLB Nasdaq-100 = eingepreist/sell-the-news</b>. A4 Contrarian: KEIN_TRADE/Cash (PCE-Risiko), RKLB nur Short-Watch (noch nicht). A5 Makro/Risiko: KLEIN_STARTEN, Quantum-Klumpen max 1 Pos./≤10%, Gros Cash fuer Post-PCE.</div>
+<div style="padding-left:14px">&bull; <b>PM-Entscheid:</b> Konsens IONQ als Qualitaetsfuehrer; Risiko-Konsens „klein + Cash halten". → <b>Eine gestaffelte Tranche-1-Probe IONQ, 7,5 %.</b></div>
+<div style="height:6px"></div>
+<div><b>BUCHUNG (autonom, ueber Risk-Gate):</b></div>
+<div style="padding-left:14px">&bull; <b>IONQ Long 130 Stk @ ⌀57.76</b> = $7.509 (7,5 %); <b>Stop 51.00</b> (GTC aktiv), <b>Ziel 69.00</b> (+19 %), max 30 Handelstage. `speku:false` (Kern-These).</div>
+<div style="padding-left:14px">&bull; guard OK 0/0; Alpaca gespiegelt 1:1 (130 Stk, Stop gesetzt); Cash 92.491 (92,5 %).</div>
+<div style="height:6px"></div>
+<div><b>Bewusst NICHT:</b> RKLB-Long (sell-the-news), Quantum-Mehrfachklumpen (Lektion: eff. Stichprobe ~1), Vollausschoepfung (PCE-Binaer Do). ~92 % Cash = Munition fuer Post-PCE-Tranche-2.</div>
+<div style="height:6px"></div>
+<div><b>Erinnerung an Nutzer:</b> reale Order + echte Stop-Loss-Order beim Broker hinterlegen (IONQ 130 @ Markt, Stop 51.00) — falls real nachgezogen wird.</div>
+<div style="height:6px"></div>
+<div>---</div></div></div>
 
 <h2>Markt-News <span style="color:var(--dim);font-weight:500">(● = handelsrelevant)</span></h2><div class="card"><div class="lesson"><span style="color:var(--dim)">○</span> <b>06.22 · 09:36</b> &nbsp;<span class="badge buy">SPY</span> <span class="badge buy">SPCX</span> <span class="badge buy">RKLB</span> <span class="badge buy">OKLO</span><br><span style="color:var(--txt)">Morgen-Briefing 22.06. (Mo, Depot resettet): Overnight-Futures stark: S&P +1.08%, Nasdaq +1.91% (Fed-Signal 16-17.6. = Pause eingepreist, Risk-on). Makro heute: KEINE grossen Termine (PCE Do). Watchlist stabil: SPCX nach IPO-Hoch 225.64 (16.6.) jetzt 160-180er Bereich, RKLB Nasdaq-100-Aufnahme ab heute (KeyBanc Buy, Motiv-Deal), OKLO/SMR profitieren Japan-Deal (18.6. Centrus-Fuel). Depot: 100k USD frisch 1:1, 0 Positionen, kein Stop-Risiko. Boerse oeffnet 15:30 MESZ.</span><span class="dim"> — Haiku-Scout 09:36 (CNBC Futures +1.08%/+1.91% verifiziert, KeyBanc/stockanalysis RKLB, Bloomberg Japan-Deal 18.6., BLS-Kalender = keine CPI/PPI Mo)</span></div></div>
 
@@ -150,8 +172,8 @@ function copyPrompt() {
 }
 </script>
 
-<div class="note">Experiment (2000 € Einzahlungen), keine Anlageberatung. Unter 30 Trades ist jedes Ergebnis
+<div class="note">Experiment (100000 € Einzahlungen), keine Anlageberatung. Unter 30 Trades ist jedes Ergebnis
 statistisches Rauschen — auch ein Vorsprung. Zum Vergleich: über 15 Jahre schlägt die Mehrheit
 der Profi-Fonds ihren Index in keiner einzigen US-Kategorie (SPIVA 2024).</div>
 
-</div><script type="application/json" id="agent-daten">{"stand": "22.06.2026, 16:08", "vermoegen": 100000.0, "rendite": 4900.0, "cashQuote": 100.0, "realisiert": 0.0, "vsSpyPp": 4999.86, "positionen": [], "trades": []}</script></body></html>
+</div><script type="application/json" id="agent-daten">{"stand": "22.06.2026, 16:24", "vermoegen": 99948.15, "rendite": -0.05, "cashQuote": 92.5, "realisiert": 0.0, "vsSpyPp": 99.81, "positionen": [{"ticker": "IONQ", "side": "long", "eur": 7508.65, "entry": 57.76, "kurs": 57.36, "stop": 51.0, "ziel": 69.0, "maxTage": 30, "speku": false}], "trades": []}</script></body></html>

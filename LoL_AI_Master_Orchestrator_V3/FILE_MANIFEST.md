@@ -115,6 +115,7 @@
 - `prompts/review/adversarial-tests-lying.md`
 - `prompts/review/adversarial-upload-idempotency.md`
 - `prompts/review/verified-fix-review.md`
+- `reports/PHASE_00_COMPLETION_REPORT.md`
 - `reports/templates/HUMAN_GATE.md`
 - `reports/templates/IMPLEMENTATION_REPORT.md`
 - `reports/templates/REVIEW_REPORT.md`

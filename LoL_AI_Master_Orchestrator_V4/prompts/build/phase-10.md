@@ -39,6 +39,15 @@ This layer is what turns "event compilation" into "entertaining video".
 - Final score = w_signal·signal + w_semantic·semantic (config, default 0.4/0.6);
   LLM-discovered windows enter ranking with signal=0. Top-N per hour + global
   top-K as before; reason_json now carries both layers' reasons.
+- **Personalization inputs (loaded into the editorial prompts when present,
+  both schema-validated, both optional):** humor_profile.json (few-shot
+  examples from the phase-14 dashboard ratings — the user's own humor) and
+  style_profile.json edit conventions (phase 11 — caption/zoom/SFX density
+  of the reference channels). Absence ⇒ neutral defaults, flagged in report.
+- Also build tests/harness/editorial_eval.py: offline eval tool comparing
+  editorial output against hand-labeled funny moments of a session
+  (found-rate, median |punchline_ts − label|). Not part of gated tests
+  (needs live LLM); used at phase 14/20 human reviews.
 - **Contract discipline**: every LLM response validated against
   schemas/editorial.schema.json; invalid ⇒ one retry ⇒ signal-only fallback for
   that item, flagged in reason_json. The pipeline NEVER blocks on the LLM.

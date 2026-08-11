@@ -18,6 +18,15 @@ Read persistent instructions (CLAUDE.md/AGENTS.md), MASTER_ORCHESTRATOR.md and t
 
 ## Human review criteria (Go/No-Go)
 - Output quality the user would actually publish; total manual effort acceptable; storage/GPU headroom confirmed; go/no-go record with exact SHA.
+- **Editorial/humor quality (V4 — core mechanic, explicitly judged):**
+  of the top 10 clips of the POC session: ≥ 6 rated "would publish as-is",
+  0 clips with the punchline cut off, ≥ 2 clips that contain NO game event
+  (pure comedy/talk moments found by the editorial layer — if the session
+  plausibly contained such moments), captions/zooms/SFX land on the punchline
+  not just on kills. Run tests/harness/editorial_eval.py (built in phase 10)
+  against hand labels of THIS session; attach its report (found-rate,
+  punchline offset median) to the Go/No-Go record. These numbers are recorded
+  evidence for the human decision, not auto-gates — humor is judged by you.
 ## Concrete files
 - tests/harness/e2e_real_stream.py (orchestrates checks + collects metrics), runbooks/POC_RUNBOOK.md (written in this phase)
 

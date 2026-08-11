@@ -1,0 +1,24 @@
+# runtime / local-only — canonical runtime state lives outside git history
+.venv/
+.orchestrator/
+state/
+PROJECT_STATE.md
+CURRENT_TASK.md
+ONE_SHOT_REPORT.md
+reports/human-gates/
+reports/acceptance/
+reports/agent_result.json
+
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+*.egg-info/
+
+# media / large artifacts of the built program
+*.mkv
+*.mp4
+*.wav
+data/
+recordings/

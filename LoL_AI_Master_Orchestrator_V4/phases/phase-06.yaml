@@ -1,0 +1,38 @@
+id: '06'
+name: Receiver/Security
+builder: claude
+reviewer: codex
+cross_vendor_review: true
+human_gate: true
+required_tests:
+- phase_06_tests
+- receiver_tailscale_binding
+- app_auth_over_tailscale
+- cross_tenant_tailscale_device_denied
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: cross_tenant_denied_pct
+  op: ==
+  value: 100
+- name: auth_bypass_count
+  op: ==
+  value: 0
+- name: duplicate_logical_objects
+  op: ==
+  value: 0
+deferrable_tests:
+- app_auth_over_tailscale
+- cross_tenant_tailscale_device_denied
+- receiver_tailscale_binding
+review_prompts:
+- prompts/build/phase-06.md
+- prompts/review/adversarial-tenant-escape.md
+- prompts/review/adversarial-auth-replay-secrets.md
+- prompts/review/adversarial-tailscale-network.md

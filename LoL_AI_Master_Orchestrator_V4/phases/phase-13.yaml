@@ -1,0 +1,27 @@
+id: '13'
+name: Automatic Cut Rules
+builder: codex
+reviewer: claude
+cross_vendor_review: true
+human_gate: false
+required_tests:
+- phase_13_tests
+- cutrule_determinism
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: cut_determinism
+  op: ==
+  value: 1
+- name: clip_len_violations
+  op: ==
+  value: 0
+review_prompts:
+- prompts/build/phase-13.md
+- prompts/review/adversarial-tests-lying.md

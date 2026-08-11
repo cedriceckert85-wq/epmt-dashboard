@@ -1,0 +1,24 @@
+id: '11'
+name: Reference Style
+builder: codex
+reviewer: claude
+cross_vendor_review: true
+human_gate: false
+required_tests:
+- phase_11_tests
+- style_profile_schema
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: style_profile_schema_valid
+  op: ==
+  value: 1
+review_prompts:
+- prompts/build/phase-11.md
+- prompts/review/adversarial-tests-lying.md

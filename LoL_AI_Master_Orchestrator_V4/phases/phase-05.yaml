@@ -1,0 +1,31 @@
+id: '05'
+name: Segmentation/Reconstruction
+builder: codex
+reviewer: claude
+cross_vendor_review: true
+human_gate: true
+required_tests:
+- phase_05_tests
+- reconstruction_fixtures
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: pts_overlap_count
+  op: ==
+  value: 0
+- name: undetected_gap_count
+  op: ==
+  value: 0
+- name: av_desync_ms_max
+  op: <=
+  value: 50
+review_prompts:
+- prompts/build/phase-05.md
+- prompts/review/adversarial-segment-crash.md
+- prompts/review/adversarial-concurrency.md

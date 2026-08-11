@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "High Finding Acceptance Record (orchestrator/human owned - never part of an agent report)",
+  "type": "object",
+  "required": [
+    "phase_id",
+    "finding_id",
+    "commit_sha",
+    "decision",
+    "reason",
+    "approver",
+    "timestamp_utc"
+  ],
+  "properties": {
+    "phase_id": {
+      "type": "string"
+    },
+    "finding_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit_sha": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "enum": [
+        "ACCEPT",
+        "REJECT"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "approver": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp_utc": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,24 @@
+id: '17'
+name: Analytics
+builder: codex
+reviewer: claude
+cross_vendor_review: true
+human_gate: false
+required_tests:
+- phase_17_tests
+- analytics_ingest_idempotency
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: ingest_duplicate_rows
+  op: ==
+  value: 0
+review_prompts:
+- prompts/build/phase-17.md
+- prompts/review/adversarial-concurrency.md

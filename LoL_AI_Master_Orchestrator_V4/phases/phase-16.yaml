@@ -1,0 +1,28 @@
+id: '16'
+name: Publishing
+builder: claude
+reviewer: codex
+cross_vendor_review: true
+human_gate: true
+required_tests:
+- phase_16_tests
+- publish_idempotency
+- secret_scan_publish
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: duplicate_publish_count
+  op: ==
+  value: 0
+- name: token_leak_findings
+  op: ==
+  value: 0
+review_prompts:
+- prompts/build/phase-16.md
+- prompts/review/adversarial-upload-idempotency.md

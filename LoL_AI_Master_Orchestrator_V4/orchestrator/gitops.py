@@ -1,0 +1,127 @@
+"""Git control: only the orchestrator commits/merges. Agents never touch git.
+
+Adaptation vs V3: instead of separate worktrees, each phase works on a
+candidate branch in the single project checkout (phase/NN). Merges into
+main are ff-only and SHA-verified.
+"""
+import subprocess
+from pathlib import Path
+
+
+class GitError(Exception):
+    pass
+
+
+class GitRepo:
+    def __init__(self, root):
+        self.root = Path(root)
+
+    def _run(self, *args, check=True, capture=True):
+        p = subprocess.run(["git", *args], cwd=self.root,
+                           capture_output=capture, text=True)
+        if check and p.returncode != 0:
+            raise GitError(f"git {' '.join(args)} failed (exit {p.returncode}): "
+                           f"{(p.stderr or p.stdout or '').strip()}")
+        return p
+
+    # -- setup -----------------------------------------------------------
+    def is_repo(self):
+        p = self._run("rev-parse", "--is-inside-work-tree", check=False)
+        return p.returncode == 0 and p.stdout.strip() == "true"
+
+    def init(self, main_branch="main"):
+        if not self.is_repo():
+            self._run("init", "-b", main_branch)
+        # commits need an identity; set a repo-local one if none configured
+        for key, val in (("user.name", "LoL Orchestrator"),
+                         ("user.email", "orchestrator@localhost")):
+            if self._run("config", "--get", key, check=False).returncode != 0:
+                self._run("config", key, val)
+
+    def has_commits(self):
+        return self._run("rev-parse", "HEAD", check=False).returncode == 0
+
+    # -- info ------------------------------------------------------------
+    def head_sha(self):
+        return self._run("rev-parse", "HEAD").stdout.strip()
+
+    def current_branch(self):
+        return self._run("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+
+    def branch_exists(self, name):
+        return self._run("rev-parse", "--verify", "--quiet", f"refs/heads/{name}",
+                         check=False).returncode == 0
+
+    def branch_sha(self, name):
+        p = self._run("rev-parse", f"refs/heads/{name}", check=False)
+        return p.stdout.strip() if p.returncode == 0 else None
+
+    def status_porcelain(self):
+        """[(status, path)] of pending changes. Rename entries yield the new path."""
+        out = self._run("status", "--porcelain").stdout
+        entries = []
+        for line in out.splitlines():
+            if not line.strip():
+                continue
+            code, rest = line[:2], line[3:]
+            if " -> " in rest:
+                rest = rest.split(" -> ", 1)[1]
+            path = rest.strip()
+            if path.startswith('"') and path.endswith('"'):
+                path = path[1:-1].encode("latin-1", "backslashreplace").decode("unicode_escape")
+            entries.append((code.strip() or "??", path))
+        return entries
+
+    def is_clean(self):
+        return not self.status_porcelain()
+
+    def changed_paths_since(self, base_sha):
+        out = self._run("diff", "--name-only", base_sha, "HEAD").stdout
+        return [l.strip() for l in out.splitlines() if l.strip()]
+
+    # -- actions ---------------------------------------------------------
+    def checkout(self, branch):
+        self._run("checkout", "--quiet", branch)
+
+    def create_branch(self, name, start_point):
+        self._run("checkout", "--quiet", "-B", name, start_point)
+
+    def add_all_and_commit(self, message):
+        self._run("add", "-A")
+        if self.is_clean():
+            return None
+        self._run("commit", "--quiet", "-m", message)
+        return self.head_sha()
+
+    def restore_paths(self, paths):
+        """Revert the given paths to HEAD; untracked ones are deleted."""
+        tracked, untracked = [], []
+        for st, path in self.status_porcelain():
+            if path in paths:
+                (untracked if st == "??" else tracked).append(path)
+        if tracked:
+            self._run("checkout", "HEAD", "--", *tracked)
+        for path in untracked:
+            target = self.root / path
+            try:
+                if target.is_dir() and not target.is_symlink():
+                    import shutil
+                    shutil.rmtree(target)
+                else:
+                    target.unlink(missing_ok=True)
+            except OSError as e:
+                raise GitError(f"could not remove untracked forbidden path {path}: {e}")
+
+    def hard_reset_clean(self):
+        self._run("reset", "--hard", "--quiet")
+        self._run("clean", "-fdq")
+
+    def merge_ff_only(self, main_branch, candidate_branch):
+        self.checkout(main_branch)
+        if not self.is_clean():
+            raise GitError("main branch working tree not clean before merge")
+        self._run("merge", "--ff-only", "--quiet", candidate_branch)
+        return self.head_sha()
+
+    def delete_branch(self, name):
+        self._run("branch", "-D", name, check=False)

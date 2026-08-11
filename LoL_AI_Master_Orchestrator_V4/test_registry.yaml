@@ -1,0 +1,589 @@
+version: 1
+conventions:
+  evidence_root: .orchestrator/artifacts/{run_id}/
+  parser:
+    exit_code: exit 0 == PASS, no metrics
+    pytest_junit: exit code + junit xml as evidence
+    metrics_json: 'exit 0 == PASS AND evidence json {"metrics": {...}} feeds gate metrics'
+  requires: orchestrator doctor must verify each requirement before running; unmet requirement => UNVERIFIED,
+    never skipped-as-pass
+  implemented_in_phase: harness/tests are BUILT in that phase; the registry entry is normative from day
+    1
+tests:
+  phase_00_tests:
+    command: python -m pytest tests/unit -q --junitxml=.orchestrator/artifacts/{run_id}/phase00_junit.xml
+    cwd: .
+    timeout_s: 900
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase00_junit.xml
+    implemented_in_phase: '00'
+    produces_metrics: []
+  phase_01_tests:
+    command: python -m pytest tests/phase01 -q --junitxml=.orchestrator/artifacts/{run_id}/phase01_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase01_junit.xml
+    implemented_in_phase: '01'
+    produces_metrics: []
+  phase_02_tests:
+    command: python -m pytest tests/phase02 -q --junitxml=.orchestrator/artifacts/{run_id}/phase02_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase02_junit.xml
+    implemented_in_phase: '02'
+    produces_metrics: []
+  phase_03_tests:
+    command: python -m pytest tests/phase03 -q --junitxml=.orchestrator/artifacts/{run_id}/phase03_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase03_junit.xml
+    implemented_in_phase: '03'
+    produces_metrics: []
+  phase_04_tests:
+    command: python -m pytest tests/phase04 -q --junitxml=.orchestrator/artifacts/{run_id}/phase04_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase04_junit.xml
+    implemented_in_phase: '04'
+    produces_metrics: []
+  phase_05_tests:
+    command: python -m pytest tests/phase05 -q --junitxml=.orchestrator/artifacts/{run_id}/phase05_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase05_junit.xml
+    implemented_in_phase: '05'
+    produces_metrics: []
+  phase_06_tests:
+    command: python -m pytest tests/phase06 -q --junitxml=.orchestrator/artifacts/{run_id}/phase06_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase06_junit.xml
+    implemented_in_phase: '06'
+    produces_metrics: []
+  phase_07_tests:
+    command: python -m pytest tests/phase07 -q --junitxml=.orchestrator/artifacts/{run_id}/phase07_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase07_junit.xml
+    implemented_in_phase: '07'
+    produces_metrics: []
+  phase_08_tests:
+    command: python -m pytest tests/phase08 -q --junitxml=.orchestrator/artifacts/{run_id}/phase08_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase08_junit.xml
+    implemented_in_phase: 08
+    produces_metrics: []
+  phase_09_tests:
+    command: python -m pytest tests/phase09 -q --junitxml=.orchestrator/artifacts/{run_id}/phase09_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase09_junit.xml
+    implemented_in_phase: 09
+    produces_metrics: []
+  phase_10_tests:
+    command: python -m pytest tests/phase10 -q --junitxml=.orchestrator/artifacts/{run_id}/phase10_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase10_junit.xml
+    implemented_in_phase: '10'
+    produces_metrics: []
+  phase_11_tests:
+    command: python -m pytest tests/phase11 -q --junitxml=.orchestrator/artifacts/{run_id}/phase11_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase11_junit.xml
+    implemented_in_phase: '11'
+    produces_metrics: []
+  phase_12_tests:
+    command: python -m pytest tests/phase12 -q --junitxml=.orchestrator/artifacts/{run_id}/phase12_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase12_junit.xml
+    implemented_in_phase: '12'
+    produces_metrics: []
+  phase_13_tests:
+    command: python -m pytest tests/phase13 -q --junitxml=.orchestrator/artifacts/{run_id}/phase13_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase13_junit.xml
+    implemented_in_phase: '13'
+    produces_metrics: []
+  phase_14_tests:
+    command: python -m pytest tests/phase14 -q --junitxml=.orchestrator/artifacts/{run_id}/phase14_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase14_junit.xml
+    implemented_in_phase: '14'
+    produces_metrics: []
+  phase_15_tests:
+    command: python -m pytest tests/phase15 -q --junitxml=.orchestrator/artifacts/{run_id}/phase15_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase15_junit.xml
+    implemented_in_phase: '15'
+    produces_metrics: []
+  phase_16_tests:
+    command: python -m pytest tests/phase16 -q --junitxml=.orchestrator/artifacts/{run_id}/phase16_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase16_junit.xml
+    implemented_in_phase: '16'
+    produces_metrics: []
+  phase_17_tests:
+    command: python -m pytest tests/phase17 -q --junitxml=.orchestrator/artifacts/{run_id}/phase17_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase17_junit.xml
+    implemented_in_phase: '17'
+    produces_metrics: []
+  phase_18_tests:
+    command: python -m pytest tests/phase18 -q --junitxml=.orchestrator/artifacts/{run_id}/phase18_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase18_junit.xml
+    implemented_in_phase: '18'
+    produces_metrics: []
+  phase_19_tests:
+    command: python -m pytest tests/phase19 -q --junitxml=.orchestrator/artifacts/{run_id}/phase19_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase19_junit.xml
+    implemented_in_phase: '19'
+    produces_metrics: []
+  phase_20_tests:
+    command: python -m pytest tests/phase20 -q --junitxml=.orchestrator/artifacts/{run_id}/phase20_junit.xml
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/phase20_junit.xml
+    implemented_in_phase: '20'
+    produces_metrics: []
+  schema_roundtrip:
+    command: python -m pytest tests/phase01 -q -k roundtrip --junitxml=.orchestrator/artifacts/{run_id}/schema_roundtrip.xml
+    cwd: .
+    timeout_s: 600
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/schema_roundtrip.xml
+    implemented_in_phase: '01'
+    produces_metrics:
+    - schema_validation_failures
+  migration_up_down:
+    command: python scripts/db_migrate_check.py --json .orchestrator/artifacts/{run_id}/migration_up_down.json
+    cwd: .
+    timeout_s: 600
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/migration_up_down.json
+    implemented_in_phase: '01'
+    produces_metrics:
+    - migration_reversible
+  segment_validation_fixtures:
+    command: python tests/harness/segment_validate.py --fixtures tests/fixtures/segments --json .orchestrator/artifacts/{run_id}/segment_validation_fixtures.json
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/segment_validation_fixtures.json
+    implemented_in_phase: '02'
+    produces_metrics:
+    - segment_validate_fail_count
+  agent_crash_recovery:
+    command: python tests/harness/agent_crash_recovery.py --json .orchestrator/artifacts/{run_id}/agent_crash_recovery.json
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - windows
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/agent_crash_recovery.json
+    implemented_in_phase: '02'
+    produces_metrics:
+    - agent_cpu_pct_p95
+    - agent_ram_mb_max
+  riot_event_dedupe:
+    command: python tests/harness/riot_replay.py --fixture duplicates --json .orchestrator/artifacts/{run_id}/riot_event_dedupe.json
+    cwd: .
+    timeout_s: 900
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/riot_event_dedupe.json
+    implemented_in_phase: '03'
+    produces_metrics:
+    - event_duplicate_count
+  riot_reconnect_fixture:
+    command: python tests/harness/riot_replay.py --fixture reconnect --json .orchestrator/artifacts/{run_id}/riot_reconnect_fixture.json
+    cwd: .
+    timeout_s: 900
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/riot_reconnect_fixture.json
+    implemented_in_phase: '03'
+    produces_metrics:
+    - sample_gap_p99_ms
+  sync_drift_fixtures:
+    command: python tests/harness/sync_eval.py --fixtures tests/fixtures/sync --json .orchestrator/artifacts/{run_id}/sync_drift_fixtures.json
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/sync_drift_fixtures.json
+    implemented_in_phase: '04'
+    produces_metrics:
+    - sync_error_p95_ms
+    - sync_error_p99_ms
+    - sync_error_max_ms
+    - mapped_time_nonmonotonic_count
+  reconstruction_fixtures:
+    command: python tests/harness/reconstruct_eval.py --json .orchestrator/artifacts/{run_id}/reconstruction_fixtures.json
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/reconstruction_fixtures.json
+    implemented_in_phase: '05'
+    produces_metrics:
+    - pts_overlap_count
+    - undetected_gap_count
+    - av_desync_ms_max
+  receiver_tailscale_binding:
+    command: python tests/harness/tailscale_binding_check.py --json .orchestrator/artifacts/{run_id}/receiver_tailscale_binding.json
+    cwd: .
+    timeout_s: 600
+    requires:
+    - tailscale
+    - network
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/receiver_tailscale_binding.json
+    implemented_in_phase: '06'
+    produces_metrics: []
+  app_auth_over_tailscale:
+    command: python tests/harness/auth_matrix.py --json .orchestrator/artifacts/{run_id}/app_auth_over_tailscale.json
+    cwd: .
+    timeout_s: 900
+    requires:
+    - tailscale
+    - network
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/app_auth_over_tailscale.json
+    implemented_in_phase: '06'
+    produces_metrics:
+    - auth_bypass_count
+  cross_tenant_tailscale_device_denied:
+    command: python tests/harness/tenant_matrix.py --json .orchestrator/artifacts/{run_id}/cross_tenant_tailscale_device_denied.json
+    cwd: .
+    timeout_s: 900
+    requires:
+    - tailscale
+    - network
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/cross_tenant_tailscale_device_denied.json
+    implemented_in_phase: '06'
+    produces_metrics:
+    - cross_tenant_denied_pct
+    - duplicate_logical_objects
+  tailscale_preflight:
+    command: python tests/harness/tailscale_preflight.py --json .orchestrator/artifacts/{run_id}/tailscale_preflight.json
+    cwd: .
+    timeout_s: 300
+    requires:
+    - tailscale
+    - network
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/tailscale_preflight.json
+    implemented_in_phase: '07'
+    produces_metrics: []
+  tailscale_disconnect_resume:
+    command: python tests/harness/tailscale_disconnect_resume.py --json .orchestrator/artifacts/{run_id}/tailscale_disconnect_resume.json
+    cwd: .
+    timeout_s: 3600
+    requires:
+    - tailscale
+    - network
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/tailscale_disconnect_resume.json
+    implemented_in_phase: '07'
+    produces_metrics:
+    - resume_duplicate_objects
+    - corrupted_uploads
+    - catchup_after_1h_outage_min
+  tailscale_no_public_fallback:
+    command: python tests/harness/no_public_fallback.py --json .orchestrator/artifacts/{run_id}/tailscale_no_public_fallback.json
+    cwd: .
+    timeout_s: 600
+    requires:
+    - tailscale
+    - network
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/tailscale_no_public_fallback.json
+    implemented_in_phase: '07'
+    produces_metrics: []
+  tailscale_tenant_isolation:
+    command: python tests/harness/tenant_matrix.py --client --json .orchestrator/artifacts/{run_id}/tailscale_tenant_isolation.json
+    cwd: .
+    timeout_s: 900
+    requires:
+    - tailscale
+    - network
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/tailscale_tenant_isolation.json
+    implemented_in_phase: '07'
+    produces_metrics: []
+  soak_8h_pipeline:
+    command: python tests/soak/run_8h_soak.py --hours 8 --json .orchestrator/artifacts/{run_id}/soak_8h_pipeline.json
+    cwd: .
+    timeout_s: 32400
+    requires:
+    - obs
+    - riot_live
+    - tailscale
+    - network
+    - gpu
+    - long_run
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/soak_8h_pipeline.json
+    implemented_in_phase: 08
+    produces_metrics:
+    - rss_growth_mb_per_h_agent
+    - rss_growth_mb_per_h_receiver
+    - fd_leak_count
+    - segments_lost
+    - sync_error_p95_ms_at_8h
+    - stream_dropped_frames_pct_delta
+  asr_fixture_suite:
+    command: python tests/harness/asr_eval.py --fixtures tests/fixtures/audio --json .orchestrator/artifacts/{run_id}/asr_fixture_suite.json
+    cwd: .
+    timeout_s: 3600
+    requires:
+    - gpu
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/asr_fixture_suite.json
+    implemented_in_phase: 09
+    produces_metrics:
+    - asr_rtf_gpu
+    - transcript_coverage_pct
+  reaction_precision_fixture:
+    command: python tests/harness/reaction_eval.py --labels tests/fixtures/reactions/labels.json --json
+      .orchestrator/artifacts/{run_id}/reaction_precision_fixture.json
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - gpu
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/reaction_precision_fixture.json
+    implemented_in_phase: 09
+    produces_metrics:
+    - reaction_precision_fixture
+  ranking_determinism:
+    command: python tests/harness/rank_eval.py --determinism --json .orchestrator/artifacts/{run_id}/ranking_determinism.json
+    cwd: .
+    timeout_s: 600
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/ranking_determinism.json
+    implemented_in_phase: '10'
+    produces_metrics:
+    - rank_determinism
+  ranking_precision_fixture:
+    command: python tests/harness/rank_eval.py --labels tests/fixtures/ranking/labels.json --json .orchestrator/artifacts/{run_id}/ranking_precision_fixture.json
+    cwd: .
+    timeout_s: 900
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/ranking_precision_fixture.json
+    implemented_in_phase: '10'
+    produces_metrics:
+    - precision_at_10_fixture
+  style_profile_schema:
+    command: python tests/harness/style_profile_check.py --json .orchestrator/artifacts/{run_id}/style_profile_schema.json
+    cwd: .
+    timeout_s: 600
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/style_profile_schema.json
+    implemented_in_phase: '11'
+    produces_metrics:
+    - style_profile_schema_valid
+  render_fixture_suite:
+    command: python tests/harness/render_eval.py --fixtures tests/fixtures/edl --json .orchestrator/artifacts/{run_id}/render_fixture_suite.json
+    cwd: .
+    timeout_s: 7200
+    requires:
+    - gpu
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/render_fixture_suite.json
+    implemented_in_phase: '12'
+    produces_metrics:
+    - render_fail_count
+    - av_sync_drift_ms_max
+    - loudness_lufs_min
+    - loudness_lufs_max
+    - encode_speed_x_min
+  cutrule_determinism:
+    command: python tests/harness/cutrules_eval.py --json .orchestrator/artifacts/{run_id}/cutrule_determinism.json
+    cwd: .
+    timeout_s: 600
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/cutrule_determinism.json
+    implemented_in_phase: '13'
+    produces_metrics:
+    - cut_determinism
+    - clip_len_violations
+  dashboard_api_contract:
+    command: python -m pytest tests/phase14/contract -q --junitxml=.orchestrator/artifacts/{run_id}/dashboard_contract.xml
+    cwd: .
+    timeout_s: 900
+    requires:
+    - none
+    parser: pytest_junit
+    evidence: .orchestrator/artifacts/{run_id}/dashboard_contract.xml
+    implemented_in_phase: '14'
+    produces_metrics:
+    - api_contract_failures
+  fullgame_export_fixture:
+    command: python tests/harness/fullgame_eval.py --json .orchestrator/artifacts/{run_id}/fullgame_export_fixture.json
+    cwd: .
+    timeout_s: 7200
+    requires:
+    - gpu
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/fullgame_export_fixture.json
+    implemented_in_phase: '15'
+    produces_metrics:
+    - duration_delta_ms_max
+    - chapter_offset_error_ms_max
+  publish_idempotency:
+    command: python tests/harness/publish_idempotency.py --sandbox --json .orchestrator/artifacts/{run_id}/publish_idempotency.json
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - network
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/publish_idempotency.json
+    implemented_in_phase: '16'
+    produces_metrics:
+    - duplicate_publish_count
+  secret_scan_publish:
+    command: python tests/harness/secret_scan.py --paths src logs --json .orchestrator/artifacts/{run_id}/secret_scan_publish.json
+    cwd: .
+    timeout_s: 600
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/secret_scan_publish.json
+    implemented_in_phase: '16'
+    produces_metrics:
+    - token_leak_findings
+  analytics_ingest_idempotency:
+    command: python tests/harness/analytics_eval.py --json .orchestrator/artifacts/{run_id}/analytics_ingest_idempotency.json
+    cwd: .
+    timeout_s: 900
+    requires:
+    - network
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/analytics_ingest_idempotency.json
+    implemented_in_phase: '17'
+    produces_metrics:
+    - ingest_duplicate_rows
+  retention_policy_fixture:
+    command: python tests/harness/retention_eval.py --json .orchestrator/artifacts/{run_id}/retention_policy_fixture.json
+    cwd: .
+    timeout_s: 1800
+    requires:
+    - none
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/retention_policy_fixture.json
+    implemented_in_phase: '19'
+    produces_metrics:
+    - deleted_protected_objects
+    - free_space_floor_gb
+  e2e_real_stream:
+    command: python tests/harness/e2e_real_stream.py --json .orchestrator/artifacts/{run_id}/e2e_real_stream.json
+    cwd: .
+    timeout_s: 43200
+    requires:
+    - obs
+    - riot_live
+    - tailscale
+    - network
+    - gpu
+    - real_stream
+    parser: metrics_json
+    evidence: .orchestrator/artifacts/{run_id}/e2e_real_stream.json
+    implemented_in_phase: '20'
+    produces_metrics:
+    - end_to_end_success
+    - human_minutes_per_published_video

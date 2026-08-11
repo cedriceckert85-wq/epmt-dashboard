@@ -1,0 +1,34 @@
+id: '04'
+name: Sync Engine
+builder: claude
+reviewer: codex
+cross_vendor_review: true
+human_gate: true
+required_tests:
+- phase_04_tests
+- sync_drift_fixtures
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: sync_error_p95_ms
+  op: <=
+  value: 100
+- name: sync_error_p99_ms
+  op: <=
+  value: 250
+- name: sync_error_max_ms
+  op: <=
+  value: 500
+- name: mapped_time_nonmonotonic_count
+  op: ==
+  value: 0
+review_prompts:
+- prompts/build/phase-04.md
+- prompts/review/adversarial-clock-domain.md
+- prompts/review/adversarial-tests-lying.md

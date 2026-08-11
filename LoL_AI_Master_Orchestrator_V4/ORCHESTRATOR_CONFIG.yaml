@@ -1,0 +1,101 @@
+# LoL AI Master Orchestrator V4 — One-Shot configuration.
+# This file is agent-immutable (see security.immutable_paths).
+version: 4
+project:
+  name: lol-ai-cutter
+  main_branch: main
+  canonical_state: state/project_state.json
+  current_task: state/current_task.json
+  journal: state/journal.jsonl
+  generated_state_markdown: PROJECT_STATE.md
+  generated_task_markdown: CURRENT_TASK.md
+  artifact_root: .orchestrator/artifacts
+  lock_file: state/orchestrator.lock
+
+execution:
+  # auto  = one-shot: human gates become evidence-bound AUTO_GATE approvals,
+  #         written only after every deterministic criterion already holds.
+  # strict = V3 behavior: pause and wait for `orchestrator approve`.
+  gate_mode: auto
+  # Host capabilities the doctor cannot probe reliably. Set true only if
+  # the real thing is present — unmet capabilities defer tests as
+  # UNVERIFIED, they are never faked as passes.
+  capabilities_override: {}
+  #  obs: true
+  #  riot_live: true
+  #  real_stream: true
+  #  long_run: true      # allow the 8h soak inside a run
+
+agents:
+  claude:
+    executable: claude
+    timeout_s: 5400
+    max_retries: 2
+    model: null          # null = CLI default
+    args: null           # override full flag list if the CLI changes
+  codex:
+    executable: codex
+    timeout_s: 5400
+    max_retries: 2
+    model: null
+    args: null
+
+retry:
+  infrastructure_backoff_s: [5, 20]
+  invalid_schema_retries: 1
+  max_fix_cycles: 2
+
+security:
+  immutable_paths:
+    - .git
+    - .venv
+    - .orchestrator
+    - state
+    - schemas
+    - phases
+    - prompts
+    - orchestrator
+    - bootstrap.py
+    - START.bat
+    - start.sh
+    - requirements-bootstrap.txt
+    - ORCHESTRATOR_CONFIG.yaml
+    - PROJECT_STATE.md
+    - CURRENT_TASK.md
+    - ONE_SHOT_REPORT.md
+    - reports/human-gates
+    - reports/acceptance
+    - test_registry.yaml
+    - CLAUDE.md
+    - AGENTS.md
+    - MASTER_ORCHESTRATOR.md
+    - README.md
+  test_env_must_strip_provider_secrets: true
+  strip_env_vars: []     # extra env var names to strip for test runs
+
+git:
+  require_clean_main: true
+  merge_strategy: ff-only
+  agents_may_commit: false
+
+human_gates:
+  record_dir: reports/human-gates
+
+acceptance:
+  record_dir: reports/acceptance
+  schema: schemas/finding_acceptance.schema.json
+
+test_registry: test_registry.yaml
+
+gate_policy:
+  review_acceptance_source: orchestrator_or_human_only
+  require_sha_invariant: true
+  require_legal_lifecycle_transition: true
+  human_approval_must_bind_exact_sha: true
+
+retryable_exit_codes: [75]
+
+path_policy:
+  precedence: immutable_over_allowed
+  rule: A path matching an immutable path or any descendant of one is
+    forbidden even if its parent is allowed.

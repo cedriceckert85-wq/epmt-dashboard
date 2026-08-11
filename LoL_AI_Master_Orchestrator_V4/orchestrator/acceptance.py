@@ -16,9 +16,14 @@ def load_records(record_dir):
     as error markers so the gate can surface them (fail closed)."""
     records=[]
     d=Path(record_dir)
-    if not d.exists():
+    if not d.exists() or d.is_symlink():
         return records
     for p in sorted(d.glob("*.json")):
+        # never follow a symlinked record: a forged acceptance planted as a
+        # symlink to an out-of-tree file is rejected outright
+        if p.is_symlink() or not p.is_file():
+            records.append({"__load_error__": f"{p.name}: refused (symlink/non-regular file)"})
+            continue
         try:
             records.append(json.loads(p.read_text(encoding="utf-8")))
         except Exception as e:

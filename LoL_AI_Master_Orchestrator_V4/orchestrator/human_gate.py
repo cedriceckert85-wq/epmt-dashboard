@@ -21,7 +21,12 @@ def record_path(record_dir, phase_id, commit_sha):
 
 def load_approval(record_dir, phase_id, commit_sha):
     p = record_path(record_dir, phase_id, commit_sha)
-    if not p.exists():
+    # refuse to follow a symlink: a forged approval planted as a symlink to an
+    # out-of-tree file must never be honored (defense in depth beside the
+    # integrity snapshot that records symlinks as tampering).
+    if p.is_symlink() or (p.parent.exists() and p.parent.is_symlink()):
+        return None
+    if not p.is_file():
         return None
     import json
     try:

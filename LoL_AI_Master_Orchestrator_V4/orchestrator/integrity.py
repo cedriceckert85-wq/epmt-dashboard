@@ -2,38 +2,46 @@
 
 Git-diff inspection catches agent writes to tracked immutable paths, but
 runtime control files (state/, human-gate + acceptance records, generated
-projections) AND gitignored immutable trees (.venv/, .orchestrator/) are
-invisible to `git status`. An agent write there would bypass the git-diff
-layer entirely — including planting forged approval/acceptance records or
-injecting code into the venv that runs on the next `python -m orchestrator`
-invocation. So the orchestrator snapshots these paths before every agent
-run / test run and compares afterwards. Any difference => BLOCKED.
+projections, .orchestrator/) are gitignored — invisible to `git status`.
+An agent/test write there would bypass the git-diff layer entirely,
+including forging approval/acceptance records or injecting code into the
+venv that runs on the next `python -m orchestrator` invocation. So the
+orchestrator snapshots these paths before/after every agent run and test
+run and compares; any difference => BLOCKED.
 
-Two snapshot modes:
-- HASH  : small control files/dirs — full sha256 (exact content check).
-- STAT  : large trees (.venv, .orchestrator) — (size, mtime_ns) per file,
-          fast, still detects any add/remove/modify.
+Design notes (hardened after adversarial review):
+- Signatures are CONTENT HASHES, not (size, mtime) — a same-size overwrite
+  with the mtime restored via os.utime can no longer evade detection.
+- SYMLINKS are recorded as `symlink:<target>` WITHOUT being followed, so
+  planting a symlink (e.g. reports/human-gates/x.json -> /tmp/forged.json,
+  or .venv/.../sitecustomize.py -> /tmp/evil.py) shows up as an `added`
+  entry instead of being silently skipped.
+- The venv is NOT snapshotted wholesale (huge, and benign lazy caches like
+  font caches / compiled modules would false-positive). Only the files that
+  Python AUTO-EXECUTES at interpreter startup — *.pth, sitecustomize.py,
+  usercustomize.py — are guarded, which is the actual injection surface.
 """
 import hashlib
 from pathlib import Path
 
-# small, hashed exactly
+# small control dirs/files — every regular file hashed, symlinks recorded
 HASH_PATHS = [
     "state",
     "reports/human-gates",
     "reports/acceptance",
+    ".orchestrator",              # minus the artifact dir (excluded by caller)
     "PROJECT_STATE.md",
     "CURRENT_TASK.md",
     "ONE_SHOT_REPORT.md",
 ]
 
-# large trees, stat-based (immutable but gitignored — must still be guarded)
-STAT_PATHS = [
-    ".venv",
-    ".orchestrator",
-]
+# only auto-executed entry points inside the venv are guarded (injection
+# surface), not the whole tree
+VENV_ROOTS = [".venv"]
+VENV_ENTRYPOINT_NAMES = {"sitecustomize.py", "usercustomize.py"}
+VENV_ENTRYPOINT_SUFFIXES = (".pth",)
 
-PROTECTED_RUNTIME_PATHS = HASH_PATHS + STAT_PATHS
+PROTECTED_RUNTIME_PATHS = HASH_PATHS + VENV_ROOTS
 
 
 def _hash_file(p):
@@ -44,26 +52,32 @@ def _hash_file(p):
     return h.hexdigest()
 
 
-def _stat_sig(p):
-    st = p.stat()
-    return f"stat:{st.st_size}:{st.st_mtime_ns}"
+def _sig(p):
+    """Content signature that never follows a symlink."""
+    if p.is_symlink():
+        try:
+            target = p.readlink()
+        except OSError:
+            target = "?"
+        return f"symlink:{target}"
+    return f"sha256:{_hash_file(p)}"
 
 
 def _is_regenerable_cache(rel):
-    # bytecode caches are rewritten by any import and are NOT an injection
-    # vector on their own (CPython refuses a .pyc whose source hash/mtime
-    # does not match), so exclude them to avoid false tamper positives.
     return ("__pycache__/" in rel or rel.endswith((".pyc", ".pyo"))
-            or rel.endswith(".pytest_cache") or "/.pytest_cache/" in rel)
+            or "/.pytest_cache/" in rel or rel.endswith("/.pytest_cache"))
 
 
-def snapshot(root, *, hash_paths=HASH_PATHS, stat_paths=STAT_PATHS,
-             exclude=()):
+def _venv_entrypoint(name):
+    return name in VENV_ENTRYPOINT_NAMES or name.endswith(VENV_ENTRYPOINT_SUFFIXES)
+
+
+def snapshot(root, *, hash_paths=HASH_PATHS, venv_roots=VENV_ROOTS, exclude=()):
     """Map repo-relative path -> signature for every protected file.
 
     `exclude` is an iterable of repo-relative path prefixes to skip (used to
-    exempt the orchestrator's own current-run artifact subdir when it must
-    write there during the guarded window)."""
+    exempt the orchestrator's own current-run artifact dir, which it writes
+    into during the guarded window)."""
     root = Path(root)
     exclude = tuple(e.replace("\\", "/").rstrip("/") for e in exclude)
 
@@ -72,32 +86,37 @@ def snapshot(root, *, hash_paths=HASH_PATHS, stat_paths=STAT_PATHS,
 
     snap = {}
 
-    def add(rel, sig):
-        if not excluded(rel):
-            snap[rel] = sig
+    def add(p, rel):
+        if excluded(rel) or _is_regenerable_cache(rel):
+            return
+        try:
+            snap[rel] = _sig(p)
+        except OSError:
+            snap[rel] = "unreadable"
+
+    def walk(base, keep=lambda rel, name: True):
+        if base.is_symlink():                     # a symlinked dir itself
+            add(base, str(base.relative_to(root)).replace("\\", "/"))
+            return
+        if base.is_file():
+            add(base, str(base.relative_to(root)).replace("\\", "/"))
+            return
+        if not base.is_dir():
+            return
+        for f in sorted(base.rglob("*")):
+            rel = str(f.relative_to(root)).replace("\\", "/")
+            # do not descend into symlinked dirs; record the link itself
+            if f.is_symlink():
+                if keep(rel, f.name):
+                    add(f, rel)
+                continue
+            if f.is_file() and keep(rel, f.name):
+                add(f, rel)
 
     for rel in hash_paths:
-        p = root / rel
-        if p.is_file():
-            add(rel, _hash_file(p))
-        elif p.is_dir():
-            for f in sorted(p.rglob("*")):
-                if f.is_file() and not f.is_symlink():
-                    add(str(f.relative_to(root)).replace("\\", "/"), _hash_file(f))
-    for rel in stat_paths:
-        p = root / rel
-        if p.is_dir():
-            for f in sorted(p.rglob("*")):
-                if f.is_file() and not f.is_symlink():
-                    frel = str(f.relative_to(root)).replace("\\", "/")
-                    if _is_regenerable_cache(frel):
-                        continue
-                    try:
-                        add(frel, _stat_sig(f))
-                    except OSError:
-                        pass
-        elif p.is_file():
-            add(rel, _stat_sig(p))
+        walk(root / rel)
+    for rel in venv_roots:
+        walk(root / rel, keep=lambda rel, name: _venv_entrypoint(name))
     return snap
 
 

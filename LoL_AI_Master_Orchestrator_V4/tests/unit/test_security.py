@@ -1,10 +1,13 @@
 from orchestrator.path_policy import is_write_allowed, normalize
 
-ALLOWED = ["src/", "tests/", "docs/", "reports/"]
-IMMUTABLE = [".git", "state", "schemas", "phases", "prompts", "orchestrator",
+ALLOWED = ["src/", "tests/", "docs/", "reports/", "schemas/", "migrations/",
+           "config/", "assets/", "runbooks/"]
+IMMUTABLE = [".git", "state", "phases", "prompts", "orchestrator", "scripts",
              "bootstrap.py", "ORCHESTRATOR_CONFIG.yaml",
              "PROJECT_STATE.md", "CURRENT_TASK.md", "reports/human-gates",
-             "reports/acceptance", "test_registry.yaml"]
+             "reports/acceptance", "test_registry.yaml",
+             "schemas/agent_result.schema.json",
+             "schemas/finding_acceptance.schema.json"]
 
 
 def ok(p):
@@ -23,11 +26,28 @@ def test_immutable_child_beats_allowed_parent():
 
 def test_immutable_roots_blocked():
     for p in ("state/project_state.json", "phases/phase-04.yaml",
-              "schemas/agent_result.schema.json", "ORCHESTRATOR_CONFIG.yaml",
+              "schemas/agent_result.schema.json", "schemas/finding_acceptance.schema.json",
+              "ORCHESTRATOR_CONFIG.yaml",
               "test_registry.yaml", ".git/config", "PROJECT_STATE.md",
               "CURRENT_TASK.md", "orchestrator/gates.py", "prompts/build/phase-01.md",
-              "bootstrap.py"):
+              "scripts/make_zip.py", "bootstrap.py"):
         assert not ok(p)
+
+
+def test_project_schemas_writable_control_schemas_locked():
+    # build prompts tell agents to create project data schemas under schemas/;
+    # those must be writable while the two orchestrator control schemas stay
+    # locked (immutable child beats allowed parent).
+    assert ok("schemas/edl.schema.json")
+    assert ok("schemas/segment_manifest.schema.json")
+    assert not ok("schemas/agent_result.schema.json")
+    assert not ok("schemas/finding_acceptance.schema.json")
+
+
+def test_new_build_dirs_writable():
+    for p in ("migrations/0001_init.sql", "config/editorial.toml",
+              "assets/sfx/README.md", "runbooks/POC_RUNBOOK.md"):
+        assert ok(p)
 
 
 def test_traversal_and_absolute_blocked():

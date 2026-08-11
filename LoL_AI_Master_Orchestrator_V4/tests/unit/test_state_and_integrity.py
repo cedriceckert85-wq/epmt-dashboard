@@ -107,18 +107,64 @@ def test_integrity_clean_when_untouched(tmp_path):
     assert integrity.diff_snapshots(before, integrity.snapshot(tmp_path)) == []
 
 
-def test_integrity_covers_gitignored_immutable_trees(tmp_path):
-    # .venv and .orchestrator are gitignored (invisible to git status) but
-    # immutable — a write there must be detected by the snapshot.
-    (tmp_path / ".venv" / "lib").mkdir(parents=True)
-    (tmp_path / ".venv" / "lib" / "sitecustomize.py").write_text("# ok", encoding="utf-8")
+def test_integrity_guards_venv_entrypoints_only(tmp_path):
+    # only auto-executed venv files (sitecustomize/usercustomize/*.pth) are
+    # guarded; a benign lazy cache write elsewhere in .venv must NOT trip it
+    # (that false-positive would wrongly BLOCK a clean build).
+    sp = tmp_path / ".venv" / "lib" / "site-packages"
+    sp.mkdir(parents=True)
+    (sp / "sitecustomize.py").write_text("# ok", encoding="utf-8")
+    (sp / "mpl-data").mkdir()
     before = integrity.snapshot(tmp_path)
-    (tmp_path / ".venv" / "lib" / "sitecustomize.py").write_text("import os  # injected", encoding="utf-8")
-    (tmp_path / ".orchestrator" / "evil").mkdir(parents=True)
-    (tmp_path / ".orchestrator" / "evil" / "x").write_text("y", encoding="utf-8")
+    # benign cache write inside .venv -> NOT flagged
+    (sp / "mpl-data" / "fontcache.json").write_text("{}", encoding="utf-8")
+    (sp / "numba_cache.nbi").write_text("x", encoding="utf-8")
+    assert integrity.diff_snapshots(before, integrity.snapshot(tmp_path)) == []
+    # entrypoint edit -> flagged
+    before2 = integrity.snapshot(tmp_path)
+    (sp / "sitecustomize.py").write_text("import os  # injected", encoding="utf-8")
+    assert any("sitecustomize.py" in d for d in
+               integrity.diff_snapshots(before2, integrity.snapshot(tmp_path)))
+
+
+def test_integrity_content_hash_defeats_mtime_reset(tmp_path):
+    # same-size overwrite with mtime restored must still be detected
+    # (content hash, not size+mtime).
+    import os
+    (tmp_path / "state").mkdir()
+    f = tmp_path / "state" / "x.json"
+    f.write_text("AAAA", encoding="utf-8")
+    st = f.stat()
+    before = integrity.snapshot(tmp_path)
+    f.write_text("BBBB", encoding="utf-8")  # same length
+    os.utime(f, ns=(st.st_atime_ns, st.st_mtime_ns))  # restore mtime
+    assert f.stat().st_mtime_ns == st.st_mtime_ns and f.stat().st_size == st.st_size
+    assert any("x.json" in d for d in
+               integrity.diff_snapshots(before, integrity.snapshot(tmp_path)))
+
+
+def test_integrity_detects_planted_symlink(tmp_path):
+    # a forged record planted as a symlink (not followed) must show up as
+    # an added entry, not be silently skipped.
+    (tmp_path / "reports" / "human-gates").mkdir(parents=True)
+    outside = tmp_path / "forged.json"
+    outside.write_text('{"decision":"APPROVE"}', encoding="utf-8")
+    before = integrity.snapshot(tmp_path)
+    link = tmp_path / "reports" / "human-gates" / "phase-01-abc.json"
+    link.symlink_to(outside)
+    diffs = integrity.diff_snapshots(before, integrity.snapshot(tmp_path))
+    assert any("added: reports/human-gates/phase-01-abc.json" in d for d in diffs)
+
+
+def test_integrity_symlinked_venv_entrypoint_detected(tmp_path):
+    sp = tmp_path / ".venv" / "lib" / "site-packages"
+    sp.mkdir(parents=True)
+    outside = tmp_path / "evil.py"
+    outside.write_text("import os", encoding="utf-8")
+    before = integrity.snapshot(tmp_path)
+    (sp / "sitecustomize.py").symlink_to(outside)
     diffs = integrity.diff_snapshots(before, integrity.snapshot(tmp_path))
     assert any("sitecustomize.py" in d for d in diffs)
-    assert any(".orchestrator/evil/x" in d for d in diffs)
 
 
 def test_integrity_exclude_exempts_artifact_dir(tmp_path):

@@ -63,6 +63,22 @@ class GitRepo:
         return self._run("merge-base", "--is-ancestor", maybe_ancestor, ref,
                          check=False).returncode == 0
 
+    def all_refs(self):
+        """Map every local ref (branches, tags, HEAD) -> sha. Used to pin the
+        repo across an agent/test run: agents must move NO refs, so a commit
+        to main (even via checkout-main-commit-checkout-back, which leaves the
+        current HEAD sha unchanged) is detected as a ref change."""
+        out = self._run("show-ref", "--head", check=False).stdout
+        refs = {}
+        for line in out.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            sha, _, name = line.partition(" ")
+            if name:
+                refs[name] = sha
+        return refs
+
     def status_porcelain(self):
         """[(status, path)] of pending changes. Rename entries yield the new path."""
         out = self._run("status", "--porcelain").stdout

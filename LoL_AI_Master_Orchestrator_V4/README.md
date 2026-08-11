@@ -31,7 +31,7 @@ Das war's. Der Bootstrap prüft alles (Doctor), richtet eine virtuelle
 Umgebung ein, initialisiert git und startet dann den Phasen-Lauf:
 
 ```
-Phase 00  Orchestrator-Selbsttest (79 Unit-Tests müssen grün sein)
+Phase 00  Orchestrator-Selbsttest (komplette Unit-Testsuite muss grün sein)
 Phase 01  Architektur/Datenmodell     (Builder: Codex,  Reviewer: Claude)
 Phase 02  OBS Agent                   (Builder: Claude, Reviewer: Codex)
 …
@@ -125,8 +125,15 @@ python -m orchestrator reset-phase   # Phase komplett neu starten
 
 ## Sicherheit (Kurzfassung)
 
-Agenten dürfen nie: `state/`, `phases/`, `schemas/`, `prompts/`,
-`orchestrator/`, Gate-/Test-Konfiguration ändern, committen, mergen oder
-sich selbst freigeben. Das wird nach jedem Agent-Lauf per Git-Diff UND
-Hash-Snapshot (für git-ignorierte Kontrolldateien) erzwungen; Verstöße
-werden zurückgerollt und protokolliert, Wiederholung blockt die Phase.
+Agenten dürfen nie die Kontrollebene anfassen: `state/`, `phases/`,
+`prompts/`, `orchestrator/`, `scripts/`, `test_registry.yaml`,
+`ORCHESTRATOR_CONFIG.yaml`, die beiden Steuer-Schemas
+(`schemas/agent_result*`, `schemas/finding_acceptance*`),
+`reports/human-gates/` + `reports/acceptance/` — und niemals committen,
+mergen oder sich selbst freigeben. Projekt-Dateien (inkl. eigener
+Daten-Schemas unter `schemas/`) dürfen sie im Rahmen der pro-Phase
+erlaubten Pfade schreiben. Erzwungen wird das nach **jedem** Agent- und
+Testlauf durch drei Schichten: Git-Diff gegen die Pfad-Policy,
+Hash-/Symlink-Snapshot der git-ignorierten Kontrolldateien und Git-Ref-Pinning
+(kein Agent darf einen Branch bewegen). Verstöße werden zurückgerollt und
+protokolliert; Wiederholung blockt die Phase.

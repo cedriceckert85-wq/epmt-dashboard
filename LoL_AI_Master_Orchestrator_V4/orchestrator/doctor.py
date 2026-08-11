@@ -29,8 +29,9 @@ def _probe(argv, timeout_s=30):
     if not exe:
         return False, f"{argv[0]} not found on PATH"
     try:
+        # feed empty stdin so a probe never blocks on the inherited terminal
         res = ProcessRunner().run(argv, cwd=os.getcwd(), timeout_s=timeout_s,
-                                  env=dict(os.environ))
+                                  env=dict(os.environ), stdin_text="")
     except OSError as e:
         return False, str(e)
     if res.timed_out or res.exit_code != 0:

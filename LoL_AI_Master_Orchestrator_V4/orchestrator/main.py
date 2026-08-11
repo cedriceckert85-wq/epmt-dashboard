@@ -96,11 +96,13 @@ def cmd_run(cfg, args):
             providers.update((ph["builder"], ph["reviewer"]))
 
     rep = doctor_mod.run_doctor(cfg, providers_needed=sorted(providers),
-                                dry_run=args.dry_run, smoke=not args.skip_smoke)
+                                dry_run=args.dry_run, smoke=args.smoke)
     print(doctor_mod.format_report(rep))
     if not rep.ok:
-        print("\nBLOCKED: fix the doctor failures above, then run START again.",
-              file=sys.stderr)
+        # honor the docs' promise that ONE_SHOT_REPORT.md always says why
+        _write_doctor_block_report(cfg, rep)
+        print("\nBLOCKED: fix the doctor failures above, then run START again. "
+              "See ONE_SHOT_REPORT.md.", file=sys.stderr)
         return 3
 
     with SingleWriterLock(cfg.lock_file):
@@ -118,6 +120,26 @@ def cmd_run(cfg, args):
     return 3
 
 
+def _write_doctor_block_report(cfg, rep):
+    lines = [
+        "# ONE-SHOT RUN REPORT",
+        "",
+        f"- Finished: {utc_now_iso()}",
+        "- Overall status: **BLOCKED (preflight)**",
+        "",
+        "## The run could not start — the doctor found problems:",
+        "",
+    ]
+    lines += [f"- [FAIL] {p}" for p in rep.problems]
+    lines += ["", "## What to do",
+              "1. Install/log in to the tools named above (see README.md).",
+              "2. Run START again — it resumes automatically.",
+              ""]
+    if rep.cli_versions:
+        lines += ["## Detected", ""] + [f"- {k}: {v}" for k, v in sorted(rep.cli_versions.items())]
+    (cfg.root / "ONE_SHOT_REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def cmd_status(cfg, args):
     store = StateStore(cfg.state_file, cfg.journal_file)
     print(json.dumps(store.load(), indent=2, sort_keys=True))
@@ -125,7 +147,7 @@ def cmd_status(cfg, args):
 
 
 def cmd_doctor(cfg, args):
-    rep = doctor_mod.run_doctor(cfg, dry_run=args.dry_run, smoke=not args.skip_smoke)
+    rep = doctor_mod.run_doctor(cfg, dry_run=args.dry_run, smoke=args.smoke)
     print(doctor_mod.format_report(rep))
     return 0 if rep.ok else 3
 
@@ -197,12 +219,13 @@ def main(argv=None):
     sp_run.add_argument("--dry-run", action="store_true", help="fake agents, no CLIs")
     sp_run.add_argument("--strict-gates", action="store_true",
                         help="pause at human gates instead of auto-approving")
-    sp_run.add_argument("--skip-smoke", action="store_true",
-                        help="skip live CLI smoke prompts in doctor")
+    sp_run.add_argument("--smoke", action="store_true",
+                        help="also run live CLI smoke prompts in doctor "
+                             "(off by default — --version + first real agent run verify login)")
     sub.add_parser("status", help="print canonical state")
     sp_doc = sub.add_parser("doctor", help="preflight checks")
     sp_doc.add_argument("--dry-run", action="store_true")
-    sp_doc.add_argument("--skip-smoke", action="store_true")
+    sp_doc.add_argument("--smoke", action="store_true")
     sp_app = sub.add_parser("approve", help="record a human-gate decision")
     sp_app.add_argument("--phase")
     sp_app.add_argument("--commit")

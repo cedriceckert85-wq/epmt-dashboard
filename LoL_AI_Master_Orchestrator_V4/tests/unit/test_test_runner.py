@@ -108,6 +108,27 @@ def test_junit_all_skipped_is_not_a_pass(tmp_path):
     assert out.status == "fail" and "skipped" in out.reason
 
 
+def test_junit_all_skipped_via_per_testcase_children_is_not_a_pass(tmp_path):
+    # a lying producer sets suite skipped="0" but marks every <testcase>
+    # <skipped/> — must still FAIL (per-testcase counting).
+    xml = ('<testsuite name="s" tests="2" failures="0" errors="0" skipped="0">'
+           '<testcase name="a"><skipped/></testcase>'
+           '<testcase name="b"><skipped/></testcase></testsuite>')
+    out = run_registry_test("t", spec(_junit_cmd(tmp_path, xml), parser="pytest_junit",
+                                      evidence="ev/junit.xml"),
+                            root=tmp_path, run_id="r", capabilities={}, deferrable=set())
+    assert out.status == "fail" and "skipped" in out.reason
+
+
+def test_junit_per_testcase_failure_child_fails(tmp_path):
+    xml = ('<testsuite name="s" tests="2" failures="0" errors="0">'
+           '<testcase name="a"/><testcase name="b"><failure/></testcase></testsuite>')
+    out = run_registry_test("t", spec(_junit_cmd(tmp_path, xml), parser="pytest_junit",
+                                      evidence="ev/junit.xml"),
+                            root=tmp_path, run_id="r", capabilities={}, deferrable=set())
+    assert out.status == "fail" and "failures=1" in out.reason
+
+
 def test_junit_partial_skip_still_passes(tmp_path):
     xml = ('<testsuite name="s" tests="3" failures="0" errors="0" skipped="1">'
            '<testcase name="a"/><testcase name="b"/>'

@@ -248,6 +248,35 @@ def test_agent_git_commit_of_forbidden_file_is_caught(tmp_path):
     assert "HEAD" in st["blocked_reason"] or "forbidden" in st["blocked_reason"]
 
 
+def test_agent_poison_main_via_checkout_is_caught(tmp_path):
+    # builder checks out main, commits a forbidden edit, checks back — the
+    # candidate HEAD sha is unchanged but a ref moved. Ref-pinning must catch it.
+    cfg, store, repo = make_project(tmp_path)
+    set_fake_control(cfg, {"01:builder": {"poison_main": True}})
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "blocked"
+    assert "git refs" in st["blocked_reason"] or "moved git" in st["blocked_reason"]
+    # main must be back at its pre-poison commit (no forbidden edit merged)
+    repo.checkout("main")
+    assert "poisoned" not in (cfg.root / "test_registry.yaml").read_text(encoding="utf-8")
+
+
+def test_symlink_forged_human_gate_is_caught(tmp_path):
+    # a builder that plants a forged human-gate approval as a symlink must be
+    # detected by the integrity snapshot (symlinks recorded, not skipped).
+    import os
+    if not hasattr(os, "symlink"):
+        import pytest
+        pytest.skip("symlinks unsupported")
+    cfg, store, repo = make_project(tmp_path)  # auto mode: phase 00 auto-approves
+    set_fake_control(cfg, {"01:builder": {"symlink_forge_gate": True}})
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "blocked"
+    assert st["phase_id"] == "01"
+    assert "protected" in st["blocked_reason"] or "control-plane" in st["blocked_reason"]
+    assert "01" not in st.get("phase_history", {})
+
+
 def test_deferred_hardware_test_recorded_not_faked(tmp_path):
     cfg, store, repo = make_project(tmp_path)
     import yaml

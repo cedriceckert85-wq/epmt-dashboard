@@ -51,10 +51,10 @@ security:
     - .venv
     - .orchestrator
     - state
-    - schemas
     - phases
     - prompts
     - orchestrator
+    - scripts
     - bootstrap.py
     - START.bat
     - start.sh
@@ -70,6 +70,10 @@ security:
     - AGENTS.md
     - MASTER_ORCHESTRATOR.md
     - README.md
+    # only the orchestrator's OWN control schemas are locked; the project's
+    # data schemas (segment_manifest, edl, …) are agent-writable under schemas/
+    - schemas/agent_result.schema.json
+    - schemas/finding_acceptance.schema.json
   test_env_must_strip_provider_secrets: true
   strip_env_vars: []     # extra env var names to strip for test runs
 

@@ -8,7 +8,7 @@ ohne die Fail-Closed-Substanz von V3 aufzugeben.
 V3: Phase 00 = „Claude baut den Orchestrator" — d. h. das Paket war ohne
 manuelle Vorarbeit nicht lauffähig.
 V4: Der Orchestrator ist **fertig implementiert und selbst getestet**
-(79 Unit-Tests, inkl. End-to-End-Dry-Run der gesamten Schleife).
+(komplette Unit-Testsuite, inkl. End-to-End-Dry-Run der gesamten Schleife).
 Phase 00 ist jetzt der **Selbsttest-Gate**: Doctor + komplette Testsuite
 müssen grün sein, bevor irgendein Agent startet (`agentless: true`).
 
@@ -90,7 +90,7 @@ Human-Gate-Phasen nur über HUMAN_GATE→PASSED, max. 2 Fix-Zyklen.
 Claude-/Codex-Aufrufparameter liegen in `ORCHESTRATOR_CONFIG.yaml`
 (`agents.*.args`) und sind ohne Codeänderung anpassbar, falls sich die
 CLIs ändern. Der Doctor macht vor dem Lauf echte `--version`- und
-Login-Smoke-Checks (abschaltbar mit `--skip-smoke`).
+Versions-Checks; optionale Login-Smoke-Checks mit `--smoke` (standardmäßig aus, damit ein korrekt eingeloggter Nutzer nicht durch einen hängenden Prompt fälschlich blockiert wird).
 
 ## Unverändert aus V3 (normativ übernommen)
 Gate-Engine-Split, Acceptance-Store (SHA- und phasengebunden, selbst

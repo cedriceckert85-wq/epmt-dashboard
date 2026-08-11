@@ -53,20 +53,33 @@ def _parse_junit_ok(evidence_path):
     except ET.ParseError as e:
         return False, f"junit evidence unparseable: {e}"
     suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
-    tests = failures = errors = skipped = 0
+    attr_tests = attr_failures = attr_errors = attr_skipped = 0
     for s in suites:
-        tests += int(s.get("tests", 0))
-        failures += int(s.get("failures", 0))
-        errors += int(s.get("errors", 0))
-        skipped += int(s.get("skipped", 0))
-    if tests == 0:
+        attr_tests += int(s.get("tests", 0))
+        attr_failures += int(s.get("failures", 0))
+        attr_errors += int(s.get("errors", 0))
+        attr_skipped += int(s.get("skipped", 0))
+    # Count per-<testcase> children directly — a lying/non-pytest producer can
+    # set the suite-level skipped attribute to 0 while marking every testcase
+    # <skipped/>. Take the worst (max) of attribute vs child counts so neither
+    # framing slips a wholly-skipped suite through as a pass.
+    cases = list(root.iter("testcase"))
+    case_total = len(cases)
+    case_skipped = sum(1 for c in cases if c.find("skipped") is not None)
+    case_failed = sum(1 for c in cases if c.find("failure") is not None)
+    case_errored = sum(1 for c in cases if c.find("error") is not None)
+
+    total = max(attr_tests, case_total)
+    failures = max(attr_failures, case_failed)
+    errors = max(attr_errors, case_errored)
+    skipped = max(attr_skipped, case_skipped)
+    if total == 0:
         return False, "junit evidence contains zero collected tests"
     if failures or errors:
         return False, f"junit evidence has failures={failures} errors={errors}"
-    # pytest counts skipped cases in `tests`; an all-skipped suite exits 0 with
-    # zero failures but has proven NOTHING. A required gate test must actually
-    # execute assertions — never accept a wholly-skipped suite as a pass.
-    executed = tests - skipped
+    # a required gate test must actually EXECUTE assertions — an all-skipped
+    # suite (exit 0, zero failures) has proven nothing.
+    executed = total - skipped
     if executed <= 0:
         return False, f"junit evidence has no executed tests ({skipped} skipped, 0 run)"
     return True, f"junit: {executed} executed, {skipped} skipped, 0 failures"

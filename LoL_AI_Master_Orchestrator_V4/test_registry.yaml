@@ -232,7 +232,7 @@ tests:
     produces_metrics:
     - schema_validation_failures
   migration_up_down:
-    command: python scripts/db_migrate_check.py --json .orchestrator/artifacts/{run_id}/migration_up_down.json
+    command: python tests/phase01/db_migrate_check.py --json .orchestrator/artifacts/{run_id}/migration_up_down.json
     cwd: .
     timeout_s: 600
     requires:

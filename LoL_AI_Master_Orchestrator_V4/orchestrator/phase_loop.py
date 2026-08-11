@@ -123,7 +123,7 @@ class PhaseEngine:
         while True:
             attempt += 1
             clear_agent_result(self.cfg.root)
-            head_before = self.repo.head_sha()
+            refs_before = self.repo.all_refs()
             pre_snap = integrity.snapshot(self.cfg.root, exclude=artifact_exclude)
             self.log(f"[phase {st['phase_id']}] running {role.value} ({provider}), attempt {attempt} …")
             run_res = adapter.run(request)
@@ -151,16 +151,23 @@ class PhaseEngine:
                 raise PhaseRunError(
                     f"{role.value} modified protected runtime files: {', '.join(tamper[:10])}")
 
-            # agents must never move HEAD — only the orchestrator commits.
-            # A self-commit would hide forbidden (even tracked-immutable)
-            # edits from working-tree diff inspection.
-            head_after = self.repo.head_sha()
-            if head_after != head_before:
+            # agents must never move ANY git ref — only the orchestrator
+            # commits. Comparing all refs (not just current HEAD) catches a
+            # `git checkout main && commit && git checkout candidate` that
+            # leaves the current HEAD sha unchanged but poisons main.
+            refs_after = self.repo.all_refs()
+            if refs_after != refs_before:
+                moved = sorted(set(refs_before) | set(refs_after))
+                changed = [r for r in moved if refs_before.get(r) != refs_after.get(r)]
                 self.repo.checkout(st["candidate_branch"])
-                self.repo._run("reset", "--hard", "--quiet", head_before)
+                # restore any moved local branch to its pre-run sha
+                for ref in changed:
+                    if ref.startswith("refs/heads/") and ref in refs_before:
+                        self.repo._run("update-ref", ref, refs_before[ref], check=False)
+                self.repo.hard_reset_clean()
                 raise PhaseRunError(
-                    f"{role.value} moved git HEAD ({head_before[:12]}->{head_after[:12]}); "
-                    f"agents must not commit")
+                    f"{role.value} moved git refs ({', '.join(changed[:5])}); "
+                    f"agents must not commit/branch/merge")
 
             violations = self._enforce_write_policy(st, allowed)
             if violations and role == AgentRole.REVIEWER:
@@ -297,6 +304,7 @@ class PhaseEngine:
         # minus its own evidence dir) so a malicious test cannot plant a forged
         # approval/acceptance record or poison the venv during the test window.
         artifact_exclude = [str(self.cfg.artifact_root.relative_to(self.cfg.root)).replace("\\", "/")]
+        refs_before = self.repo.all_refs()
         pre_snap = integrity.snapshot(self.cfg.root, exclude=artifact_exclude)
         outcomes, exit_codes, metrics, deferred = run_phase_tests(
             phase, self.registry, root=self.cfg.root, run_id=st["run_id"],
@@ -307,6 +315,10 @@ class PhaseEngine:
             self.repo.hard_reset_clean()
             raise PhaseRunError(
                 f"candidate test run modified protected control-plane files: {', '.join(tamper[:10])}")
+        if self.repo.all_refs() != refs_before:
+            self.repo.checkout(st["candidate_branch"])
+            self.repo.hard_reset_clean()
+            raise PhaseRunError("candidate test run moved git refs (must not commit/merge)")
         # tests may only touch their allowed write paths in the worktree
         test_violations = self._enforce_write_policy(st, tuple(phase.get("allowed_write_paths", [])))
         if test_violations:

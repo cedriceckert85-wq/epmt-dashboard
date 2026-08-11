@@ -54,6 +54,29 @@ def has_audio(video):
     return r.returncode == 0 and r.stdout.strip() != ""
 
 
+def has_video(video):
+    r = run(["ffprobe", "-v", "error", "-select_streams", "v",
+             "-show_entries", "stream=index", "-of", "csv=p=0", str(video)])
+    return r.returncode == 0 and r.stdout.strip() != ""
+
+
+def write_local_cut_scripts(out_dir, source_name, merged, offset):
+    """Audio-only-Modus: statt zu schneiden, Skripte erzeugen, die die
+    Clips lokal aus dem ORIGINAL-Video schneiden (volle Qualität).
+    offset = Startzeit des Audio-Ausschnitts im Original (Sekunden)."""
+    sh = ["#!/bin/sh", f"# Clips aus {source_name} schneiden (im selben Ordner ausführen)"]
+    bat = ["@echo off", f"rem Clips aus {source_name} schneiden (im selben Ordner ausfuehren)"]
+    for i, (start, end, peaks) in enumerate(merged, 1):
+        s, e = start + offset, end + offset
+        name = f"clip_{i:02d}_{fmt_ts(s).replace(':', '-')}.mp4"
+        cmd = (f'ffmpeg -ss {s:.2f} -to {e:.2f} -i "{source_name}" '
+               f'-c:v libx264 -preset veryfast -crf 21 -c:a aac -b:a 160k -y "{name}"')
+        sh.append(cmd)
+        bat.append(cmd)
+    (out_dir / "cut_clips.sh").write_text("\n".join(sh) + "\n", encoding="utf-8")
+    (out_dir / "cut_clips.bat").write_text("\r\n".join(bat) + "\r\n", encoding="utf-8")
+
+
 def extract_pcm(video, tmpdir):
     pcm = Path(tmpdir) / "audio.s16le"
     r = run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", str(video),
@@ -140,6 +163,12 @@ def main():
     p.add_argument("--min-gap", type=float, default=30.0,
                    help="Mindestabstand zwischen Highlights in s")
     p.add_argument("--out", default="clips", help="Ausgabeverzeichnis")
+    p.add_argument("--source-name", default=None,
+                   help="Audio-only-Modus: Dateiname des Original-Videos "
+                        "für das generierte lokale Schnitt-Skript")
+    p.add_argument("--offset", default="0",
+                   help="Audio-only-Modus: Startzeit des Audio-Ausschnitts "
+                        "im Original (Sekunden oder HH:MM:SS)")
     a = p.parse_args()
 
     video = Path(a.video)
@@ -164,6 +193,39 @@ def main():
     ranges = [[max(0.0, h["t"] - a.pre), min(duration, h["t"] + a.post), [h]]
               for h in highlights]
     merged = merge_ranges([tuple(r) for r in ranges])
+
+    audio_only = not has_video(video)
+    if audio_only:
+        parts = str(a.offset).split(":")
+        offset = sum(float(x) * 60 ** i for i, x in enumerate(reversed(parts)))
+        source = a.source_name or "DEIN_ORIGINAL_VIDEO.mp4"
+        print(f"[3/4] Audio-only-Eingang: erzeuge lokales Schnitt-Skript "
+              f"(Quelle: {source}, Offset {fmt_ts(offset)}) …")
+        write_local_cut_scripts(out_dir, source, merged, offset)
+        rows = []
+        for i, (start, end, peaks) in enumerate(merged, 1):
+            best = max(peaks, key=lambda h: h["score_db"])
+            rows.append(f"| {i} | {fmt_ts(start + offset)}–{fmt_ts(end + offset)} | "
+                        f"{fmt_ts(best['t'] + offset)} | +{best['score_db']:.1f} dB |")
+            print(f"   -> Highlight {i}: {fmt_ts(best['t'] + offset)} im Original "
+                  f"(+{best['score_db']:.1f} dB)")
+        (out_dir / "highlights.json").write_text(json.dumps({
+            "source": source, "audio_analyzed": video.name,
+            "offset_s": offset, "clips": [
+                {"start_s": round(s + offset, 2), "end_s": round(e + offset, 2),
+                 "peaks": pk} for s, e, pk in merged]}, indent=2), encoding="utf-8")
+        (out_dir / "REPORT.md").write_text(
+            f"# Highlight-Report (Audio-Analyse): {video.name}\n\n"
+            f"Analysierte Länge: {fmt_ts(duration)} — Zeiten beziehen sich "
+            f"auf das ORIGINAL (Offset {fmt_ts(offset)}).\n\n"
+            "| # | Bereich | Peak | Score |\n|---|---|---|---|\n"
+            + "\n".join(rows) + "\n\n"
+            f"Clips lokal schneiden: `cut_clips.bat` (Windows) oder "
+            f"`sh cut_clips.sh` im Ordner von `{source}` ausführen.\n",
+            encoding="utf-8")
+        print(f"[4/4] Fertig: {out_dir}/ (REPORT.md, highlights.json, "
+              "cut_clips.bat/.sh)")
+        return
 
     print(f"[3/4] Schneide {len(merged)} Clip(s) …")
     report_rows, clip_meta = [], []

@@ -277,6 +277,35 @@ def test_symlink_forged_human_gate_is_caught(tmp_path):
     assert "01" not in st.get("phase_history", {})
 
 
+def test_main_baseline_detects_out_of_band_main_move(tmp_path):
+    # simulate a detached process moving main between phases: after phase 00
+    # merges, tamper main directly, then the next phase start must BLOCK.
+    cfg, store, repo = make_project(tmp_path)
+    status, st = make_engine(cfg, store, repo).run(phases=["00"], capabilities={})
+    assert status == "done"
+    # move main out from under the orchestrator
+    repo.checkout("main")
+    (cfg.root / "src").mkdir(exist_ok=True)
+    (cfg.root / "src" / "sneak.txt").write_text("x", encoding="utf-8")
+    repo.add_all_and_commit("out-of-band main move")
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "blocked"
+    assert "main HEAD moved" in st["blocked_reason"]
+
+
+def test_git_hooks_are_disabled_for_orchestrator(tmp_path):
+    # a planted pre-commit hook must NOT run during the orchestrator's commits
+    cfg, store, repo = make_project(tmp_path)
+    hooks = cfg.root / ".git" / "hooks"
+    hooks.mkdir(parents=True, exist_ok=True)
+    (hooks / "pre-commit").write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+    import os
+    os.chmod(hooks / "pre-commit", 0o755)
+    # if the hook ran, the (failing) hook would break the orchestrator's commits
+    status, st = make_engine(cfg, store, repo).run(phases=["00"], capabilities={})
+    assert status == "done"
+
+
 def test_deferred_hardware_test_recorded_not_faked(tmp_path):
     cfg, store, repo = make_project(tmp_path)
     import yaml

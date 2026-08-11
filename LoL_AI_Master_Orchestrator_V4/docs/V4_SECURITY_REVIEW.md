@@ -25,3 +25,48 @@ confirmed (0 refuted) and all were fixed before packaging. Summary:
 All fixes ship with regression tests (91 unit tests green, incl. an
 end-to-end dry-run of the whole phase loop). This document is historical;
 the normative rules live in `MASTER_ORCHESTRATOR.md`.
+
+---
+
+## Round 2 — second independent verification pass
+
+A second verification workflow re-attacked the round-1 fixes and swept for new
+issues. It found several round-1 fixes insufficient and — more importantly for
+actually shipping — more one-shot build blockers. All fixed:
+
+| Area | Problem found | Fix |
+|------|---------------|-----|
+| build-reachability | Phase 07 gated on `stream_dropped_frames_pct_delta` and phase 18 on `cross_tenant_denied_pct` — metrics no required test of that phase produces → the run dead-ends at 07 (and 18). | Removed the misplaced soak metric from 07; added the producing (deferrable) test to 18. Audited all 21 phases: no orphan gate metrics remain. |
+| optional phases | `optional`/`enabled_by_default:false` (phase 18) was never honored, so a default run tried it and blocked. | A default run now skips optional phases; they run only when named in `--phases`. |
+| junit honesty | An all-skipped suite still passed by (a) per-`<testcase>` `<skipped/>` with suite `skipped=0`, or (b) inflating the suite `tests` attribute above the emitted `<testcase>` count. | Executed count is now derived from real `<testcase>` elements only; failures/errors take max(attr, counted). |
+| junit robustness | A non-numeric junit attribute crashed the orchestrator (ValueError escaped). | All attribute parsing is guarded; malformed evidence fails closed. |
+| .venv integrity | Guard was narrowed to entrypoint names only, missing the real surface — overwriting an imported dependency module (`yaml/__init__.py`) that runs on the next invocation. | Guard now hashes every executable-as-source file under `.venv` (`.py/.pth/.so/.pyd/.dll/.egg-link`), still excluding regenerable caches (no false positives). |
+| .git hooks | A planted `.git/hooks/pre-commit` or `core.hooksPath`/`fsmonitor` in `.git/config` executed as the orchestrator on its next git op. | All git commands run with hooks disabled (`core.hooksPath` → empty dir); `.git/hooks` and `.git/config` are now snapshotted. |
+| ref integrity | Ref-pin only bracketed the synchronous agent/test call; a detached process could move `main` between windows. | `main` is pinned to a persisted baseline and re-checked at every phase start. |
+| orphan processes | Child process group was reaped only on timeout, not on normal exit. | Process group is reaped on the normal exit path too (POSIX). |
+| symlink forgery | Round-1 symlink refusal held, but the same goal was reachable with a plain regular record written while the orchestrator was stopped. | See trust boundary below. |
+| docs | CLAUDE.md/AGENTS.md/MASTER_ORCHESTRATOR.md still said `schemas/` fully immutable and omitted `scripts/`. | Corrected everywhere. |
+
+100+ unit tests green including new regressions for each of the above.
+
+## Trust boundary (read this)
+
+The three enforcement layers — git-diff path policy, hash/symlink snapshot of
+gitignored control paths, and git-ref pinning — defend against **confused or
+prompt-injected agents and single bad writes within a run**. They do **not**
+fully defend against:
+
+1. A **deliberately malicious agent that spawns a detached background process**
+   (double-fork + `setsid`) which writes to control paths *while the
+   orchestrator is stopped* (e.g. forging a strict-mode human-gate approval as
+   an ordinary file between runs). The process-group reap, `main` baseline
+   check, disabled git hooks and widened venv guard raise the bar but cannot
+   fully close a session-detached daemon.
+2. A **compromised host** or any other process running as the same user.
+
+For those threat models, run the builder/reviewer CLIs inside an **OS sandbox**
+— a container, a dedicated low-privilege user, or a Windows Job Object — so the
+agent process cannot outlive its run or touch anything outside the workspace.
+The default one-shot `gate_mode: auto` is not a human-trust boundary anyway (it
+auto-approves once deterministic criteria hold); the strict human gate is the
+one that assumes no attacker-controlled background process on the host.

@@ -50,15 +50,29 @@ human_gate-Phasen, HUMAN_GATE→MERGED.
 - Human-Gate-Record vorhanden (auto oder strict), exakt SHA-gebunden
 
 ## Agenten dürfen nie
-- state/, phases/, schemas/, prompts/, orchestrator/, test_registry.yaml,
+- state/, phases/, prompts/, orchestrator/, scripts/, test_registry.yaml,
   ORCHESTRATOR_CONFIG.yaml, bootstrap.py, Start-Skripte ändern
+- die beiden Steuer-Schemas (schemas/agent_result*, schemas/finding_acceptance*)
+  ändern — Projekt-Daten-Schemas unter schemas/ sind hingegen erlaubt
 - reports/human-gates/ oder reports/acceptance/ schreiben
-- committen, mergen, rebasen, taggen, pushen (.git ist immutable)
+- committen, mergen, rebasen, taggen, pushen; keinen Git-Ref bewegen
+  (.git ist immutable; alle Git-Kommandos laufen ohne Hooks)
 - Human Gates oder Acceptance-Records erzeugen
 - sich selbst als unabhängigen Reviewer ausgeben
 
-Enforcement: Git-Diff-Inspektion (Pfad-Policy: immutable schlägt allowed)
-UND Hash-Snapshots für git-ignorierte Kontrollpfade — nach jedem Agent-Lauf.
+Enforcement nach JEDEM Agent- und Testlauf, dreischichtig: Git-Diff gegen die
+Pfad-Policy (immutable schlägt allowed), Hash-/Symlink-Snapshot der
+git-ignorierten Kontrollpfade (state/, records, Projektionen, .git/hooks,
+.git/config, ausführbare .venv-Dateien) und Git-Ref-Pinning inkl.
+main-Baseline-Prüfung zu Phasenbeginn.
+
+Vertrauensgrenze (ehrlich): Diese Schichten schützen gegen verwirrte oder
+prompt-injizierte Agenten und einzelne Fehlschreibungen INNERHALB eines Laufs.
+Ein absichtlich bösartiger Agent, der einen abgekoppelten Hintergrundprozess
+startet (double-fork/setsid) und schreibt, WÄHREND der Orchestrator gestoppt
+ist, oder ein kompromittierter Host liegen außerhalb dieser Dateisystem-Grenze
+— dagegen hilft nur OS-Sandboxing (Container / eingeschränkter Nutzer /
+Windows Job Object) der Builder-/Reviewer-CLIs. Siehe docs/V4_SECURITY_REVIEW.md.
 Verstöße werden revertiert und journaliert; Wiederholung ⇒ BLOCKED.
 
 ## Reviewer

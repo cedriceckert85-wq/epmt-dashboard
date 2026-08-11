@@ -50,39 +50,42 @@ def _parse_junit_ok(evidence_path):
         return False, "junit evidence file missing"
     try:
         root = ET.parse(p).getroot()
-    except ET.ParseError as e:
+    except (ET.ParseError, OSError) as e:
         return False, f"junit evidence unparseable: {e}"
+
+    def _int(v):
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return 0
+
     suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
-    attr_tests = attr_failures = attr_errors = attr_skipped = 0
+    attr_failures = attr_errors = 0
     for s in suites:
-        attr_tests += int(s.get("tests", 0))
-        attr_failures += int(s.get("failures", 0))
-        attr_errors += int(s.get("errors", 0))
-        attr_skipped += int(s.get("skipped", 0))
-    # Count per-<testcase> children directly — a lying/non-pytest producer can
-    # set the suite-level skipped attribute to 0 while marking every testcase
-    # <skipped/>. Take the worst (max) of attribute vs child counts so neither
-    # framing slips a wholly-skipped suite through as a pass.
+        attr_failures += _int(s.get("failures"))
+        attr_errors += _int(s.get("errors"))
+
+    # The number of EXECUTED tests is counted from the real <testcase>
+    # elements, never from the suite-level `tests` attribute (which an
+    # untrusted/lying producer can inflate to defeat the all-skipped guard).
+    # Failures/errors take the max of attribute vs counted children so an
+    # under-reported failure attribute cannot hide a real failure.
     cases = list(root.iter("testcase"))
     case_total = len(cases)
     case_skipped = sum(1 for c in cases if c.find("skipped") is not None)
     case_failed = sum(1 for c in cases if c.find("failure") is not None)
     case_errored = sum(1 for c in cases if c.find("error") is not None)
 
-    total = max(attr_tests, case_total)
     failures = max(attr_failures, case_failed)
     errors = max(attr_errors, case_errored)
-    skipped = max(attr_skipped, case_skipped)
-    if total == 0:
-        return False, "junit evidence contains zero collected tests"
+    if case_total == 0:
+        return False, "junit evidence contains zero collected <testcase> elements"
     if failures or errors:
         return False, f"junit evidence has failures={failures} errors={errors}"
-    # a required gate test must actually EXECUTE assertions — an all-skipped
-    # suite (exit 0, zero failures) has proven nothing.
-    executed = total - skipped
+    executed = case_total - case_skipped
     if executed <= 0:
-        return False, f"junit evidence has no executed tests ({skipped} skipped, 0 run)"
-    return True, f"junit: {executed} executed, {skipped} skipped, 0 failures"
+        return False, f"junit evidence has no executed tests ({case_skipped} skipped, 0 run)"
+    return True, f"junit: {executed} executed, {case_skipped} skipped, 0 failures"
 
 
 def _parse_metrics_json(evidence_path):

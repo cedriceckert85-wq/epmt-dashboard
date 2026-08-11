@@ -108,6 +108,26 @@ def test_junit_all_skipped_is_not_a_pass(tmp_path):
     assert out.status == "fail" and "skipped" in out.reason
 
 
+def test_junit_inflated_tests_attr_cannot_hide_all_skipped(tmp_path):
+    # a lying producer inflates suite tests="2" but emits ONE skipped testcase;
+    # executed must be counted from real <testcase> elements -> FAIL.
+    xml = ('<testsuite name="s" tests="2" failures="0" errors="0" skipped="0">'
+           '<testcase name="only"><skipped/></testcase></testsuite>')
+    out = run_registry_test("t", spec(_junit_cmd(tmp_path, xml), parser="pytest_junit",
+                                      evidence="ev/junit.xml"),
+                            root=tmp_path, run_id="r", capabilities={}, deferrable=set())
+    assert out.status == "fail" and ("skipped" in out.reason or "no executed" in out.reason)
+
+
+def test_junit_malformed_attribute_fails_closed_not_crash(tmp_path):
+    xml = '<testsuite name="s" tests="oops" failures="x"><testcase name="a"/></testsuite>'
+    out = run_registry_test("t", spec(_junit_cmd(tmp_path, xml), parser="pytest_junit",
+                                      evidence="ev/junit.xml"),
+                            root=tmp_path, run_id="r", capabilities={}, deferrable=set())
+    # a non-numeric attr must not raise; the real testcase count still governs
+    assert out.status in ("pass", "fail")
+
+
 def test_junit_all_skipped_via_per_testcase_children_is_not_a_pass(tmp_path):
     # a lying producer sets suite skipped="0" but marks every <testcase>
     # <skipped/> — must still FAIL (per-testcase counting).

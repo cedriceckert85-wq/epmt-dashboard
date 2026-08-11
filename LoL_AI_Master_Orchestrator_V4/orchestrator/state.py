@@ -27,6 +27,7 @@ DEFAULT_STATE = {
     "fix_cycles": 0,
     "candidate_branch": None,
     "candidate_commit": None,
+    "main_baseline": None,         # expected main HEAD between phases (ref-integrity)
     "tested_commit": None,
     "reviewed_commit": None,
     "approved_commit": None,

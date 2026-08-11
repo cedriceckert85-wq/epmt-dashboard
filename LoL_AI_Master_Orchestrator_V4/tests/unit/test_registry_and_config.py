@@ -53,6 +53,27 @@ def test_hardware_tests_are_deferrable_where_required():
                 assert t in ph.get("deferrable_tests", []), (pid, t, reqs)
 
 
+def test_no_orphan_gate_metrics():
+    """Every phase gate metric MUST be produced by one of that phase's
+    required_tests — otherwise the phase can never PASS (dead-end)."""
+    tests = test_registry.load(ROOT / "test_registry.yaml")
+    produced_by = {}
+    for tid, spec in tests.items():
+        for m in (spec.get("produces_metrics") or []):
+            produced_by.setdefault(m, set()).add(tid)
+    for pid in list_phase_ids(ROOT):
+        ph = load_phase(ROOT, pid)
+        req = set(ph.get("required_tests", []))
+        for rule in ph.get("metrics", []):
+            producers = produced_by.get(rule["name"], set()) & req
+            assert producers, f"phase {pid} metric {rule['name']} has no producing required-test"
+
+
+def test_optional_phase_flags_present():
+    ph18 = load_phase(ROOT, "18")
+    assert ph18.get("optional") is True and ph18.get("enabled_by_default") is False
+
+
 def test_review_prompt_files_exist():
     for pid in list_phase_ids(ROOT):
         ph = load_phase(ROOT, pid)

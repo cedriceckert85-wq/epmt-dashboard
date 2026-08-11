@@ -25,15 +25,14 @@ gate:
   max_unaccepted_high: 0
 network_transport: tailscale_mvp
 metrics:
+# every gate metric MUST be produced by one of this phase's required_tests
+# (stream_dropped_frames_pct_delta is a soak metric and belongs to phase 08)
 - name: resume_duplicate_objects
   op: ==
   value: 0
 - name: corrupted_uploads
   op: ==
   value: 0
-- name: stream_dropped_frames_pct_delta
-  op: <=
-  value: 0.5
 - name: catchup_after_1h_outage_min
   op: <=
   value: 90

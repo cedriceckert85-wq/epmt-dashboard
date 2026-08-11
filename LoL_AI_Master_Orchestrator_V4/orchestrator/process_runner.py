@@ -35,6 +35,17 @@ class ProcessRunner:
             except Exception:
                 pass
 
+    def _reap_group(self, p):
+        """Best-effort: kill the child's process group after it exits, to
+        catch orphaned children still holding the group. POSIX only; a
+        session-detached daemon is out of scope (needs OS sandboxing)."""
+        if os.name == "nt":
+            return
+        try:
+            os.killpg(p.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError, OSError):
+            pass
+
     def _kill_tree_windows(self, pid:int):
         return subprocess.run(
             ["taskkill","/PID",str(pid),"/T","/F"],
@@ -68,6 +79,12 @@ class ProcessRunner:
                                  time.time()-start,False)
         try:
             out,err=p.communicate(stdin_text if use_stdin else None, timeout=timeout_s)
+            # Reap the whole process group on the NORMAL exit path too, so a
+            # child the agent left running (a naive orphan that did not
+            # detach into its own session) cannot keep executing after the
+            # agent "finished". A deliberate double-fork+setsid daemon escapes
+            # this — that requires OS sandboxing (see security docs).
+            self._reap_group(p)
             return ProcessResult(p.returncode,False,out,err,time.time()-start,False)
 
         except subprocess.TimeoutExpired:

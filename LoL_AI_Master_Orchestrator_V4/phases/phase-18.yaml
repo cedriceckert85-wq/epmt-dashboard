@@ -6,6 +6,7 @@ cross_vendor_review: true
 human_gate: true
 required_tests:
 - phase_18_tests
+- cross_tenant_tailscale_device_denied
 allowed_write_paths:
 - src/
 - tests/
@@ -22,6 +23,8 @@ gate:
 optional: true
 enabled_by_default: false
 precondition_note: Enable only if user explicitly expands scope beyond one streamer.
+deferrable_tests:
+- cross_tenant_tailscale_device_denied
 metrics:
 - name: cross_tenant_denied_pct
   op: ==

@@ -29,17 +29,21 @@ HASH_PATHS = [
     "state",
     "reports/human-gates",
     "reports/acceptance",
-    ".orchestrator",              # minus the artifact dir (excluded by caller)
+    ".orchestrator",              # minus the artifact + no-hooks dirs (excluded)
+    ".git/hooks",                 # planted hooks execute as the orchestrator
+    ".git/config",                # core.hooksPath / core.fsmonitor injection
     "PROJECT_STATE.md",
     "CURRENT_TASK.md",
     "ONE_SHOT_REPORT.md",
 ]
 
-# only auto-executed entry points inside the venv are guarded (injection
-# surface), not the whole tree
+# Inside the venv, guard every file Python can IMPORT AND EXECUTE — that is
+# the real injection surface an attacker uses to run code on the next
+# `python -m orchestrator` invocation. Data/cache files (font caches, proj.db,
+# .nbi, __pycache__/.pyc) are NOT executable-as-source and are excluded so a
+# benign lazy cache write never false-positives into a BLOCK.
 VENV_ROOTS = [".venv"]
-VENV_ENTRYPOINT_NAMES = {"sitecustomize.py", "usercustomize.py"}
-VENV_ENTRYPOINT_SUFFIXES = (".pth",)
+VENV_CODE_SUFFIXES = (".py", ".pth", ".so", ".pyd", ".dll", ".egg-link")
 
 PROTECTED_RUNTIME_PATHS = HASH_PATHS + VENV_ROOTS
 
@@ -68,8 +72,8 @@ def _is_regenerable_cache(rel):
             or "/.pytest_cache/" in rel or rel.endswith("/.pytest_cache"))
 
 
-def _venv_entrypoint(name):
-    return name in VENV_ENTRYPOINT_NAMES or name.endswith(VENV_ENTRYPOINT_SUFFIXES)
+def _venv_code_file(name):
+    return name.endswith(VENV_CODE_SUFFIXES)
 
 
 def snapshot(root, *, hash_paths=HASH_PATHS, venv_roots=VENV_ROOTS, exclude=()):
@@ -116,7 +120,7 @@ def snapshot(root, *, hash_paths=HASH_PATHS, venv_roots=VENV_ROOTS, exclude=()):
     for rel in hash_paths:
         walk(root / rel)
     for rel in venv_roots:
-        walk(root / rel, keep=lambda rel, name: _venv_entrypoint(name))
+        walk(root / rel, keep=lambda rel, name: _venv_code_file(name))
     return snap
 
 

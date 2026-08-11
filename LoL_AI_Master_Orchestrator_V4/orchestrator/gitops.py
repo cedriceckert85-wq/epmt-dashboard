@@ -15,9 +15,20 @@ class GitError(Exception):
 class GitRepo:
     def __init__(self, root):
         self.root = Path(root)
+        # every git invocation runs with hooks disabled: a builder that plants
+        # .git/hooks/pre-commit (or core.hooksPath) must never get it executed
+        # as the orchestrator on the next commit/checkout/merge.
+        self._no_hooks_dir = self.root / ".orchestrator" / "no-hooks"
+
+    def _base(self):
+        try:
+            self._no_hooks_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
+        return ["git", "-c", f"core.hooksPath={self._no_hooks_dir}"]
 
     def _run(self, *args, check=True, capture=True):
-        p = subprocess.run(["git", *args], cwd=self.root,
+        p = subprocess.run([*self._base(), *args], cwd=self.root,
                            capture_output=capture, text=True)
         if check and p.returncode != 0:
             raise GitError(f"git {' '.join(args)} failed (exit {p.returncode}): "

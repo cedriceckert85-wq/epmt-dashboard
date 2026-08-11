@@ -89,6 +89,19 @@ def cmd_run(cfg, args):
 
     all_ids = list_phase_ids(cfg.root)
     phase_ids = _parse_phase_selection(args.phases, all_ids)
+    if not args.phases:
+        # a default run skips phases marked optional / enabled_by_default:false
+        # (e.g. multi-streamer). They run only when named explicitly in --phases.
+        kept = []
+        for pid in phase_ids:
+            ph = load_phase(cfg.root, pid)
+            if ph.get("optional") and not ph.get("enabled_by_default", True):
+                print(f"[skip] phase {pid} ({ph.get('name')}) is optional "
+                      f"(enabled_by_default: false) — run it explicitly with "
+                      f"--phases {pid} to include it")
+                continue
+            kept.append(pid)
+        phase_ids = kept
     providers = set()
     for pid in phase_ids:
         ph = load_phase(cfg.root, pid)

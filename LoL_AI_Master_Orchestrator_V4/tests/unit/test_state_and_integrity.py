@@ -107,24 +107,36 @@ def test_integrity_clean_when_untouched(tmp_path):
     assert integrity.diff_snapshots(before, integrity.snapshot(tmp_path)) == []
 
 
-def test_integrity_guards_venv_entrypoints_only(tmp_path):
-    # only auto-executed venv files (sitecustomize/usercustomize/*.pth) are
-    # guarded; a benign lazy cache write elsewhere in .venv must NOT trip it
-    # (that false-positive would wrongly BLOCK a clean build).
+def test_integrity_guards_venv_code_not_caches(tmp_path):
+    # every executable-as-source venv file is guarded (real injection surface),
+    # but benign non-code lazy caches are not (no false-positive BLOCK).
     sp = tmp_path / ".venv" / "lib" / "site-packages"
     sp.mkdir(parents=True)
-    (sp / "sitecustomize.py").write_text("# ok", encoding="utf-8")
+    (sp / "yaml").mkdir()
+    (sp / "yaml" / "__init__.py").write_text("# ok", encoding="utf-8")
     (sp / "mpl-data").mkdir()
     before = integrity.snapshot(tmp_path)
-    # benign cache write inside .venv -> NOT flagged
+    # benign non-code cache writes inside .venv -> NOT flagged
     (sp / "mpl-data" / "fontcache.json").write_text("{}", encoding="utf-8")
     (sp / "numba_cache.nbi").write_text("x", encoding="utf-8")
+    (sp / "proj.db").write_text("x", encoding="utf-8")
     assert integrity.diff_snapshots(before, integrity.snapshot(tmp_path)) == []
-    # entrypoint edit -> flagged
+    # overwriting an imported dependency MODULE (the real attack) -> flagged
     before2 = integrity.snapshot(tmp_path)
-    (sp / "sitecustomize.py").write_text("import os  # injected", encoding="utf-8")
-    assert any("sitecustomize.py" in d for d in
+    (sp / "yaml" / "__init__.py").write_text("import os  # injected", encoding="utf-8")
+    assert any("yaml/__init__.py" in d for d in
                integrity.diff_snapshots(before2, integrity.snapshot(tmp_path)))
+
+
+def test_integrity_guards_git_hooks_and_config(tmp_path):
+    (tmp_path / ".git" / "hooks").mkdir(parents=True)
+    (tmp_path / ".git" / "config").write_text("[core]\n", encoding="utf-8")
+    before = integrity.snapshot(tmp_path)
+    (tmp_path / ".git" / "hooks" / "pre-commit").write_text("#!/bin/sh\nevil\n", encoding="utf-8")
+    (tmp_path / ".git" / "config").write_text("[core]\n\thooksPath = /tmp/evil\n", encoding="utf-8")
+    diffs = integrity.diff_snapshots(before, integrity.snapshot(tmp_path))
+    assert any(".git/hooks/pre-commit" in d for d in diffs)
+    assert any(".git/config" in d for d in diffs)
 
 
 def test_integrity_content_hash_defeats_mtime_reset(tmp_path):

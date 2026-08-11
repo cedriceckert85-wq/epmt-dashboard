@@ -264,12 +264,21 @@ class PhaseEngine:
         main = self.cfg.project["main_branch"]
         self.repo.checkout(main)
         base_sha = self.repo.head_sha()
+        # cross-window ref integrity: main must be exactly where the last merge
+        # left it. A detached process that moved main BETWEEN snapshot windows
+        # (outside any agent/test run) is caught here, fail closed.
+        expected_main = st.get("main_baseline")
+        if expected_main and base_sha != expected_main:
+            raise PhaseRunError(
+                f"main HEAD moved outside orchestrator control "
+                f"(expected {expected_main[:12]}, found {base_sha[:12]})")
         branch = f"phase/{st['phase_id']}"
         self.repo.create_branch(branch, main)
         run_id = new_id(f"run-{st['phase_id']}")
         return self._transition(
             st, phase, Lifecycle.BUILDING,
             run_id=run_id, candidate_branch=branch, base_commit=base_sha,
+            main_baseline=base_sha,
             attempt=int(st.get("attempt", 0)) + 1, fix_cycles=0,
             builder_provider=phase["builder"], reviewer_provider=phase["reviewer"],
             candidate_commit=None, tested_commit=None, reviewed_commit=None,
@@ -558,7 +567,7 @@ class PhaseEngine:
             deferred_all[st["phase_id"]] = st["evidence"]["deferred_tests"]
         return self._transition(st, phase, Lifecycle.MERGED,
                                 merged_commit=merged, phase_history=history,
-                                deferred_tests=deferred_all)
+                                deferred_tests=deferred_all, main_baseline=merged)
 
     def _advance(self, st, phase, phase_ids):
         idx = phase_ids.index(st["phase_id"])

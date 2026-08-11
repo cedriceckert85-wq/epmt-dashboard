@@ -1,4 +1,0 @@
-# Pinned tooling for skeleton unit tests (Phase 00 may extend via lockfile)
-pytest==9.1.1
-PyYAML==6.0.3
-jsonschema==4.26.0

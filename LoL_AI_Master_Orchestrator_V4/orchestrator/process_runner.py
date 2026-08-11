@@ -1,4 +1,4 @@
-import subprocess, time, os, signal
+import subprocess, time, os, signal, shutil
 from dataclasses import dataclass
 
 @dataclass
@@ -9,6 +9,22 @@ class ProcessResult:
     stderr:str
     duration_s:float
     cleanup_incomplete:bool=False
+
+
+def resolve_argv(argv, env=None):
+    """Resolve argv[0] against the run env's PATH. On Windows, npm-installed
+    CLIs (claude/codex) are .cmd shims which CreateProcess cannot start
+    directly — wrap them with cmd.exe /c."""
+    argv=list(argv)
+    path=(env or os.environ).get("PATH")
+    exe=shutil.which(argv[0], path=path)
+    if exe:
+        argv[0]=exe
+    if os.name=="nt" and str(argv[0]).lower().endswith((".cmd",".bat")):
+        comspec=(env or os.environ).get("COMSPEC","cmd.exe")
+        argv=[comspec,"/c"]+argv
+    return argv
+
 
 class ProcessRunner:
     @staticmethod
@@ -34,15 +50,22 @@ class ProcessRunner:
             creationflags=getattr(subprocess,"CREATE_NEW_PROCESS_GROUP",0)
 
         use_stdin = stdin_text is not None
+        argv=resolve_argv(argv, env)
 
-        p=subprocess.Popen(
-            argv, cwd=cwd, env=env,
-            stdin=subprocess.PIPE if use_stdin else None,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True,
-            start_new_session=start_new_session,
-            creationflags=creationflags
-        )
+        try:
+            p=subprocess.Popen(
+                argv, cwd=cwd, env=env,
+                stdin=subprocess.PIPE if use_stdin else None,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                text=True,
+                start_new_session=start_new_session,
+                creationflags=creationflags
+            )
+        except OSError as e:
+            # fail closed as a result, not a crash: callers treat 127 like
+            # any failing command
+            return ProcessResult(127,False,"",f"failed to launch {argv[0]}: {e}",
+                                 time.time()-start,False)
         try:
             out,err=p.communicate(stdin_text if use_stdin else None, timeout=timeout_s)
             return ProcessResult(p.returncode,False,out,err,time.time()-start,False)

@@ -235,43 +235,24 @@ def main(argv=None):
 
     # ---------------------------------------------------------------- recover
     if args.command == "recover":
+        # Delegate to the engine: fresh state read under the lock, and
+        # crash-between-merge-and-state reconciliation. Never crashes.
+        from .engine import PhaseEngine
         from .phases import load_phase, PhaseError
-        from .lock import SingleWriterLock, LockHeldError
-        lock = SingleWriterLock(cfg.lock_path)
         try:
-            lock.acquire(takeover_stale=True)
-        except LockHeldError as e:
-            print(f"BLOCKED: a live orchestrator holds the lock: {e}", file=sys.stderr)
+            phase = load_phase(ROOT, st["phase_id"])
+            builder, reviewer = _adapters_for(cfg, phase, fake=True)
+        except (PhaseError, SystemExit) as e:
+            print(f"BLOCKED: {e}", file=sys.stderr)
             return 3
-        try:
-            if st["lifecycle"] == "READY":
-                print("state already READY — nothing to recover")
-                return 0
-            try:
-                phase = load_phase(ROOT, st["phase_id"])
-            except PhaseError as e:
-                print(f"BLOCKED: {e}", file=sys.stderr)
-                return 3
-            frm = st["lifecycle"]
-            if frm != "BLOCKED":
-                # interrupted mid-phase: document, then move BLOCKED first
-                st = store.transition(st, phase, "BLOCKED",
-                                      reason=f"operator recovery from {frm}: {args.reason}",
-                                      task_note=f"recovered from interrupted {frm}")
-            st = store.transition(st, phase, "READY",
-                                  run_id=None, candidate_commit=None,
-                                  tested_commit=None, reviewed_commit=None,
-                                  approved_commit=None, merged_commit=None,
-                                  test_evidence_id=None, review_evidence_id=None,
-                                  human_approval_id=None, last_gate=None,
-                                  reason=args.reason,
-                                  task_note="operator recovery -> READY")
-            journal.append("recovered", frm=frm, reason=args.reason)
-            print(f"recovered: {frm} -> READY (phase {st['phase_id']})")
+        engine = PhaseEngine(ROOT, cfg, builder, reviewer, journal=journal, store=store)
+        result = engine.recover(reason=args.reason)
+        print(f"recover: {result.status}")
+        for reason in result.reasons:
+            print(f"  - {reason}")
+        if result.status in ("READY", "RECOVERED"):
             print("inspect worktrees/artifacts under .orchestrator/ before rerunning.")
-            return 0
-        finally:
-            lock.release()
+        return result.exit_code
 
     return 1
 

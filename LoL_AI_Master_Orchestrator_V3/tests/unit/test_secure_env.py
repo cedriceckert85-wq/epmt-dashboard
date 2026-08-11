@@ -42,3 +42,10 @@ def test_agent_env_keeps_own_provider_strips_other():
     assert codex["OPENAI_API_KEY"] == "sk-proj-secret"
     assert "ANTHROPIC_API_KEY" not in codex
     assert "CLAUDE_CODE_TOKEN" not in codex
+
+
+def test_agent_env_drops_ssh_agent_and_generic_secrets():
+    claude = env_for_agent(BASE, "claude")
+    assert "SSH_AUTH_SOCK" not in claude          # host SSH agent never handed over
+    assert "MY_APP_PASSWORD" not in claude         # generic credential dropped
+    assert claude["PATH"] == "/usr/bin"            # ordinary vars retained

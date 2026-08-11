@@ -70,5 +70,9 @@ def env_for_agent(base_env, provider):
             continue
         if any(up.startswith(p) for p in ATOMIC_DROP_PREFIXES):
             continue
+        # defense in depth: don't hand the agent the host's SSH agent socket
+        # or any generic credential-looking variable it has no need for.
+        if k == "SSH_AUTH_SOCK" or _is_secret_name(k):
+            continue
         out[k] = v
     return out

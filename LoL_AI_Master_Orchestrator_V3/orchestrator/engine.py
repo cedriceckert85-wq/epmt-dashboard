@@ -12,7 +12,7 @@ with real exit codes, parsed evidence, diff-based policy checks, secret
 scans and SHA-bound approval records. No agent statement can release a
 phase.
 """
-import json, random, time
+import hashlib, json, random, time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -89,11 +89,54 @@ class PhaseEngine:
     def _evidence_path(self, run_id):
         return self._artifact_dir(run_id) / "evidence.json"
 
+    # ------------------------------------------------- control-plane integrity
+    def _snapshot_protected(self):
+        """Content-hash manifest {path: sha256} of the orchestrator-owned
+        gate trust stores (acceptance + human-gate records) and the
+        canonical state file, so a forged acceptance/approval record or a
+        state tamper written by an agent is detected regardless of where
+        the write came from. Deliberately EXCLUDES the journal, which the
+        orchestrator itself appends to during an agent run."""
+        manifest = {}
+        targets = []
+        for d in (self.config.acceptance_dir, self.config.human_gate_dir):
+            d = Path(d)
+            if d.exists():
+                targets.extend(sorted(f for f in d.rglob("*") if f.is_file()))
+        if Path(self.config.state_path).is_file():
+            targets.append(Path(self.config.state_path))
+        for f in targets:
+            try:
+                manifest[str(f)] = hashlib.sha256(f.read_bytes()).hexdigest()
+            except OSError as e:
+                manifest[str(f)] = f"__unreadable__:{type(e).__name__}"
+        return manifest
+
+    def _verify_protected(self, before, *, who):
+        after = self._snapshot_protected()
+        if before != after:
+            added = sorted(set(after) - set(before))
+            removed = sorted(set(before) - set(after))
+            changed = sorted(k for k in before if k in after and before[k] != after[k])
+            detail = []
+            if added:
+                detail.append("added " + ", ".join(Path(p).name for p in added[:5]))
+            if removed:
+                detail.append("removed " + ", ".join(Path(p).name for p in removed[:5]))
+            if changed:
+                detail.append("modified " + ", ".join(Path(p).name for p in changed[:5]))
+            raise _Blocked(f"{who} tampered with orchestrator-owned trust store "
+                           f"(acceptance/human-gate/state): {'; '.join(detail)}")
+
     # ------------------------------------------------------------- agent run
     def _run_agent(self, adapter, *, run_id, phase_id, role, workspace,
                    prompt_file, allowed_write_paths=()):
         """Runs one agent with the configured retry policy. Returns the
-        validated structured report or raises _Blocked (fail closed)."""
+        validated structured report or raises _Blocked (fail closed).
+        The orchestrator-owned trust stores are hashed before and after the
+        run — an agent can never forge an acceptance/approval record, even
+        by writing outside its worktree."""
+        protected_before = self._snapshot_protected()
         timeout_s = getattr(adapter, "timeout_s", None) or 3600
         request = AgentRequest(
             run_id=run_id, phase_id=phase_id, role=role, workspace=Path(workspace),
@@ -127,7 +170,8 @@ class PhaseEngine:
                                f"after {infra_used} retries (provider={adapter.provider})")
             if result.exit_code != 0:
                 raise _Blocked(f"{role} agent process failed exit={result.exit_code} "
-                               f"(provider={adapter.provider}): {result.stderr.strip()[:300]}")
+                               f"(provider={adapter.provider}): "
+                               f"{secret_scan.redact(result.stderr.strip()[:300])}")
             errors = validate_agent_result(result.structured, schema=self.schema,
                                            request=request)
             if errors:
@@ -142,6 +186,10 @@ class PhaseEngine:
             status = result.structured.get("status")
             if status != "completed":
                 raise _Blocked(f"{role} agent reported status={status}")
+            # fail closed if the agent touched any orchestrator-owned trust
+            # store (forged acceptance/approval, state tamper) — regardless
+            # of whether the write escaped the worktree.
+            self._verify_protected(protected_before, who=f"{role} agent")
             return result.structured
 
     # ----------------------------------------------------------- policy check
@@ -164,6 +212,93 @@ class PhaseEngine:
             return self._run_phase_locked(phase_id, resume=resume)
         finally:
             lock.release()
+
+    # --------------------------------------------------------------- recover
+    def recover(self, *, reason="operator recovery"):
+        """Clear an interrupted/BLOCKED/wedged phase back to a runnable
+        state, under the lock, from a FRESH state read (never a snapshot
+        taken before locking). Reconciles a crash between git merge and the
+        MERGED state write so a completed merge is never lost and never
+        deadlocks. Never raises — always returns an EngineResult."""
+        lock = SingleWriterLock(self.config.lock_path)
+        try:
+            lock.acquire(takeover_stale=True)
+        except LockHeldError as e:
+            return EngineResult("BLOCKED", 3,
+                                (f"a live orchestrator holds the lock: {e}",), {})
+        try:
+            st = self.store.load()                     # CONC-04: read AFTER lock
+            phase = phases.load_phase(self.root, st["phase_id"])
+            frm = st["lifecycle"]
+
+            if frm == "READY":
+                return EngineResult("READY", 0, ("state already READY",), st)
+
+            # CONC-03: reconcile against git before wiping anything.
+            main_head = self.git.rev_parse(self.config.main_branch)
+            candidate = st.get("candidate_commit")
+
+            if frm == "MERGED" or (frm == "PASSED" and candidate and main_head == candidate):
+                # The merge is (or should be) on main. If main HEAD == candidate,
+                # the merge succeeded; finalize forward to READY(next phase).
+                if candidate and main_head == candidate:
+                    st = self._finalize_merged(st, phase, candidate, reason)
+                    self.journal.append("recovered_merge_finalized", frm=frm,
+                                       merged_commit=candidate, reason=reason)
+                    return EngineResult("RECOVERED", 0,
+                                        (f"reconciled {frm}: merge {candidate} finalized, "
+                                         f"phase advanced",), st)
+                # PASSED but main HEAD is not the candidate: merge never landed.
+                # Safe to roll back to READY and rebuild; no work on main to lose.
+                if frm == "MERGED":
+                    return EngineResult(
+                        "BLOCKED", 3,
+                        (f"state MERGED but main HEAD {main_head[:8]} != candidate "
+                         f"{str(candidate)[:8]}: manual git inspection required",), st)
+
+            # ordinary interrupted/BLOCKED phase: document then reset to READY
+            if frm != "BLOCKED":
+                st = self.store.transition(st, phase, "BLOCKED",
+                                           reason=f"operator recovery from {frm}: {reason}",
+                                           task_note=f"recovered from interrupted {frm}")
+            st = self.store.transition(
+                st, phase, "READY", run_id=None, candidate_commit=None,
+                tested_commit=None, reviewed_commit=None, approved_commit=None,
+                merged_commit=None, test_evidence_id=None, review_evidence_id=None,
+                human_approval_id=None, last_gate=None, reason=reason,
+                task_note="operator recovery -> READY")
+            self.journal.append("recovered", frm=frm, reason=reason)
+            return EngineResult("RECOVERED", 0, (f"{frm} -> READY",), st)
+        except (StateError, PhaseError, GitError, OSError) as e:
+            return EngineResult("BLOCKED", 3,
+                                (f"recovery blocked: {type(e).__name__}: {e}",), {})
+        finally:
+            lock.release()
+
+    def _finalize_merged(self, st, phase, merged, reason):
+        """Complete a confirmed merge forward to READY(next phase). Used by
+        the normal path and by recover reconciliation."""
+        if st["lifecycle"] == "PASSED":
+            st = self.store.transition(st, phase, "MERGED", merged_commit=merged,
+                                       reason=reason, task_note=f"merged {merged}")
+        # clean up any leftover worktree for this run
+        run_id = st.get("run_id")
+        if run_id:
+            wt = self.config.worktree_root / run_id
+            if Path(wt).exists():
+                self.git.remove_worktree(wt, branch=f"candidate/phase-{phase['id']}/{run_id}")
+        nxt = phases.next_phase_id(self.root, phase["id"])
+        st = self.store.transition(
+            st, phase, "READY",
+            phase_id=nxt if nxt is not None else st["phase_id"],
+            run_id=None, attempt=0, builder=None, candidate_commit=None,
+            test_evidence_id=None, review_evidence_id=None, human_gate_required=None,
+            last_gate="PASS", reviewer_provider=None, builder_provider=None,
+            approved_commit=None, reviewed_commit=None, tested_commit=None,
+            human_approval_id=None,
+            task_note=(f"phase {phase['id']} merged; next phase {nxt} ready"
+                       if nxt else f"phase {phase['id']} merged; no further phases"))
+        return st
 
     def _run_phase_locked(self, phase_id, *, resume):
         try:
@@ -454,6 +589,13 @@ class PhaseEngine:
             human_approval_id=(approval or {}).get("approval_id"),
             task_note="gate PASSED — merging ff-only")
 
+        # Journal the merge INTENT before touching main, so a crash between
+        # the git merge and the MERGED state write is reconcilable by
+        # `recover` (which compares main HEAD against candidate/base).
+        base_for_merge = self.git.rev_parse(self.config.main_branch)
+        self.journal.append("merging_intent", phase_id=phase["id"],
+                           candidate_commit=candidate, base_sha=base_for_merge,
+                           run_id=st["run_id"])
         merged = self.git.merge_ff_only(candidate)
         merge_check = gates.validate_merge_commit(
             candidate_commit=candidate, merged_commit=merged)
@@ -462,23 +604,7 @@ class PhaseEngine:
                                        reason="; ".join(merge_check.reasons),
                                        task_note="merge integrity failure")
             return EngineResult("BLOCKED", 3, merge_check.reasons, st)
-        st = self.store.transition(st, phase, "MERGED", merged_commit=merged,
-                                   task_note=f"merged {merged}")
-        self.git.remove_worktree(Path(evidence["worktree"]),
-                                 branch=evidence.get("worktree_branch"))
-
-        nxt = phases.next_phase_id(self.root, phase["id"])
-        st = self.store.transition(
-            st, phase, "READY",
-            phase_id=nxt if nxt is not None else st["phase_id"],
-            run_id=None, attempt=0, builder=None, candidate_commit=None,
-            test_evidence_id=None, review_evidence_id=None,
-            human_gate_required=None,
-            last_gate="PASS", reviewer_provider=None, builder_provider=None,
-            approved_commit=None, reviewed_commit=None, tested_commit=None,
-            human_approval_id=None,
-            task_note=(f"phase {phase['id']} merged; next phase {nxt} ready"
-                       if nxt else f"phase {phase['id']} merged; no further phases"))
+        st = self._finalize_merged(st, phase, merged, reason="normal completion")
         return EngineResult("MERGED", 0,
                             (f"phase {phase['id']} merged as {merged}",), st)
 
@@ -508,6 +634,7 @@ class PhaseEngine:
 
     # ------------------------------------------------------------------ block
     def _block(self, st, phase, reason):
+        reason = secret_scan.redact(reason)
         self.journal.append("blocked", phase_id=st.get("phase_id"),
                            run_id=st.get("run_id"), reason=reason)
         try:

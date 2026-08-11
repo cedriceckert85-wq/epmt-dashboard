@@ -151,6 +151,7 @@
 - `tests/unit/test_process_runner.py`
 - `tests/unit/test_registry.py`
 - `tests/unit/test_result_validation.py`
+- `tests/unit/test_review_fixes.py`
 - `tests/unit/test_schema_consistency.py`
 - `tests/unit/test_secret_scan.py`
 - `tests/unit/test_secure_env.py`

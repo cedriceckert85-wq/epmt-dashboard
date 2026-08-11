@@ -7,9 +7,22 @@ it is only allowed as an explicit takeover (recover/unlock path), never
 silently.
 """
 import json, os, socket
+from contextlib import contextmanager
 from pathlib import Path
 
 from .journal import utc_now
+
+try:
+    import fcntl
+    _HAVE_FLOCK = True
+except ImportError:                         # Windows
+    fcntl = None
+    _HAVE_FLOCK = False
+
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
 
 
 class LockError(Exception):
@@ -50,6 +63,34 @@ class SingleWriterLock:
             "created_utc": utc_now(),
         }, indent=2)
 
+    @contextmanager
+    def _guard(self):
+        """Cross-process guard mutex serializing the check-then-act window
+        of stale takeover, so two processes can never both conclude the
+        lock is stale and both delete/recreate it. Held only for the brief
+        inspect+unlink+create sequence, never for a whole phase."""
+        guard_path = self.path.with_name(self.path.name + ".guard")
+        guard_path.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(guard_path, os.O_CREAT | os.O_RDWR)
+        try:
+            if _HAVE_FLOCK:
+                fcntl.flock(fd, fcntl.LOCK_EX)
+            elif msvcrt is not None:
+                msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
+            yield
+        finally:
+            try:
+                if _HAVE_FLOCK:
+                    fcntl.flock(fd, fcntl.LOCK_UN)
+                elif msvcrt is not None:
+                    try:
+                        os.lseek(fd, 0, os.SEEK_SET)
+                        msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+                    except OSError:
+                        pass
+            finally:
+                os.close(fd)
+
     def inspect(self):
         """Returns (exists, info_dict|None, stale:bool)."""
         try:
@@ -71,16 +112,25 @@ class SingleWriterLock:
         try:
             fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         except FileExistsError:
-            exists, info, stale = self.inspect()
-            if not exists:
-                # raced a release; try once more, still fail closed
-                return self.acquire(takeover_stale=takeover_stale)
-            if stale and takeover_stale:
-                self.break_stale()
-                return self.acquire(takeover_stale=False)
-            holder = (info or {}).get("pid", "unknown")
-            raise LockHeldError(
-                f"orchestrator lock held (pid={holder}, stale={stale})", stale=stale)
+            if takeover_stale:
+                # Serialize the entire takeover (inspect + unlink + create)
+                # under the guard so a second process cannot slip a live
+                # lock into the gap. atomically_takeover creates the new
+                # lock itself when it wins.
+                fd = self._atomically_takeover_stale()
+                if fd is None:
+                    exists, info, stale = self.inspect()
+                    holder = (info or {}).get("pid", "unknown")
+                    raise LockHeldError(
+                        f"orchestrator lock held (pid={holder}, stale={stale})",
+                        stale=stale)
+            else:
+                exists, info, stale = self.inspect()
+                if not exists:
+                    return self.acquire(takeover_stale=False)   # raced a release
+                holder = (info or {}).get("pid", "unknown")
+                raise LockHeldError(
+                    f"orchestrator lock held (pid={holder}, stale={stale})", stale=stale)
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(self._payload())
             f.flush()
@@ -88,15 +138,34 @@ class SingleWriterLock:
         self._owned = True
         return self
 
+    def _atomically_takeover_stale(self):
+        """Under the guard mutex: re-inspect; if (still) stale, unlink and
+        O_EXCL-create in one uninterrupted critical section. Returns the
+        open fd of the freshly created lock, or None if not takeable."""
+        with self._guard():
+            exists, info, stale = self.inspect()
+            if exists and not stale:
+                return None                    # someone holds a LIVE lock — refuse
+            if exists:                          # stale — remove before recreating
+                self.path.unlink(missing_ok=True)
+            try:
+                return os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            except FileExistsError:
+                # lost the create race despite the guard (belt-and-suspenders):
+                # treat as held, fail closed rather than clobber.
+                return None
+
     def break_stale(self):
-        """Remove a lock only after verifying it is stale. Fail closed."""
-        exists, info, stale = self.inspect()
-        if not exists:
-            return False
-        if not stale:
-            raise LockError("refusing to break a non-stale lock")
-        self.path.unlink(missing_ok=True)
-        return True
+        """Remove a lock only after verifying it is stale, under the guard
+        mutex so the check-then-act window is not racy. Fail closed."""
+        with self._guard():
+            exists, info, stale = self.inspect()
+            if not exists:
+                return False
+            if not stale:
+                raise LockError("refusing to break a non-stale lock")
+            self.path.unlink(missing_ok=True)
+            return True
 
     def release(self):
         if not self._owned:

@@ -77,6 +77,26 @@ BUILDING → TESTING → CHECKPOINTED → REVIEWING → GATE → MERGED
   AUTO_GATE-Records dokumentiert. Wer die V3-Disziplin will:
   `START.bat --strict-gates` — dann pausiert der Lauf an jedem Human Gate.
 
+## Humor & Kreativität: die LLM-Editorial-Schicht (Phase 10/12/13)
+
+Das fertige Programm nutzt selbst ein LLM (per `claude -p`, läuft über dein
+Max-Abo) als „Redakteur": Es liest das komplette Session-Transkript plus
+Event-Timeline, erkennt **lustige Momente ohne Kill-Event**, **Callbacks**
+(„witzig wegen Minute 12"), bestimmt die **Pointe** (Clip endet nach der
+Pointe, nicht nach Stoppuhr) und schlägt **Zooms/Sound-Effekte/Captions
+auf der Pointe** vor. Darunter liegt immer der deterministische
+Signal-Scorer als Sicherheitsnetz — fällt das LLM aus (Quota, offline),
+läuft die Pipeline signal-only weiter und markiert das sichtbar.
+
+Dafür wichtig:
+- Die Claude CLI muss auf dem Pipeline-Rechner **eingeloggt bleiben** (auch
+  nach dem Bau) — sie ist Teil des fertigen Programms.
+- Eigene Sound-Effekte/Musik (lizenzfrei) in `assets/sfx/` und
+  `assets/music/` legen; das System lädt selbst nichts herunter.
+- Referenz-Videos (Phase 11): 10–30 handverlesene Videos exakt deines
+  Zielstils bringen mehr als hunderte gemischte — sie steuern Pacing und
+  Struktur; der Humor kommt aus der Editorial-Schicht.
+
 ## Nützliche Kommandos
 
 ```

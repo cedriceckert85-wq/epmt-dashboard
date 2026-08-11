@@ -99,3 +99,22 @@ Exit-Codes/Metriken, Pfad-Policy-Referenzimplementierung, Prozess-Runner
 mit Tree-Kill + `cleanup_incomplete`-Fail-Closed, Cross-Vendor-Pflicht
 (Builder ≠ Reviewer, nie Fake-Review), Secret-Strip in Test-Umgebungen,
 21 Phasen + Build-Prompts + Adversarial-Review-Prompts.
+
+## 12. LLM-Editorial-Schicht (Phase 10/12/13) — Humor ist Kernmechanik
+V3 schrieb für Highlight-Ranking und Cut-Regeln „no LLM" vor (Determinismus).
+Das deckelt die Qualität genau dort, wo sie entsteht: Humor, Callbacks,
+Pointen-Timing. V4 ergänzt eine zweischichtige Architektur:
+- **Layer 1 (unverändert):** deterministischer Signal-Scorer + deterministische
+  Cut-Regeln — voll testbar, Gate-relevant, Fallback-Pfad.
+- **Layer 2 (neu):** `src/pipeline/editorial.py` — LLM-Pass über die GANZE
+  Session (Transkript + Events): erkennt Comedy-Momente ohne Game-Event,
+  Callback-Paare, Pointen (punchline_ts), schlägt Zoom/SFX/Captions vor.
+  Score-Merge konfigurierbar; strikte JSON-Schemas; Cache; Kosten-Caps;
+  Ausfall ⇒ signal-only, sichtbar geflaggt — die Pipeline blockt nie am LLM.
+- Phase 13 wird editorial-aware (Pointen-Ende, Setup-Vorlauf, Callback-Inserts),
+  bleibt aber pure-function/deterministisch (Editorial-Daten sind Input).
+- Phase 12 bekommt sfx[]/callback_inserts[] im EDL-Schema + lokale
+  Asset-Bibliothek (assets/sfx/, assets/music/ — nutzerseitig, lizenziert).
+- Gate-Disziplin bleibt: alle gated Tests mocken das LLM (Test-Umgebungen sind
+  secret-frei); Live-Qualität wird an den Human-Review-Punkten (Dashboard/POC)
+  beurteilt. rank_determinism gilt für Layer 1 + Merge mit fixem Mock-Fixture.

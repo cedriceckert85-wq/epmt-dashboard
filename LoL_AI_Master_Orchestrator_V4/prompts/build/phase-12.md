@@ -10,10 +10,17 @@ Read persistent instructions (CLAUDE.md/AGENTS.md), MASTER_ORCHESTRATOR.md and t
 - Report UNVERIFIED instead of guessing; real-hardware evidence cannot be mocked away.
 
 ## Inputs
-- Top highlight candidates, style_profile.json, session media, claude CLI (claude -p, Max subscription — batch top candidates ONLY)
+- Top highlight candidates incl. editorial data (phase 10: category, punchline_ts,
+  callback_refs/callback_insert, zoom/sfx suggestions, session_context.json),
+  style_profile.json, session media, claude CLI (claude -p, Max subscription — batch top candidates ONLY)
 
 ## Architecture
-- EDL generation: claude -p with strict JSON schema (schemas/edl.schema.json): cuts[], captions[], zooms[], hook_text; output validated + clamped to media bounds; invalid ⇒ one retry then rule-based fallback EDL (never blocks pipeline)
+- EDL generation: claude -p with strict JSON schema (schemas/edl.schema.json): cuts[], captions[], zooms[], sfx[], callback_inserts[], hook_text; the prompt INCLUDES the editorial context (why the moment is funny/hype, punchline_ts, callback text+timestamps) so captions/zooms/sfx land ON the punchline, not just on kills; output validated + clamped to media bounds; invalid ⇒ one retry then rule-based fallback EDL (never blocks pipeline)
+- SFX/music: local library folders (assets/sfx/, assets/music/ — user-provided,
+  licensed; ship empty with README); sfx[] entries reference library ids only;
+  missing id ⇒ skip entry, log; audio ducking under SFX; never download media
+- callback_inserts: render as brief picture-in-picture or hard-cut insert of the
+  referenced earlier window (max 5 s), with caption from editorial context
 - Renderer: single ffmpeg filtergraph per clip; NVENC h264 yuv420p CBR 12 Mbit landscape + 9:16 vertical crop variant (subject-follow via fixed center + optional face/champ tracking later); loudnorm two-pass to −14 LUFS
 - GPU scheduling: renderer and ASR never run concurrently (simple lock)
 

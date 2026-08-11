@@ -13,6 +13,8 @@ def listing(root: Path):
         rel=p.relative_to(root).as_posix()
         if any(x in rel for x in EXCLUDE):
             continue
+        if rel==".git":              # in a linked worktree .git is a FILE
+            continue
         out.append(rel)
     return sorted(set(out)|{"FILE_MANIFEST.md"})
 

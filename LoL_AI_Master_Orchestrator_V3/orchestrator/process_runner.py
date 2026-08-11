@@ -35,14 +35,18 @@ class ProcessRunner:
 
         use_stdin = stdin_text is not None
 
-        p=subprocess.Popen(
-            argv, cwd=cwd, env=env,
-            stdin=subprocess.PIPE if use_stdin else None,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True,
-            start_new_session=start_new_session,
-            creationflags=creationflags
-        )
+        try:
+            p=subprocess.Popen(
+                argv, cwd=cwd, env=env,
+                stdin=subprocess.PIPE if use_stdin else None,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                text=True,
+                start_new_session=start_new_session,
+                creationflags=creationflags
+            )
+        except OSError as e:
+            # missing/unspawnable executable: fail closed, never raise
+            return ProcessResult(127,False,"",f"spawn failed: {e}",time.time()-start,False)
         try:
             out,err=p.communicate(stdin_text if use_stdin else None, timeout=timeout_s)
             return ProcessResult(p.returncode,False,out,err,time.time()-start,False)

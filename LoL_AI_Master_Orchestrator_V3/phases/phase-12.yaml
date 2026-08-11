@@ -1,0 +1,33 @@
+id: '12'
+name: EDL/Renderer
+builder: claude
+reviewer: codex
+cross_vendor_review: true
+human_gate: true
+required_tests:
+- phase_12_tests
+- render_fixture_suite
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: render_fail_count
+  op: ==
+  value: 0
+- name: av_sync_drift_ms_max
+  op: <=
+  value: 40
+- name: loudness_lufs_min
+  op: '>='
+  value: -15
+- name: loudness_lufs_max
+  op: <=
+  value: -13
+- name: encode_speed_x_min
+  op: '>='
+  value: 1.5

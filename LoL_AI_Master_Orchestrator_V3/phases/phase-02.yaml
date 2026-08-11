@@ -1,0 +1,28 @@
+id: '02'
+name: OBS Agent
+builder: claude
+reviewer: codex
+cross_vendor_review: true
+human_gate: true
+required_tests:
+- phase_02_tests
+- segment_validation_fixtures
+- agent_crash_recovery
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: segment_validate_fail_count
+  op: ==
+  value: 0
+- name: agent_cpu_pct_p95
+  op: <=
+  value: 5
+- name: agent_ram_mb_max
+  op: <=
+  value: 300

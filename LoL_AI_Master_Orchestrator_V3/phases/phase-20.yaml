@@ -1,0 +1,24 @@
+id: '20'
+name: POC/Go-No-Go
+builder: claude
+reviewer: codex
+cross_vendor_review: true
+human_gate: true
+required_tests:
+- phase_20_tests
+- e2e_real_stream
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: end_to_end_success
+  op: ==
+  value: 1
+- name: human_minutes_per_published_video
+  op: <=
+  value: 10

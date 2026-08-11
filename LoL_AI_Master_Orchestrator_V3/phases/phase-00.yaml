@@ -1,0 +1,19 @@
+id: '00'
+name: Master Orchestrator
+builder: claude
+reviewer: codex
+cross_vendor_review: true
+human_gate: true
+required_tests:
+- phase_00_tests
+allowed_write_paths:
+- orchestrator/
+- tests/
+- docs/
+- reports/
+- scripts/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+preconditions:
+- no prior phase gate required

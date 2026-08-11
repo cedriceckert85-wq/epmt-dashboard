@@ -1,0 +1,10 @@
+import argparse, json, time, sys
+p=argparse.ArgumentParser()
+p.add_argument("--mode",choices=["success","fail","hang","malformed","schema-invalid","retryable"],default="success")
+a=p.parse_args()
+if a.mode=="hang": time.sleep(86400)
+elif a.mode=="fail": sys.exit(2)
+elif a.mode=="malformed": print("{bad json")
+elif a.mode=="schema-invalid": print(json.dumps({"foo":"bar"}))
+elif a.mode=="retryable": sys.exit(75)
+else: print(json.dumps({"run_id":"fake","phase_id":"00","role":"builder","status":"completed","summary":"ok","findings":[],"tests":[]}))

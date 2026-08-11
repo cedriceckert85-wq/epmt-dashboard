@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "run_id": null,
+  "sequence": 0,
+  "phase_id": "00",
+  "lifecycle": "READY",
+  "attempt": 0,
+  "builder": null,
+  "candidate_commit": null,
+  "test_evidence_id": null,
+  "review_evidence_id": null,
+  "human_gate_required": true,
+  "last_gate": null,
+  "reviewer_provider": null,
+  "builder_provider": null,
+  "approved_commit": null,
+  "reviewed_commit": null,
+  "tested_commit": null,
+  "merged_commit": null,
+  "human_approval_id": null
+}

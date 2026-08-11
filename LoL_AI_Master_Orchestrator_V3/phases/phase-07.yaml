@@ -1,0 +1,34 @@
+id: '07'
+name: Safe Live Upload
+builder: codex
+reviewer: claude
+cross_vendor_review: true
+human_gate: true
+required_tests:
+- phase_07_tests
+- tailscale_preflight
+- tailscale_disconnect_resume
+- tailscale_no_public_fallback
+- tailscale_tenant_isolation
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+network_transport: tailscale_mvp
+metrics:
+- name: resume_duplicate_objects
+  op: ==
+  value: 0
+- name: corrupted_uploads
+  op: ==
+  value: 0
+- name: stream_dropped_frames_pct_delta
+  op: <=
+  value: 0.5
+- name: catchup_after_1h_outage_min
+  op: <=
+  value: 90

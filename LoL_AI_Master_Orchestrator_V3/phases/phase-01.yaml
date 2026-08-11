@@ -1,0 +1,25 @@
+id: '01'
+name: Architecture/Data Model
+builder: codex
+reviewer: claude
+cross_vendor_review: true
+human_gate: true
+required_tests:
+- phase_01_tests
+- schema_roundtrip
+- migration_up_down
+allowed_write_paths:
+- src/
+- tests/
+- docs/
+- reports/
+gate:
+  max_blockers: 0
+  max_unaccepted_high: 0
+metrics:
+- name: schema_validation_failures
+  op: ==
+  value: 0
+- name: migration_reversible
+  op: ==
+  value: 1

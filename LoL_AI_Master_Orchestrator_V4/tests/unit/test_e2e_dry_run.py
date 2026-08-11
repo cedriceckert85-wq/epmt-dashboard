@@ -226,6 +226,28 @@ def test_failing_required_test_triggers_fix_then_blocks(tmp_path):
     assert "max fix cycles" in st["blocked_reason"]
 
 
+def test_reviewer_unverified_status_blocks(tmp_path):
+    cfg, store, repo = make_project(tmp_path)
+    set_fake_control(cfg, {"01:reviewer": {"status": "unverified", "findings": []}})
+    status, st = make_engine(cfg, store, repo).run(
+        phases=["00", "01"], capabilities={})
+    assert status == "blocked"
+    assert st["phase_id"] == "01"
+    assert "not 'completed'" in st["blocked_reason"]
+
+
+def test_agent_git_commit_of_forbidden_file_is_caught(tmp_path):
+    cfg, store, repo = make_project(tmp_path)
+    # a builder that commits an edit to an immutable tracked file itself
+    d = cfg.root / ".orchestrator"
+    d.mkdir(exist_ok=True)
+    (d / "fake_control.json").write_text(json.dumps(
+        {"01:builder": {"self_commit_immutable": True}}), encoding="utf-8")
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "blocked"
+    assert "HEAD" in st["blocked_reason"] or "forbidden" in st["blocked_reason"]
+
+
 def test_deferred_hardware_test_recorded_not_faked(tmp_path):
     cfg, store, repo = make_project(tmp_path)
     import yaml

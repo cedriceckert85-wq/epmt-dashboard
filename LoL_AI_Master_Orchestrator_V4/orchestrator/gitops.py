@@ -56,6 +56,13 @@ class GitRepo:
         p = self._run("rev-parse", f"refs/heads/{name}", check=False)
         return p.stdout.strip() if p.returncode == 0 else None
 
+    def is_ancestor(self, maybe_ancestor, ref):
+        """True if maybe_ancestor is reachable from ref (already merged)."""
+        if not maybe_ancestor:
+            return False
+        return self._run("merge-base", "--is-ancestor", maybe_ancestor, ref,
+                         check=False).returncode == 0
+
     def status_porcelain(self):
         """[(status, path)] of pending changes. Rename entries yield the new path."""
         out = self._run("status", "--porcelain").stdout

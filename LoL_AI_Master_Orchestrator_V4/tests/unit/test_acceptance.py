@@ -13,10 +13,12 @@ def test_valid_accept():
     assert ids == {"F1"} and reasons == []
 
 
-def test_sha_scoping():
+def test_sha_scoping_accepts_nothing_without_error():
+    # stale acceptance must accept nothing, but must NOT raise a blocking
+    # error (that would permanently block a clean rebuild).
     ids, reasons = acceptance.accepted_ids([rec(commit_sha="old")], phase_id="04",
                                            candidate_commit="abc")
-    assert ids == set() and any("stale" in r for r in reasons)
+    assert ids == set() and reasons == []
 
 
 def test_other_phase_ignored_silently():

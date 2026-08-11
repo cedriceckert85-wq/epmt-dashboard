@@ -96,6 +96,41 @@ def test_junit_zero_tests_fails(tmp_path):
     assert out.status == "fail" and "zero" in out.reason
 
 
+def test_junit_all_skipped_is_not_a_pass(tmp_path):
+    # pytest reports a fully-skipped module as exit 0, tests=N, failures=0,
+    # skipped=N — this must NOT count as a real pass (vacuous green).
+    xml = ('<testsuite name="s" tests="2" failures="0" errors="0" skipped="2">'
+           '<testcase name="a"><skipped/></testcase>'
+           '<testcase name="b"><skipped/></testcase></testsuite>')
+    out = run_registry_test("t", spec(_junit_cmd(tmp_path, xml), parser="pytest_junit",
+                                      evidence="ev/junit.xml"),
+                            root=tmp_path, run_id="r", capabilities={}, deferrable=set())
+    assert out.status == "fail" and "skipped" in out.reason
+
+
+def test_junit_partial_skip_still_passes(tmp_path):
+    xml = ('<testsuite name="s" tests="3" failures="0" errors="0" skipped="1">'
+           '<testcase name="a"/><testcase name="b"/>'
+           '<testcase name="c"><skipped/></testcase></testsuite>')
+    out = run_registry_test("t", spec(_junit_cmd(tmp_path, xml), parser="pytest_junit",
+                                      evidence="ev/junit.xml"),
+                            root=tmp_path, run_id="r", capabilities={}, deferrable=set())
+    assert out.status == "pass"
+
+
+def test_bearer_token_env_vars_are_stripped(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "x")
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "x")
+    monkeypatch.setenv("SOME_CUSTOM_SECRET", "x")
+    monkeypatch.setenv("MY_SERVICE_TOKEN", "x")
+    monkeypatch.setenv("HARMLESS_VALUE", "keepme")
+    env = stripped_env()
+    for k in ("ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN",
+              "SOME_CUSTOM_SECRET", "MY_SERVICE_TOKEN"):
+        assert k not in env
+    assert env.get("HARMLESS_VALUE") == "keepme"
+
+
 def test_env_stripping():
     env = stripped_env()
     for k in DEFAULT_STRIP_ENV:

@@ -13,6 +13,7 @@ from pathlib import Path
 from . import gates, human_gate, integrity, path_policy, secret_scan
 from .adapters import make_adapter
 from .config import load_phase
+from .gitops import GitError
 from .models import AgentRequest, AgentRole, Lifecycle
 from .resultio import RESULT_REL_PATH, clear_agent_result, read_agent_result
 from .state import render_projections
@@ -63,8 +64,16 @@ class PhaseEngine:
         return st
 
     def _block(self, st, phase, reason):
-        self.store.journal("blocked", {"phase_id": st["phase_id"], "reason": reason})
-        return self._transition(st, phase, Lifecycle.BLOCKED, blocked_reason=reason)
+        # BLOCKED is the universal fail-closed sink; force it even from states
+        # that don't list it as a legal transition (e.g. MERGED) so a failure
+        # can never escape the state machine.
+        self.store.journal("blocked", {
+            "phase_id": st["phase_id"], "from": st["lifecycle"], "reason": reason})
+        st = self.store.save({**st, "lifecycle": Lifecycle.BLOCKED.value,
+                              "blocked_reason": reason})
+        render_projections(self.cfg.root, st, phase)
+        self.log(f"[phase {st['phase_id']}] BLOCKED ({reason.splitlines()[0] if reason else ''})")
+        return st
 
     # ------------------------------------------------------------------ agents
     def _run_agent(self, st, phase, role, prompt_files, extra_sections=()):
@@ -99,19 +108,28 @@ class PhaseEngine:
             timeout_s=int(agent_cfg.get("timeout_s", 3600)),
             allowed_write_paths=allowed)
 
+        # each failure kind has its OWN budget — an infra retry must not
+        # silently consume the schema-retry allowance and vice versa
         schema_retries = self.cfg.invalid_schema_retries
         infra_retries = int(agent_cfg.get("max_retries", 2))
+        violation_retries = 1
         backoffs = list(self.cfg.infra_backoff)
+        infra_failures = schema_failures = violation_failures = 0
+        # the orchestrator legitimately writes prompts/logs/evidence under
+        # its own artifact dir; exempt it so it is not seen as tampering
+        artifact_exclude = [str((self.cfg.artifact_root)
+                                .relative_to(self.cfg.root)).replace("\\", "/")]
         attempt = 0
         while True:
             attempt += 1
             clear_agent_result(self.cfg.root)
-            pre_snap = integrity.snapshot(self.cfg.root)
+            head_before = self.repo.head_sha()
+            pre_snap = integrity.snapshot(self.cfg.root, exclude=artifact_exclude)
             self.log(f"[phase {st['phase_id']}] running {role.value} ({provider}), attempt {attempt} …")
             run_res = adapter.run(request)
             # snapshot BEFORE the orchestrator itself writes journal/logs,
             # otherwise our own writes would look like agent tampering
-            post_snap = integrity.snapshot(self.cfg.root)
+            post_snap = integrity.snapshot(self.cfg.root, exclude=artifact_exclude)
             self.store.journal("agent_run", {
                 "phase_id": st["phase_id"], "role": role.value, "provider": provider,
                 "exit_code": run_res.exit_code, "timed_out": run_res.timed_out,
@@ -133,23 +151,36 @@ class PhaseEngine:
                 raise PhaseRunError(
                     f"{role.value} modified protected runtime files: {', '.join(tamper[:10])}")
 
+            # agents must never move HEAD — only the orchestrator commits.
+            # A self-commit would hide forbidden (even tracked-immutable)
+            # edits from working-tree diff inspection.
+            head_after = self.repo.head_sha()
+            if head_after != head_before:
+                self.repo.checkout(st["candidate_branch"])
+                self.repo._run("reset", "--hard", "--quiet", head_before)
+                raise PhaseRunError(
+                    f"{role.value} moved git HEAD ({head_before[:12]}->{head_after[:12]}); "
+                    f"agents must not commit")
+
             violations = self._enforce_write_policy(st, allowed)
             if violations and role == AgentRole.REVIEWER:
                 self.store.journal("reviewer_write_violation", {
                     "phase_id": st["phase_id"], "paths": violations[:50]})
-                if attempt <= 1 + schema_retries:
+                violation_failures += 1
+                if violation_failures <= violation_retries:
                     continue
                 raise PhaseRunError("reviewer modified files outside reports/ twice")
 
             if run_res.timed_out or (run_res.exit_code != 0 and not (self.cfg.root / RESULT_REL_PATH).exists()):
-                if attempt <= infra_retries:
-                    delay = backoffs[min(attempt - 1, len(backoffs) - 1)] if backoffs else 5
+                infra_failures += 1
+                if infra_failures <= infra_retries:
+                    delay = backoffs[min(infra_failures - 1, len(backoffs) - 1)] if backoffs else 5
                     self.log(f"[phase {st['phase_id']}] {role.value} infra failure "
                              f"(exit {run_res.exit_code}, timeout={run_res.timed_out}) — retry in {delay}s")
                     time.sleep(0 if self.dry_run else delay)
                     continue
                 raise PhaseRunError(
-                    f"{role.value} agent failed after {attempt} attempts "
+                    f"{role.value} agent failed after {infra_failures} infra attempts "
                     f"(exit {run_res.exit_code}, timed_out={run_res.timed_out})")
 
             result, problems = read_agent_result(
@@ -157,7 +188,8 @@ class PhaseEngine:
             if problems:
                 self.store.journal("agent_result_invalid", {
                     "phase_id": st["phase_id"], "role": role.value, "problems": problems})
-                if attempt <= schema_retries:
+                schema_failures += 1
+                if schema_failures <= schema_retries:
                     extra_sections = list(extra_sections) + [(
                         "RESULT FILE PROBLEMS (fix these)",
                         "Your previous run produced an invalid result file:\n- "
@@ -179,9 +211,13 @@ class PhaseEngine:
             if role == AgentRole.REVIEWER:
                 # reviewer writes never enter git history; evidence lives in artifacts
                 self._archive_and_drop_report_writes(st)
-            if result.get("status") in ("blocked", "failed"):
+            # fail closed on anything that is not an affirmatively completed
+            # run. An 'unverified' review is NOT a clean review — treating it
+            # as one would let a degraded/evasive cross-vendor reviewer pass a
+            # phase with an empty findings list.
+            if result.get("status") != "completed":
                 raise PhaseRunError(
-                    f"{role.value} reported status={result['status']}: "
+                    f"{role.value} reported status={result.get('status')!r} (not 'completed'): "
                     f"{result.get('summary', '')[:300]}")
             return result
 
@@ -256,10 +292,26 @@ class PhaseEngine:
         self.repo.checkout(st["candidate_branch"])
         if not self.repo.is_clean():
             raise PhaseRunError("working tree dirty before testing")
+        # candidate test code is untrusted and runs with FS access. Guard the
+        # control plane (state/, records, projections, .venv, .orchestrator
+        # minus its own evidence dir) so a malicious test cannot plant a forged
+        # approval/acceptance record or poison the venv during the test window.
+        artifact_exclude = [str(self.cfg.artifact_root.relative_to(self.cfg.root)).replace("\\", "/")]
+        pre_snap = integrity.snapshot(self.cfg.root, exclude=artifact_exclude)
         outcomes, exit_codes, metrics, deferred = run_phase_tests(
             phase, self.registry, root=self.cfg.root, run_id=st["run_id"],
             capabilities=self.capabilities,
             strip_env_extra=self.cfg.secret_env_vars)
+        tamper = integrity.diff_snapshots(pre_snap, integrity.snapshot(self.cfg.root, exclude=artifact_exclude))
+        if tamper:
+            self.repo.hard_reset_clean()
+            raise PhaseRunError(
+                f"candidate test run modified protected control-plane files: {', '.join(tamper[:10])}")
+        # tests may only touch their allowed write paths in the worktree
+        test_violations = self._enforce_write_policy(st, tuple(phase.get("allowed_write_paths", [])))
+        if test_violations:
+            raise PhaseRunError(
+                f"candidate test run wrote outside allowed paths: {', '.join(test_violations[:10])}")
         changed = self.repo.changed_paths_since(st["base_commit"])
         secrets = secret_scan.scan_files(self.cfg.root, changed)
         evidence = {
@@ -331,16 +383,32 @@ class PhaseEngine:
                 out.add(m)
         return out
 
+    def _forbidden_committed_changes(self, st, phase):
+        """Paths committed into the candidate (vs base) that violate the
+        write policy — defense in depth against any change that reached
+        history without going through the per-run working-tree enforcement."""
+        allowed = tuple(phase.get("allowed_write_paths", []))
+        bad = []
+        for path in self.repo.changed_paths_since(st["base_commit"]):
+            if not path_policy.is_write_allowed(
+                    path, allowed_paths=allowed, immutable_paths=self.cfg.immutable_paths):
+                bad.append(path)
+        return bad
+
     def _evaluate_gate(self, st, phase, *, approval):
         ev = st.get("evidence", {})
         acc_records = acceptance_mod.load_records(
             self.cfg.root / self.cfg.data["acceptance"]["record_dir"])
+        forbidden = self._forbidden_committed_changes(st, phase)
+        if forbidden:
+            self.store.journal("forbidden_committed_changes", {
+                "phase_id": st["phase_id"], "paths": forbidden[:100]})
         return gates.evaluate_completion_gate(
             phase,
             test_exit_codes=ev.get("test_exit_codes", {}),
             metrics=ev.get("metrics", {}),
             review_findings=st.get("review_findings", []),
-            forbidden_changes=[],
+            forbidden_changes=forbidden,
             secret_findings=ev.get("secret_findings", []),
             clean_main=self.repo.is_clean(),
             candidate_commit=st.get("candidate_commit"),
@@ -447,12 +515,26 @@ class PhaseEngine:
 
     def _step_passed(self, st, phase):
         main = self.cfg.project["main_branch"]
-        merged = self.repo.merge_ff_only(main, st["candidate_branch"])
-        dec = gates.validate_merge_commit(candidate_commit=st["candidate_commit"],
-                                          merged_commit=merged)
-        if not dec.passed:
-            raise PhaseRunError("merge validation failed: " + "; ".join(dec.reasons))
-        self.repo.delete_branch(st["candidate_branch"])
+        candidate = st["candidate_commit"]
+        # Idempotent / resumable across the merge+delete boundary: if a crash
+        # landed after the ff-merge (and possibly after branch deletion) but
+        # before the MERGED state was saved, main already contains the
+        # candidate commit. Detect that and finish instead of re-merging a
+        # (possibly deleted) branch.
+        self.repo.checkout(main)
+        if self.repo.is_ancestor(candidate, "HEAD"):
+            merged = self.repo.head_sha()
+            if merged != candidate:
+                raise PhaseRunError(
+                    f"main advanced past candidate {candidate[:12]} (head {merged[:12]}); "
+                    f"cannot verify clean ff-merge")
+        else:
+            merged = self.repo.merge_ff_only(main, st["candidate_branch"])
+            dec = gates.validate_merge_commit(candidate_commit=candidate, merged_commit=merged)
+            if not dec.passed:
+                raise PhaseRunError("merge validation failed: " + "; ".join(dec.reasons))
+        if st.get("candidate_branch"):
+            self.repo.delete_branch(st["candidate_branch"])
         history = dict(st.get("phase_history", {}))
         history[st["phase_id"]] = {
             "gate": "PASS",
@@ -533,6 +615,12 @@ class PhaseEngine:
                 return "waiting_human", st
             except PhaseRunError as e:
                 st = self._block(st, phase, str(e))
+                return "blocked", st
+            except GitError as e:
+                # a git-level failure is "unverifiable" per the module
+                # contract — record it as BLOCKED (fail closed, resumable),
+                # never let it escape and abort the run silently.
+                st = self._block(st, phase, f"git failure: {e}")
                 return "blocked", st
 
     def _all_phase_ids(self):

@@ -42,8 +42,13 @@ def validate_record(rec, *, phase_id, candidate_commit):
     if str(rec["phase_id"]) != str(phase_id):
         return None, None            # record for another phase: ignore here
     if rec["commit_sha"] != candidate_commit:
-        # SHA-scoped: stale acceptance must never leak onto a new candidate
-        return None, f"stale acceptance for finding {rec['finding_id']} (sha {rec['commit_sha']} != candidate)"
+        # SHA-scoped: a stale acceptance simply accepts nothing on the new
+        # candidate. It must NOT be surfaced as a gate-blocking error —
+        # otherwise an acceptance an operator wrote for an earlier candidate
+        # would permanently block the phase even after a clean fresh rebuild
+        # that has none of the accepted findings. The SHA scoping already
+        # guarantees it can never leak onto the wrong candidate.
+        return None, None
     return str(rec["finding_id"]), None
 
 

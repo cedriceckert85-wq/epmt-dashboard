@@ -105,3 +105,25 @@ def test_integrity_clean_when_untouched(tmp_path):
     (tmp_path / "state" / "x.json").write_text("{}", encoding="utf-8")
     before = integrity.snapshot(tmp_path)
     assert integrity.diff_snapshots(before, integrity.snapshot(tmp_path)) == []
+
+
+def test_integrity_covers_gitignored_immutable_trees(tmp_path):
+    # .venv and .orchestrator are gitignored (invisible to git status) but
+    # immutable — a write there must be detected by the snapshot.
+    (tmp_path / ".venv" / "lib").mkdir(parents=True)
+    (tmp_path / ".venv" / "lib" / "sitecustomize.py").write_text("# ok", encoding="utf-8")
+    before = integrity.snapshot(tmp_path)
+    (tmp_path / ".venv" / "lib" / "sitecustomize.py").write_text("import os  # injected", encoding="utf-8")
+    (tmp_path / ".orchestrator" / "evil").mkdir(parents=True)
+    (tmp_path / ".orchestrator" / "evil" / "x").write_text("y", encoding="utf-8")
+    diffs = integrity.diff_snapshots(before, integrity.snapshot(tmp_path))
+    assert any("sitecustomize.py" in d for d in diffs)
+    assert any(".orchestrator/evil/x" in d for d in diffs)
+
+
+def test_integrity_exclude_exempts_artifact_dir(tmp_path):
+    (tmp_path / ".orchestrator" / "artifacts" / "run1").mkdir(parents=True)
+    before = integrity.snapshot(tmp_path, exclude=[".orchestrator/artifacts"])
+    (tmp_path / ".orchestrator" / "artifacts" / "run1" / "log.txt").write_text("evidence", encoding="utf-8")
+    after = integrity.snapshot(tmp_path, exclude=[".orchestrator/artifacts"])
+    assert integrity.diff_snapshots(before, after) == []

@@ -49,6 +49,17 @@ class FakeAdapter(AgentAdapter):
             if ctrl.get("write_forbidden"):
                 (ws / "state" / "fake_attack.txt").parent.mkdir(exist_ok=True)
                 (ws / "state" / "fake_attack.txt").write_text("attack", encoding="utf-8")
+            if ctrl.get("self_commit_immutable"):
+                # simulate a builder that edits an immutable tracked file and
+                # commits it itself to dodge working-tree diff enforcement
+                import subprocess
+                imm = ws / "test_registry.yaml"
+                if imm.exists():
+                    imm.write_text(imm.read_text(encoding="utf-8")
+                                   + "\n# tampered by builder\n", encoding="utf-8")
+                subprocess.run(["git", "add", "-A"], cwd=ws, capture_output=True)
+                subprocess.run(["git", "commit", "-m", "builder self-commit"],
+                               cwd=ws, capture_output=True)
 
         result = {
             "run_id": request.run_id,

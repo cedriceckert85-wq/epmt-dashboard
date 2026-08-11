@@ -146,6 +146,8 @@ class SingleWriterLock:
     def _pid_alive(self, pid):
         if pid <= 0:
             return False
+        if os.name == "nt":
+            return self._pid_alive_windows(pid)
         try:
             os.kill(pid, 0)
         except ProcessLookupError:
@@ -155,6 +157,31 @@ class SingleWriterLock:
         except OSError:
             return False
         return True
+
+    def _pid_alive_windows(self, pid):
+        # os.kill(pid, 0) on Windows calls TerminateProcess — it would KILL the
+        # other orchestrator. Use OpenProcess for a non-destructive liveness
+        # probe instead. Fail closed (assume alive) if the probe is unavailable.
+        try:
+            import ctypes
+            from ctypes import wintypes
+            PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+            kernel32 = ctypes.windll.kernel32
+            handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+            if not handle:
+                err = kernel32.GetLastError()
+                # 87 ERROR_INVALID_PARAMETER => no such pid (dead);
+                # 5 ERROR_ACCESS_DENIED => exists but not ours (alive)
+                return err != 87
+            try:
+                exit_code = wintypes.DWORD()
+                if kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+                    return exit_code.value == 259  # STILL_ACTIVE
+                return True
+            finally:
+                kernel32.CloseHandle(handle)
+        except Exception:
+            return True  # cannot probe => treat as alive (fail closed)
 
     def acquire(self):
         self.lock_file.parent.mkdir(parents=True, exist_ok=True)

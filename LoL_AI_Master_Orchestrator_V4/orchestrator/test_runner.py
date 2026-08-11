@@ -17,16 +17,28 @@ from .process_runner import ProcessRunner
 from .test_registry import unmet_requirements
 
 DEFAULT_STRIP_ENV = [
-    "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPENAI_ORG_ID", "CLAUDE_API_KEY",
-    "CODEX_API_KEY", "RIOT_API_KEY", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY",
-    "AWS_SESSION_TOKEN", "GITHUB_TOKEN", "GH_TOKEN", "TS_AUTHKEY",
+    "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_API_KEY",
+    "CLAUDE_CODE_OAUTH_TOKEN", "OPENAI_API_KEY", "OPENAI_ORG_ID",
+    "OPENAI_BASE_URL", "CODEX_API_KEY", "RIOT_API_KEY",
+    "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
+    "GITHUB_TOKEN", "GH_TOKEN", "TS_AUTHKEY", "TAILSCALE_AUTHKEY",
+    "HF_TOKEN", "HUGGING_FACE_HUB_TOKEN", "SLACK_TOKEN",
 ]
+
+# any env var whose name contains one of these substrings is also stripped —
+# defense in depth against provider/bearer creds leaking into agent-authored
+# test processes (which are untrusted candidate code)
+STRIP_SUBSTRINGS = ("TOKEN", "API_KEY", "APIKEY", "SECRET", "PASSWORD",
+                    "PASSWD", "CREDENTIAL", "PRIVATE_KEY", "ACCESS_KEY",
+                    "AUTH_KEY", "SESSION_KEY")
 
 
 def stripped_env(extra_strip=()):
     env = dict(os.environ)
+    explicit = set(DEFAULT_STRIP_ENV) | set(extra_strip)
     for k in list(env):
-        if k in DEFAULT_STRIP_ENV or k in extra_strip:
+        ku = k.upper()
+        if k in explicit or any(s in ku for s in STRIP_SUBSTRINGS):
             env.pop(k, None)
     return env
 
@@ -41,16 +53,23 @@ def _parse_junit_ok(evidence_path):
     except ET.ParseError as e:
         return False, f"junit evidence unparseable: {e}"
     suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
-    tests = failures = errors = 0
+    tests = failures = errors = skipped = 0
     for s in suites:
         tests += int(s.get("tests", 0))
         failures += int(s.get("failures", 0))
         errors += int(s.get("errors", 0))
+        skipped += int(s.get("skipped", 0))
     if tests == 0:
-        return False, "junit evidence contains zero executed tests"
+        return False, "junit evidence contains zero collected tests"
     if failures or errors:
         return False, f"junit evidence has failures={failures} errors={errors}"
-    return True, f"junit: {tests} tests, 0 failures"
+    # pytest counts skipped cases in `tests`; an all-skipped suite exits 0 with
+    # zero failures but has proven NOTHING. A required gate test must actually
+    # execute assertions — never accept a wholly-skipped suite as a pass.
+    executed = tests - skipped
+    if executed <= 0:
+        return False, f"junit evidence has no executed tests ({skipped} skipped, 0 run)"
+    return True, f"junit: {executed} executed, {skipped} skipped, 0 failures"
 
 
 def _parse_metrics_json(evidence_path):

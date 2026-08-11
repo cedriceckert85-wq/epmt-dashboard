@@ -28,14 +28,27 @@ def _parse_phase_selection(spec, all_ids):
     picked = []
     for part in spec.split(","):
         part = part.strip()
+        if not part:
+            continue
         if "-" in part:
-            lo, hi = part.split("-", 1)
-            picked += [p for p in all_ids if lo.zfill(2) <= p <= hi.zfill(2)]
-        elif part:
+            lo, hi = (x.strip() for x in part.split("-", 1))
+            if not lo or not hi:
+                raise ConfigError(f"invalid phase range '{part}' (use e.g. 03-05)")
+            lo, hi = lo.zfill(2), hi.zfill(2)
+            if lo not in all_ids or hi not in all_ids:
+                raise ConfigError(f"phase range '{part}' out of bounds "
+                                  f"({all_ids[0]}..{all_ids[-1]})")
+            if lo > hi:
+                raise ConfigError(f"phase range '{part}' is reversed (low > high)")
+            picked += [p for p in all_ids if lo <= p <= hi]
+        else:
             if part.zfill(2) not in all_ids:
                 raise ConfigError(f"unknown phase: {part}")
             picked.append(part.zfill(2))
-    return sorted(set(picked))
+    result = sorted(set(picked))
+    if not result:
+        raise ConfigError(f"--phases '{spec}' selected no phases")
+    return result
 
 
 def _write_final_report(cfg, st, status):

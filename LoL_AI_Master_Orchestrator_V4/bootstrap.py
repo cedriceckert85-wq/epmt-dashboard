@@ -54,7 +54,26 @@ def ensure_venv():
     py = venv_python()
     if not py.exists():
         info("Erzeuge virtuelle Umgebung .venv …")
-        venv.EnvBuilder(with_pip=True, clear=False).create(VENV_DIR)
+        try:
+            venv.EnvBuilder(with_pip=True, clear=False).create(VENV_DIR)
+        except Exception as e:
+            # Debian/Ubuntu ship python3 without the venv/ensurepip module.
+            # Remove the poisoned half-venv and give the correct instruction
+            # instead of a misleading "check internet" later.
+            import shutil
+            shutil.rmtree(VENV_DIR, ignore_errors=True)
+            hint = ""
+            if os.name != "nt":
+                v = f"{sys.version_info.major}.{sys.version_info.minor}"
+                hint = (f"\nAuf Debian/Ubuntu fehlt oft das venv-Modul. Installiere es mit:\n"
+                        f"    sudo apt-get install -y python3-venv python{v}-venv python3-pip\n"
+                        f"und starte danach erneut.")
+            fail(f"Virtuelle Umgebung konnte nicht erstellt werden: {e}{hint}")
+    if not py.exists():
+        import shutil
+        shutil.rmtree(VENV_DIR, ignore_errors=True)
+        fail("Virtuelle Umgebung unvollständig (kein Python im .venv). "
+             "Bitte python3-venv installieren und START erneut ausführen.")
     req = ROOT / "requirements-bootstrap.txt"
     marker = VENV_DIR / ".deps-installed"
     if marker.exists() and marker.read_text() == req.read_text(encoding="utf-8"):

@@ -83,13 +83,26 @@ def test_valid_acceptance_record_accepts_exactly_that_finding():
     assert evaluate_completion_gate(_phase(), **args).passed
 
 
-def test_stale_sha_acceptance_is_rejected_and_reported():
+def test_stale_sha_acceptance_accepts_nothing_but_does_not_error():
+    # a stale ACCEPT (bound to an earlier candidate) must neither accept the
+    # finding nor emit a blocking 'stale' error — otherwise it would
+    # permanently block the phase even on a clean fresh rebuild.
     args = BASE.copy()
     args["review_findings"] = [{"id": "F1", "severity": "high", "title": "x"}]
     args["acceptance_records"] = [_acc("F1", sha="OLD")]
     d = evaluate_completion_gate(_phase(), **args)
     assert not d.passed
-    assert any("stale acceptance" in r for r in d.reasons)
+    assert any("unaccepted high findings" in r for r in d.reasons)
+    assert not any("stale" in r for r in d.reasons)
+
+
+def test_stale_acceptance_does_not_block_a_clean_rebuild():
+    # new candidate has NO findings; an old acceptance for a prior candidate
+    # must not turn a clean rebuild into a BLOCK.
+    args = BASE.copy()
+    args["review_findings"] = []
+    args["acceptance_records"] = [_acc("F1", sha="OLD")]
+    assert evaluate_completion_gate(_phase(), **args).passed
 
 
 def test_wrong_phase_acceptance_does_not_accept():
@@ -136,6 +149,11 @@ def test_human_gate_pass_blocks_without_approval():
 
 def test_secret_findings_block():
     args = BASE.copy(); args["secret_findings"] = [{"file": "a", "kind": "k", "line": 1}]
+    assert not evaluate_completion_gate(_phase(), **args).passed
+
+
+def test_forbidden_changes_block():
+    args = BASE.copy(); args["forbidden_changes"] = ["schemas/x.json"]
     assert not evaluate_completion_gate(_phase(), **args).passed
 
 

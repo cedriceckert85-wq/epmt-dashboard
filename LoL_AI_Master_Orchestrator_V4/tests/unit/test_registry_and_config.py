@@ -64,3 +64,16 @@ def test_unmet_requirements_helper():
     spec = {"requires": ["gpu", "network"]}
     assert test_registry.unmet_requirements(spec, {"network": True}) == ["gpu"]
     assert test_registry.unmet_requirements(spec, {"gpu": True, "network": True}) == []
+
+
+def test_phase_selection_validation():
+    from orchestrator.main import _parse_phase_selection
+    from orchestrator.config import ConfigError
+    import pytest
+    ids = [f"{i:02d}" for i in range(21)]
+    assert _parse_phase_selection("03-05", ids) == ["03", "04", "05"]
+    assert _parse_phase_selection("02,04", ids) == ["02", "04"]
+    assert _parse_phase_selection(None, ids) == ids
+    for bad in ("05-03", "05-", "-05", "99", "99-100", "xx"):
+        with pytest.raises(ConfigError):
+            _parse_phase_selection(bad, ids)

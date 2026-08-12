@@ -34,8 +34,10 @@ def _markdown(plan, vod_name, meta):
         L.append(f"- **Cut:** `{hhmmss(p.clip_t0)}` → `{hhmmss(p.clip_t1)}`  "
                  f"({p.duration:.1f}s, {p.category})")
         if p.punchline_t is not None:
-            L.append(f"- **Punchline at:** `{hhmmss(p.punchline_t)}`  "
-                     f"(clip ends shortly after)")
+            tail = p.clip_t1 - p.punchline_t
+            note = ("clip ends just after" if tail <= 4.0
+                    else "clip runs on through the follow-up")
+            L.append(f"- **Punchline at:** `{hhmmss(p.punchline_t)}`  ({note})")
         L.append(f"- **Why it works:** {p.why}")
         if p.transcript_excerpt:
             L.append(f"- **Said:** _{p.transcript_excerpt}_")

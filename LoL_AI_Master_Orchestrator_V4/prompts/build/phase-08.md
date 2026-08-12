@@ -18,7 +18,7 @@ Read persistent instructions (CLAUDE.md/AGENTS.md), MASTER_ORCHESTRATOR.md and t
 - Long-run sync check: re-fit at hour 8 within Phase-04 bounds
 
 ## Tests / metrics
-- soak_8h_pipeline → rss_growth_mb_per_h_agent ≤ 10, receiver ≤ 20, fd_leak_count == 0, segments_lost == 0, sync_error_p95_ms_at_8h ≤ 100
+- soak_8h_pipeline → rss_growth_mb_per_h_agent ≤ 10, receiver ≤ 20, fd_leak_count == 0, segments_lost == 0, sync_error_p95_ms_at_8h ≤ 100, stream_dropped_frames_pct_delta ≤ 0.5
 - phase_08_tests: harness unit tests
 
 ## Real vs mock

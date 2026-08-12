@@ -27,7 +27,11 @@ Read persistent instructions (CLAUDE.md/AGENTS.md), MASTER_ORCHESTRATOR.md and t
 ## Tests / metrics
 - tailscale_disconnect_resume → resume_duplicate_objects == 0, corrupted_uploads == 0, catchup_after_1h_outage_min ≤ 90
 - tailscale_no_public_fallback, tailscale_preflight, tailscale_tenant_isolation
-- gate: stream_dropped_frames_pct_delta ≤ 0.5 vs no-uploader baseline (measured during a REAL stream window)
+- Note: the stream-stability guarantee `stream_dropped_frames_pct_delta ≤ 0.5`
+  (vs a no-uploader baseline, measured during a REAL stream) is GATED IN PHASE 08
+  where the 8h soak actually produces it — it is not a phase-07 gate metric.
+  Phase 07 must not destabilize the stream, but the measured threshold lives in
+  phase 08's gate.
 
 ## Real vs mock
 - Disconnect/resume over real Tailscale (stop service mid-chunk); baseline comparison on the real streamer PC.

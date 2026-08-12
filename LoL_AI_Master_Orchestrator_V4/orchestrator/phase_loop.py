@@ -644,8 +644,13 @@ class PhaseEngine:
         # Downstream invalidation: merging a phase that a certified phase was
         # validated against (invalidated_by) drops that phase — and everything
         # depending on it — back out of history, so certification must be redone.
+        before_ids = set(history)
         history = self._invalidate_downstream(history, pid)
+        invalidated = before_ids - set(history)
         deferred_all = dict(st.get("deferred_tests", {}))
+        # invalidated phases must re-certify from scratch — drop their deferred record
+        for gone in invalidated:
+            deferred_all.pop(gone, None)
         # a certify re-run of a phase clears its prior deferred record
         if self.certify:
             deferred_all.pop(pid, None)

@@ -485,11 +485,16 @@ class PhaseEngine:
                     "phase_id": st["phase_id"], "commit": candidate,
                     "approval_id": approval["approval_id"]})
             else:
+                import os as _os
+                launcher = "START.bat" if _os.name == "nt" else "./start.sh"
                 raise WaitingForHuman(
                     f"Phase {st['phase_id']} waits for human approval of commit {candidate}.\n"
-                    f"Approve with:\n  python -m orchestrator approve --phase {st['phase_id']} "
+                    f"Approve by running (from this folder):\n"
+                    f"  {launcher} approve --phase {st['phase_id']} "
                     f"--commit {candidate} --approver YOUR_NAME --decision APPROVE\n"
-                    f"then re-run START to resume.")
+                    f"then run {launcher} again to resume.\n"
+                    f"(The {launcher} launcher forwards the command into the .venv; a bare "
+                    f"'python -m orchestrator' on your system Python may lack dependencies.)")
         if approval.get("decision") != "APPROVE":
             raise PhaseRunError(f"human gate rejected for commit {candidate}")
         st = self.store.save({**st, "approved_commit": candidate,

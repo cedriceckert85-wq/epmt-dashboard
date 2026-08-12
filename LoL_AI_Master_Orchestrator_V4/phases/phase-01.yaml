@@ -22,9 +22,10 @@ gate:
   max_blockers: 0
   max_unaccepted_high: 0
 metrics:
-- name: schema_validation_failures
-  op: ==
-  value: 0
+# schema_validation_failures was redundant: schema_roundtrip (pytest_junit)
+# passing already means zero schema-validation failures, and a pytest_junit
+# test emits no metric to gate on. migration_reversible IS produced by
+# migration_up_down (metrics_json), so it stays.
 - name: migration_reversible
   op: ==
   value: 1

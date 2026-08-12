@@ -99,17 +99,23 @@ Dafür wichtig:
 
 ## Nützliche Kommandos
 
+Unter Windows `START.bat`, unter Linux/macOS `./start.sh` — beide leiten den
+Befehl in die `.venv` weiter. **Nutze immer den Launcher**, nicht ein bloßes
+`python -m orchestrator …` (dein System-Python hat die Abhängigkeiten nicht).
+
 ```
 START.bat                        # Lauf starten / fortsetzen (eine Aktion)
 START.bat --strict-gates         # mit echten Human Gates
 START.bat --phases 00-05         # nur bestimmte Phasen
+START.bat --phases 18            # optionale Phase 18 explizit mitlaufen lassen
 START.bat doctor                 # nur Preflight-Checks
 START.bat status                 # kanonischen Zustand anzeigen
-python -m orchestrator approve --phase 04 --commit <sha> \
-       --approver DEIN_NAME --decision APPROVE   # Human Gate (strict)
-python -m orchestrator unblock       # BLOCKED -> READY
-python -m orchestrator reset-phase   # Phase komplett neu starten
+START.bat approve --phase 04 --commit <sha> \
+          --approver DEIN_NAME --decision APPROVE   # Human Gate (strict)
+START.bat unblock                # BLOCKED -> READY (nach Ursachenbehebung)
+START.bat reset-phase            # Phase komplett neu starten
 ```
+(Linux/macOS: überall `START.bat` durch `./start.sh` ersetzen.)
 
 ## Was liegt wo?
 

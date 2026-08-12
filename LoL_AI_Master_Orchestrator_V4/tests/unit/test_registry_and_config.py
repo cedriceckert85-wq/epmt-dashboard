@@ -55,10 +55,20 @@ def test_hardware_tests_are_deferrable_where_required():
 
 def test_no_orphan_gate_metrics():
     """Every phase gate metric MUST be produced by one of that phase's
-    required_tests — otherwise the phase can never PASS (dead-end)."""
+    required_tests AND that test's parser must be able to emit a metric
+    (only metrics_json does) — otherwise the phase can never PASS (dead-end).
+    Also: no test may falsely DECLARE produces_metrics it cannot emit."""
     tests = test_registry.load(ROOT / "test_registry.yaml")
+    # honesty check: only metrics_json tests may declare produces_metrics
+    for tid, spec in tests.items():
+        if spec.get("produces_metrics") and spec.get("parser") != "metrics_json":
+            raise AssertionError(
+                f"test {tid} (parser {spec.get('parser')}) declares produces_metrics "
+                f"but only metrics_json tests can emit metrics")
     produced_by = {}
     for tid, spec in tests.items():
+        if spec.get("parser") != "metrics_json":
+            continue
         for m in (spec.get("produces_metrics") or []):
             produced_by.setdefault(m, set()).add(tid)
     for pid in list_phase_ids(ROOT):
@@ -66,7 +76,8 @@ def test_no_orphan_gate_metrics():
         req = set(ph.get("required_tests", []))
         for rule in ph.get("metrics", []):
             producers = produced_by.get(rule["name"], set()) & req
-            assert producers, f"phase {pid} metric {rule['name']} has no producing required-test"
+            assert producers, (f"phase {pid} metric {rule['name']} has no producing "
+                               f"required-test with a metrics_json parser (dead-end)")
 
 
 def test_optional_phase_flags_present():

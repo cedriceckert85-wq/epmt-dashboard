@@ -20,10 +20,9 @@ allowed_write_paths:
 gate:
   max_blockers: 0
   max_unaccepted_high: 0
-metrics:
-- name: api_contract_failures
-  op: ==
-  value: 0
+# api_contract_failures was redundant: dashboard_api_contract (pytest_junit)
+# passing already means zero contract failures, and pytest_junit emits no
+# metric. The test pass/fail carries the gate.
 review_prompts:
 - prompts/build/phase-14.md
 - prompts/review/adversarial-prompt-injection.md

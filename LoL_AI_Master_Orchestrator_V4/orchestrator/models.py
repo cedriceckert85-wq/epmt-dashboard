@@ -69,5 +69,15 @@ class TestOutcome:
     duration_s: float = 0.0
 
     def as_exit_code(self):
-        """Exit code the gate engine may trust: 0 only for a real pass."""
-        return 0 if self.status == "pass" else (self.exit_code if self.exit_code is not None else 1)
+        """Exit code the gate engine may trust: 0 ONLY for a real pass.
+
+        Critically, a non-'pass' outcome must never yield 0 even when the
+        underlying process exited 0 — e.g. a pytest_junit/metrics_json test
+        whose process returned 0 but whose evidence was judged invalid
+        (all-skipped suite, missing metrics). Returning the process's 0 there
+        would let the gate treat a FAILED test as passing (fail-open)."""
+        if self.status == "pass":
+            return 0
+        if self.exit_code not in (None, 0):
+            return self.exit_code
+        return 1

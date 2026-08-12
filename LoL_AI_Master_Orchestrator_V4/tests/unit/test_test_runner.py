@@ -96,6 +96,20 @@ def test_junit_zero_tests_fails(tmp_path):
     assert out.status == "fail" and "zero" in out.reason
 
 
+def test_all_skipped_junit_does_not_leak_zero_exit_to_gate(tmp_path):
+    # regression: pytest exits 0 for an all-skipped suite; the outcome is
+    # 'fail' (junit_ok False) but its exit_code is 0. as_exit_code() must NOT
+    # return 0 for a fail, or the gate would treat it as a passing test.
+    xml = ('<testsuite name="s" tests="1" failures="0" errors="0">'
+           '<testcase name="a"><skipped/></testcase></testsuite>')
+    out = run_registry_test("t", spec(_junit_cmd(tmp_path, xml), parser="pytest_junit",
+                                      evidence="ev/junit.xml"),
+                            root=tmp_path, run_id="r", capabilities={}, deferrable=set())
+    assert out.status == "fail"
+    assert out.exit_code == 0          # the process itself exited 0
+    assert out.as_exit_code() != 0     # but the gate must see a failure
+
+
 def test_junit_all_skipped_is_not_a_pass(tmp_path):
     # pytest reports a fully-skipped module as exit 0, tests=N, failures=0,
     # skipped=N — this must NOT count as a real pass (vacuous green).

@@ -229,8 +229,7 @@ tests:
     parser: pytest_junit
     evidence: .orchestrator/artifacts/{run_id}/schema_roundtrip.xml
     implemented_in_phase: '01'
-    produces_metrics:
-    - schema_validation_failures
+    produces_metrics: []
   migration_up_down:
     command: python tests/phase01/db_migrate_check.py --json .orchestrator/artifacts/{run_id}/migration_up_down.json
     cwd: .
@@ -511,8 +510,7 @@ tests:
     parser: pytest_junit
     evidence: .orchestrator/artifacts/{run_id}/dashboard_contract.xml
     implemented_in_phase: '14'
-    produces_metrics:
-    - api_contract_failures
+    produces_metrics: []
   fullgame_export_fixture:
     command: python tests/harness/fullgame_eval.py --json .orchestrator/artifacts/{run_id}/fullgame_export_fixture.json
     cwd: .

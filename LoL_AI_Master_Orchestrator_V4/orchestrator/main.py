@@ -10,6 +10,7 @@ Commands:
 """
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -60,9 +61,17 @@ def _write_final_report(cfg, st, status):
         f"- Current phase: {st['phase_id']} ({st['lifecycle']})",
     ]
     if st.get("blocked_reason"):
+        launcher = "START.bat" if os.name == "nt" else "./start.sh"
         lines += ["", "## Blocked reason", "", "```", str(st["blocked_reason"]), "```",
-                  "", "Fix the cause, then run START again — the run resumes. ",
-                  "Use `python -m orchestrator reset-phase` to restart the phase from scratch."]
+                  "",
+                  "This phase is BLOCKED (fail-closed). To continue:",
+                  f"1. Fix the cause described above.",
+                  f"2. Clear the block:  `{launcher} unblock`   "
+                  f"(or `{launcher} reset-phase` to rebuild the phase from scratch).",
+                  f"3. Run `{launcher}` again to resume.",
+                  "",
+                  "Note: simply re-running START without `unblock`/`reset-phase` will "
+                  "NOT clear a BLOCKED phase — that is deliberate."]
     lines += ["", "## Phases", ""]
     for pid in sorted(st.get("phase_history", {})):
         h = st["phase_history"][pid]
@@ -194,8 +203,12 @@ def cmd_unblock(cfg, args):
         print("state is not BLOCKED", file=sys.stderr)
         return 2
     # the operator chose to retry: clean the tree (evidence lives in
-    # .orchestrator/artifacts and the journal) so READY can start
+    # .orchestrator/artifacts and the journal) so READY can start.
+    # Clean the CURRENT (candidate) branch FIRST — a fix-cycle block leaves
+    # uncommitted edits to tracked files, and git refuses to switch branches
+    # over them; without this the recovery command itself crashes.
     repo = GitRepo(cfg.root)
+    repo.hard_reset_clean()
     repo.checkout(cfg.project["main_branch"])
     repo.hard_reset_clean()
     # Re-derive the ref baseline from wherever main is NOW: the operator may
@@ -216,6 +229,8 @@ def cmd_reset_phase(cfg, args):
     st = store.load()
     branch = st.get("candidate_branch")
     main = cfg.project["main_branch"]
+    # clean the current branch before switching (a block can leave a dirty tree)
+    repo.hard_reset_clean()
     repo.checkout(main)
     repo.hard_reset_clean()
     if branch:

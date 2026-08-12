@@ -306,6 +306,33 @@ def test_git_hooks_are_disabled_for_orchestrator(tmp_path):
     assert status == "done"
 
 
+def test_unblock_and_reset_work_on_a_dirty_tree(tmp_path):
+    # a fix-cycle infra failure leaves the candidate branch checked out with a
+    # dirty tree; unblock/reset-phase must not crash trying to switch to main.
+    from orchestrator.main import cmd_unblock, cmd_reset_phase
+    cfg, store, repo = make_project(tmp_path)
+    set_fake_control(cfg, {"01:reviewer": {"findings": [
+        {"id": "B1", "severity": "blocker", "title": "x"}]}})
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "blocked"
+    # leave the candidate branch checked out and dirty (as a real block does)
+    repo.checkout(st["candidate_branch"])
+    (cfg.root / "src").mkdir(exist_ok=True)
+    (cfg.root / "src" / "phase_01_builder.txt").write_text("uncommitted edit\n" * 3, encoding="utf-8")
+    assert not repo.is_clean()
+
+    class A:
+        pass
+    rc = cmd_unblock(cfg, A())            # must not raise GitError
+    assert rc == 0
+    st = store.load()
+    assert st["lifecycle"] == "READY"
+    # and reset-phase also survives a dirty tree
+    repo.checkout(cfg.project["main_branch"])
+    rc = cmd_reset_phase(cfg, A())
+    assert rc == 0
+
+
 def test_recovery_after_fix_commit_to_main_does_not_permanently_block(tmp_path):
     # emulate: a phase blocks, operator commits a fix to main, unblock re-pins
     # the baseline, and the next run does NOT trip the main-baseline check.

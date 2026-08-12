@@ -94,13 +94,20 @@ def _channel_plans(plan):
 
 
 def _chapters(plan):
-    """YouTube chapter list: ascending, starting at 00:00, MM:SS granularity."""
-    rows = ["00:00 Intro"]
-    seen = {0}
-    for p in sorted(plan, key=lambda p: p.clip_t0):
+    """YouTube chapter list: ascending, starting at 00:00, MM:SS granularity.
+    A clip starting in the first second becomes the 00:00 chapter itself
+    (no 'Intro' placeholder stealing its title); colliding start seconds are
+    bumped forward instead of silently dropping a title."""
+    ordered = sorted(plan, key=lambda p: p.clip_t0)
+    rows = []
+    seen = set()
+    if not ordered or int(max(0, ordered[0].clip_t0)) > 0:
+        rows.append("00:00 Intro")
+        seen.add(0)
+    for p in ordered:
         t = max(0, int(p.clip_t0))
-        if t in seen:
-            continue
+        while t in seen:
+            t += 1
         seen.add(t)
         h, rest = divmod(t, 3600)
         m, s = divmod(rest, 60)

@@ -205,6 +205,108 @@ def test_demo_pipeline_produces_channel_plans(tmp_path):
     assert penta.channels == ["shorts", "main", "uncut"]
 
 
+# ---------- hostile-input regressions (verification findings) ----------
+
+def test_identical_point_windows_are_duplicates():
+    # two zero-width takes at the same t must be ONE moment, not a spurious
+    # discovery that burns a top_k slot
+    from clip_lab.editorial import _apply_moments
+    cands = [Candidate(t0=100.0, t1=100.0, signal_score=3)]
+    moments = [{"t0": 100, "t1": 100, "semantic_score": 9, "title": "penta"},
+               {"t0": 100, "t1": 100, "semantic_score": 8, "title": "dup"}]
+    out = _apply_moments(cands, moments, cfg())
+    assert len(out) == 1
+
+
+def test_edge_adjacent_real_windows_do_not_match():
+    # B's duplicate take must not blend into the NEIGHBORING clip
+    from clip_lab.editorial import _blend_second_opinion
+    x = Candidate(t0=10.0, t1=20.0, signal_score=1, semantic_score=8.0,
+                  editorial_source="llm", why="x")
+    y = Candidate(t0=20.0, t1=30.0, signal_score=1, semantic_score=2.0,
+                  editorial_source="llm", why="y")
+    _blend_second_opinion([x, y], [{"t0": 10, "t1": 20, "semantic_score": 9},
+                                   {"t0": 10, "t1": 20, "semantic_score": 9}])
+    assert y.semantic_score == 2.0                 # neighbor untouched
+    assert "[2nd opinion" not in y.why
+
+
+def test_scalar_channels_config_does_not_crash():
+    cands = [Candidate(t0=100.0, t1=100.0, signal_score=3)]
+    def runner(prompt):
+        return "[]" if "CANDIDATE WINDOWS" in prompt else "{}"
+    out, source, _ = run_editorial(cands, "log", LLMClient(["x"], runner=runner),
+                                   cfg(channels=3))
+    assert source == "llm"                          # no TypeError
+    assert _channels_block(cfg(channels="shorts")) == ""
+
+
+def test_styles_brief_keeps_every_style_name_under_budget():
+    profiles = {f"style{i}": {"learned_from": 3, "target_clip_s": 20.0,
+                              "pace": "p" * 150, "caption_style": "c" * 150,
+                              "notes": "n" * 300,
+                              "humor_style": ["dry humor trait"] * 3}
+                for i in range(8)}
+    brief = styles_brief(profiles, max_chars=2500)
+    for name in profiles:
+        assert f"[{name}]" in brief, name           # no style silently dropped
+
+
+def test_category_is_sanitized_for_csv_and_filenames():
+    f = _moment_fields({"category": 'funny,but "hype"/../evil'})
+    assert "," not in f["category"] and "/" not in f["category"]
+    assert f["category"] == "funnybuthypeevil"[:20]
+    assert _moment_fields({"category": "///"})["category"] == "moment"
+
+
+def test_style_folder_names_are_slugged(tmp_path, monkeypatch):
+    monkeypatch.setattr("clip_lab.style.which", lambda n: "/usr/bin/" + n)
+    monkeypatch.setattr("clip_lab.style._make_transcriber", lambda c: None)
+    (tmp_path / "my,funny style!").mkdir()
+    (tmp_path / "my,funny style!" / "a.mp4").write_bytes(b"x")
+    profiles, _ = learn_styles(tmp_path, cfg(), None, run=_fake_run())
+    assert set(profiles) == {"my_funny_style"}      # CSV/prompt-safe slug
+
+
+def test_chapter_at_zero_keeps_its_title(tmp_path):
+    from clip_lab.editsheet import write_edit_sheet
+    plan = [_item(1, 0.4, 12.0, "Cold Open", []),
+            _item(2, 500.0, 520.0, "Later", [])]
+    write_edit_sheet(plan, tmp_path, vod_name="v", meta={"duration": 1000})
+    lines = (tmp_path / "chapters.txt").read_text(encoding="utf-8").strip().splitlines()
+    assert lines[0] == "00:00 Cold Open"            # no Intro stealing the slot
+    assert lines[1] == "08:20 Later"
+
+
+def test_chapter_second_collision_bumps_not_drops(tmp_path):
+    from clip_lab.editsheet import write_edit_sheet
+    plan = [_item(1, 100.2, 110.0, "First", []),
+            _item(2, 100.9, 111.0, "Second", [])]
+    write_edit_sheet(plan, tmp_path, vod_name="v", meta={"duration": 1000})
+    txt = (tmp_path / "chapters.txt").read_text(encoding="utf-8")
+    assert "First" in txt and "Second" in txt       # both titles survive
+
+
+def test_fetch_style_is_slugged(tmp_path, monkeypatch):
+    import clip_lab.util as util
+    import subprocess as sp
+    from clip_lab.cli import main
+    monkeypatch.setattr(util, "which", lambda n: "/usr/bin/" + n)
+    calls = []
+    def fake_run(cmd, **kw):
+        calls.append(cmd)
+        return SimpleNamespace(returncode=0)
+    monkeypatch.setattr(sp, "run", fake_run)
+    rc = main(["fetch", "http://x", "--style", "My Funny"])
+    assert rc == 0
+    tmpl = calls[0][2]
+    assert "my_funny" in tmpl                        # learner-compatible slug
+    calls.clear()
+    rc = main(["fetch", "http://x", "--style", "../evil"])
+    assert rc == 0
+    assert ".." not in calls[0][2]                   # no path traversal
+
+
 # ---------- selftest never builds the second brain (determinism fix) ----------
 
 def test_selftest_never_constructs_codex_client(tmp_path, monkeypatch):

@@ -135,6 +135,13 @@ def cmd_learn(args):
     return 0
 
 
+def _safe_slug(value, fallback="moment"):
+    """Category/labels become FILENAMES — squash anything path-hostile."""
+    import re
+    slug = re.sub(r"[^a-z0-9_\-]+", "", str(value or "").lower())[:20]
+    return slug or fallback
+
+
 def _cut_all(vod, plan, cfg, out):
     from .render import cut_clip, pick_encoder
     _, enc = pick_encoder(cfg)
@@ -142,7 +149,7 @@ def _cut_all(vod, plan, cfg, out):
     cdir = Path(out) / "cuts"
     cdir.mkdir(parents=True, exist_ok=True)
     for p in plan:
-        name = f"{p.rank:02d}_{p.category}.mp4"
+        name = f"{p.rank:02d}_{_safe_slug(p.category)}.mp4"
         try:
             cut_clip(vod, cdir / name, p.clip_t0, p.clip_t1, cfg,
                      vertical=cfg.render_vertical)
@@ -161,7 +168,7 @@ def cmd_cut(args):
     out.mkdir(parents=True, exist_ok=True)
     print(f"Cutting {len(plan)} clips with {enc} …")
     for p in plan:
-        name = f"{p['rank']:02d}_{p.get('category','moment')}.mp4"
+        name = f"{p['rank']:02d}_{_safe_slug(p.get('category'))}.mp4"
         try:
             cut_clip(args.vod, out / name, p["clip_t0"], p["clip_t1"], cfg,
                      vertical=cfg.render_vertical)
@@ -193,7 +200,14 @@ def cmd_fetch(args):
     else:
         dest = _anchor_to_root(cfg.references_dir)
         if args.style:
-            dest = dest / str(args.style).strip().lower()
+            # exact same slugging as the style learner uses for folder names,
+            # so learn finds the clips later — also blocks "../" path tricks
+            from .style import _style_name
+            style = _style_name(args.style)
+            if not style:
+                print(f"Invalid --style name: {args.style}", file=sys.stderr)
+                return 2
+            dest = dest / style
     if dest.exists() and not dest.is_dir():
         print(f"{dest} is a file, not a folder.", file=sys.stderr)
         return 2

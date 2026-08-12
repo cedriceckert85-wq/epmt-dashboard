@@ -154,11 +154,18 @@ def _style_groups(folder):
         groups["default"] = root_vids
     if folder.is_dir():
         for sub in sorted(p for p in folder.iterdir() if p.is_dir()):
-            name = sub.name.strip().lower()[:40]
+            name = _style_name(sub.name)
             vids = list_videos(sub)
             if name and vids:
                 groups[name] = vids
     return groups
+
+
+def _style_name(raw):
+    """Folder name -> safe style slug. Style names end up in CSV columns and
+    prompts, so commas/odd characters are squashed to underscores."""
+    name = re.sub(r"[^a-z0-9_\-]+", "_", str(raw).strip().lower()).strip("_")
+    return name[:40]
 
 
 def learn_styles(folder, cfg, llm, *, log=lambda *a: None, run=subprocess.run):
@@ -291,7 +298,7 @@ def load_profiles(path):
     if isinstance(styles, dict):
         out = {}
         for name, prof in styles.items():
-            key = str(name).strip().lower()[:40]
+            key = _style_name(name)
             if key and isinstance(prof, dict):
                 out[key] = _sanitize_profile(prof, {"learned_from": _int_learned(prof)})
         return out
@@ -333,16 +340,33 @@ def _profile_lines(profile):
 def styles_brief(profiles, max_chars=2500):
     """Prompt block covering ALL learned styles. With just a 'default' style
     it reads like the classic single guide; with named styles it instructs the
-    LLM to pick the best-fitting style PER MOMENT and tag it."""
+    LLM to pick the best-fitting style PER MOMENT and tag it.
+
+    The budget is split per style so EVERY style name always appears — a hard
+    tail-truncation would silently make the last styles untaggable."""
     if not profiles:
         return ""
     if set(profiles) == {"default"}:
         return style_brief(profiles["default"], max_chars)
-    L = ["STYLE GUIDES (learned from your reference folders). For EVERY moment "
-         "decide from the content which style it should be cut in, and tag it "
-         'via "style": "<name>":']
+    header = ("STYLE GUIDES (learned from your reference folders). For EVERY "
+              "moment decide from the content which style it should be cut in, "
+              'and tag it via "style": "<name>":')
+    share = max(60, (max_chars - len(header)) // max(1, len(profiles)))
+    L = [header]
     for name in sorted(profiles):
         prof = profiles[name] or {}
-        L.append(f"[{name}] (from {prof.get('learned_from', '?')} clips)")
-        L.extend(_profile_lines(prof) or ["- (no distinctive stats)"])
-    return "\n".join(L)[:max_chars]
+        block = [f"[{name}] (from {prof.get('learned_from', '?')} clips)"]
+        block.extend(_profile_lines(prof) or ["- (no distinctive stats)"])
+        text = "\n".join(block)
+        if len(text) > share:
+            # trim whole lines from the end, never the [name] header line
+            kept = []
+            used = 0
+            for line in block:
+                if kept and used + len(line) + 1 > share:
+                    break
+                kept.append(line)
+                used += len(line) + 1
+            text = "\n".join(kept)
+        L.append(text)
+    return "\n".join(L)

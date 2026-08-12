@@ -93,6 +93,9 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
     style_block = (style_brief + "\n\n") if style_brief else ""
     style_names = tuple(str(s).strip().lower() for s in (style_names or ()) if s)
     channel_names = _channel_names(cfg)
+    if not channel_names:
+        log("editorial: no valid channels configured — channel tagging is off "
+            "(check the channels = [...] entries in config.toml)")
 
     # 1) session pass — the WHOLE script, chunked + merged if it is long
     context = _session_pass(llm, timeline_doc, cfg, log, memory_block)
@@ -136,9 +139,15 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
     return refined, source, context
 
 
+def _channel_list(cfg):
+    """cfg.channels, tolerating a user-mangled config (scalar/str/None)."""
+    chs = getattr(cfg, "channels", None)
+    return chs if isinstance(chs, list) else []
+
+
 def _channel_names(cfg):
     out = []
-    for c in (getattr(cfg, "channels", None) or []):
+    for c in _channel_list(cfg):
         if isinstance(c, dict) and str(c.get("name", "")).strip():
             n = str(c["name"]).strip().lower()[:40]
             if n not in out:
@@ -148,7 +157,7 @@ def _channel_names(cfg):
 
 def _channels_block(cfg):
     rows = []
-    for c in (getattr(cfg, "channels", None) or []):
+    for c in _channel_list(cfg):
         if not (isinstance(c, dict) and str(c.get("name", "")).strip()):
             continue
         name = str(c["name"]).strip().lower()[:40]
@@ -361,8 +370,11 @@ def _moment_fields(m, style_names=(), channel_names=()):
                 cx = x.strip().lower()[:40]
                 if cx in channel_names and cx not in channels:
                     channels.append(cx)
+    # category is free LLM text: sanitize to a safe slug — it ends up in CSV
+    # columns and in cut FILENAMES, so no commas, slashes or path tricks
+    category = re.sub(r"[^a-z0-9_\-]+", "", str(m.get("category", "moment")).lower())
     return dict(
-        category=str(m.get("category", "moment")),
+        category=(category[:20] or "moment"),
         semantic_score=_clip_score(m.get("semantic_score", 0), 0, 10),
         punchline_t=_num(m.get("punchline_t")),
         title=(m.get("title") or None),
@@ -382,17 +394,20 @@ def _moment_fields(m, style_names=(), channel_names=()):
 
 def _covers_same_moment(c, t0, t1):
     """True when window [t0, t1] and candidate c describe the same moment:
-    real overlap, or a zero-width window/candidate sitting strictly inside the
-    other. Mere edge-adjacency of two real windows is a DIFFERENT moment."""
+    real overlap, two identical point windows, or a zero-width window/candidate
+    sitting inside the other. Mere edge-adjacency of two real windows is a
+    DIFFERENT moment."""
     ov = min(c.t1, t1) - max(c.t0, t0)
     if ov > 0:
         return True
     if ov < 0:
         return False
+    if c.t1 == c.t0 and t1 == t0:
+        return c.t0 == t0        # two identical point windows
     if c.t1 == c.t0:
-        return t0 < c.t0 < t1
+        return t0 <= c.t0 <= t1  # point candidate inside (or at edge of) window
     if t1 == t0:
-        return c.t0 < t0 < c.t1
+        return c.t0 <= t0 <= c.t1
     return False
 
 
@@ -477,9 +492,10 @@ def _best_overlap(cands, t0, t1, used):
 
     Candidate windows built from a single game event are zero-width (t0==t1),
     so a strict `overlap > 0` test would never match them and every refined
-    moment would wrongly become a 'discovered' duplicate. We therefore accept
-    a touching/containing match (overlap >= 0) and only fall through to
-    'discovered' when the window genuinely misses every candidate."""
+    moment would wrongly become a 'discovered' duplicate. A zero-length
+    overlap therefore counts — but ONLY when one side is zero-width: two REAL
+    windows that merely touch at an edge are different moments, and matching
+    them would blend a judgement into the wrong clip."""
     best, best_ov = None, None
     for c in cands:
         if id(c) in used:
@@ -487,9 +503,11 @@ def _best_overlap(cands, t0, t1, used):
         ov = min(c.t1, t1) - max(c.t0, t0)
         if best_ov is None or ov > best_ov:
             best, best_ov = c, ov
-    if best is not None and best_ov is not None and best_ov >= 0:
-        return best
-    return None
+    if best is None or best_ov is None or best_ov < 0:
+        return None
+    if best_ov == 0 and (best.t1 - best.t0) > 0 and (t1 - t0) > 0:
+        return None
+    return best
 
 
 def _clean_overlays(items):

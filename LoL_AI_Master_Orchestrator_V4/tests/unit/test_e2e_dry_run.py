@@ -421,6 +421,20 @@ def test_reset_phase_removes_it_from_history_so_it_reruns(tmp_path):
     assert status == "done" and "01" in st["phase_history"]
 
 
+def test_agentless_selfcheck_failure_blocks_directly_not_via_fix_loop(tmp_path):
+    cfg, store, repo = make_project(tmp_path)
+    import yaml
+    reg = yaml.safe_load((cfg.root / "test_registry.yaml").read_text())
+    reg["tests"]["p00_t"]["command"] = f'"{PY}" -c "import sys;sys.exit(1)"'
+    (cfg.root / "test_registry.yaml").write_text(yaml.safe_dump(reg), encoding="utf-8")
+    repo.add_all_and_commit("break self-check")
+    status, st = make_engine(cfg, store, repo).run(phases=["00"], capabilities={})
+    assert status == "blocked" and st["phase_id"] == "00"
+    assert "self-check" in st["blocked_reason"].lower()
+    assert "max fix cycles" not in st["blocked_reason"]
+    assert int(st.get("fix_cycles", 0)) == 0     # never entered the fix loop
+
+
 def test_deferred_hardware_test_recorded_not_faked(tmp_path):
     cfg, store, repo = make_project(tmp_path)
     import yaml

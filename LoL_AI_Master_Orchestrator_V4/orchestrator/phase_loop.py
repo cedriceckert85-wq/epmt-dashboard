@@ -370,6 +370,18 @@ class PhaseEngine:
             for o in outcomes:
                 if o.name in failed or o.name in non_deferrable_unverified:
                     detail.append(f"{o.name}: {o.status} — {o.reason}")
+            if phase.get("agentless"):
+                # No agent can fix the orchestrator's OWN test suite — routing
+                # into the fix-loop would just re-fail and BLOCK with a
+                # misleading "max fix cycles" reason. Fail directly with the
+                # real cause.
+                raise PhaseRunError(
+                    "Orchestrator self-check failed (this is the shipped test suite, "
+                    "not your project). This means the package hit a bug or an "
+                    "unsupported environment. Details:\n" + "\n".join(detail)
+                    + "\nSee the junit evidence under .orchestrator/artifacts/. "
+                    "Do NOT edit the orchestrator; report this or try a supported "
+                    "Python (3.10+) on a supported OS.")
             return self._to_fixing(st, phase, "failing tests:\n" + "\n".join(detail))
         return self._transition(st, phase, Lifecycle.CHECKPOINTED,
                                 tested_commit=st["candidate_commit"], evidence=evidence)

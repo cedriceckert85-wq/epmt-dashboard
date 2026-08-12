@@ -132,6 +132,13 @@ def run_registry_test(name, spec, *, root, run_id, capabilities, deferrable,
 
     cwd = root / spec.get("cwd", ".")
     argv = shlex.split(command, posix=(os.name != "nt"))
+    if os.name == "nt":
+        # shlex(posix=False) on Windows KEEPS quote characters inside each
+        # token (posix=True would instead mangle the backslashes in Windows
+        # paths). Strip a matched surrounding quote pair so a quoted argv[0]
+        # like "C:\...\python.exe" becomes a launchable path.
+        argv = [a[1:-1] if len(a) >= 2 and a[0] == a[-1] and a[0] in ("'", '"') else a
+                for a in argv]
     # a bare `python`/`python3` may not exist on the host (Debian/Ubuntu ship
     # only python3, some only `python`). Always run registry commands with the
     # SAME interpreter the orchestrator runs under, which is guaranteed present.

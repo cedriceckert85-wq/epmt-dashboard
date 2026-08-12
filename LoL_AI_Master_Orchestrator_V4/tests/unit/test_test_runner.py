@@ -186,6 +186,20 @@ def test_bearer_token_env_vars_are_stripped(monkeypatch):
     assert env.get("HARMLESS_VALUE") == "keepme"
 
 
+def test_windows_style_quoted_command_parses_launchably():
+    # On Windows shlex uses posix=False (to keep backslash paths intact), which
+    # RETAINS quotes in each token. The runner must strip a surrounding quote
+    # pair so a quoted interpreter path is launchable — otherwise the shipped
+    # phase-00 self-check (whose fixtures quote sys.executable) fails on Windows.
+    import shlex
+    cmd = f'"{PY}" -c "print(1)"'
+    argv = shlex.split(cmd, posix=False)          # emulate the Windows branch
+    argv = [a[1:-1] if len(a) >= 2 and a[0] == a[-1] and a[0] in ("'", '"') else a
+            for a in argv]
+    assert argv[0] == PY and "\"" not in argv[0]
+    assert argv[1:] == ["-c", "print(1)"]
+
+
 def test_bare_python_resolved_to_running_interpreter(tmp_path):
     # a registry command using bare `python` must run even on a host with only
     # python3 — it is resolved to sys.executable.
@@ -203,7 +217,7 @@ def test_python_placeholder_substituted(tmp_path):
 
 def test_non_utf8_output_does_not_crash(tmp_path):
     # a test emitting a raw non-UTF-8 byte must not raise UnicodeDecodeError
-    s = spec(f'{PY} -c "import os,sys;os.write(1, b\'\\xff\\xfe\');sys.exit(0)"')
+    s = spec(f'"{PY}" -c "import os,sys;os.write(1, b\'\\xff\\xfe\');sys.exit(0)"')
     out = run_registry_test("t", s, root=tmp_path, run_id="r", capabilities={}, deferrable=set())
     assert out.status == "pass"
 

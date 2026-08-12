@@ -81,11 +81,47 @@ def _moment_reply():
     ]
 
 
+def _memory_reply(prompt):
+    """Canned memory consolidation: if the CURRENT MEMORY in the prompt already
+    knows the Q gag, bump times_seen — demonstrating that a returning gag gets
+    counted up instead of duplicated."""
+    current = prompt.split("CURRENT MEMORY:", 1)[-1].split("TODAY'S SESSION", 1)[0]
+    seen = 2 if "hit a Q eventually" in current else 1
+    mem = {
+        "version": 1,
+        "sessions_analyzed": seen,
+        "gags": [
+            {"name": "I'll hit a Q eventually",
+             "description": "whiffs every skillshot early, swears the hit is coming",
+             "times_seen": seen, "first_seen": "sample_vod.mkv",
+             "last_seen": "sample_vod.mkv"},
+            {"name": "Blaming the wall",
+             "description": "every failed flash is the wall's fault",
+             "times_seen": seen, "first_seen": "sample_vod.mkv",
+             "last_seen": "sample_vod.mkv"},
+        ],
+        "catchphrases": ["clip that, somebody clip that right now"],
+        "lore": ["The pentakill where he finally hit all his Qs"],
+        "sessions": [{"vod": "sample_vod.mkv", "date": "demo",
+                      "summary": "From whiffed Qs to a pentakill."}],
+    }
+    return "Memory updated:\n" + json.dumps(mem, ensure_ascii=False)
+
+
 def demo_runner(prompt):
     """Emulate a CLI that prints JSON on stdout (with a little prose around it,
     to exercise the client's JSON extraction)."""
+    if "LONG-TERM MEMORY" in prompt:
+        return _memory_reply(prompt)
     if "CANDIDATE WINDOWS" in prompt:
-        body = json.dumps(_moment_reply(), ensure_ascii=False)
+        moments = _moment_reply()
+        # when the channel brain already knows the gags (2nd+ session), tag the
+        # continuations so the edit sheet shows the lore connection
+        if "CHANNEL MEMORY (from PREVIOUS streams" in prompt:
+            for m in moments:
+                if m["title"].startswith(("PENTAKILL", "Told You")):
+                    m["lore_refs"] = ["I'll hit a Q eventually"]
+        body = json.dumps(moments, ensure_ascii=False)
         return "Sure! Here is the edit plan:\n" + body + "\nHope that helps."
     body = json.dumps(_session_reply(), ensure_ascii=False)
     return "Here's the session read:\n" + body

@@ -43,6 +43,12 @@ llm_session_chunk_chars = 150000
 llm_moment_context_s = 90.0   # log detail around each candidate in the moment pass
 llm_moment_log_chars = 60000  # total moment-pass log budget (rest = even sample)
 
+[memory]
+memory_enabled = true               # the channel brain: remembers running gags across sessions
+memory_file = "channel_memory.json" # relative -> stored next to the tool; delete it to forget
+memory_max_gags = 40                # keep the brain compact: most-seen gags survive
+memory_max_sessions = 20            # session summaries kept
+
 [render]
 encoder = "auto"              # auto | amf | x264 ; auto = AMF on the 9070 XT, else CPU x264
 render_crf = 20               # x264 quality (lower = better/bigger)

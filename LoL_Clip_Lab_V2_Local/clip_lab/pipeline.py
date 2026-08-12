@@ -12,6 +12,7 @@ from pathlib import Path
 
 from . import editorial as editorial_mod
 from . import events as events_mod
+from . import memory as memory_mod
 from . import ingest, rank, reactions, timeline, transcribe
 from .edl import build_edit_plan
 from .editsheet import write_edit_sheet
@@ -19,7 +20,7 @@ from .llm_client import LLMClient
 
 
 def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
-            audio_stream=None, llm=None, log=print):
+            audio_stream=None, llm=None, memory_path=None, log=print):
     vod_path = Path(vod_path)
     out = Path(out_dir)
     work = out / "work"
@@ -64,18 +65,38 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
     doc = timeline.build_timeline_doc(segments, reacts, evs)
     if llm is None:
         llm = LLMClient(cfg.llm_cmd, cfg.llm_timeout_s)
+
+    # channel memory (the brain across sessions): inject what earlier streams
+    # taught us, so returning running gags are recognized
+    memory = None
+    brief = ""
+    if memory_path and cfg.memory_enabled:
+        memory = memory_mod.load_memory(memory_path)
+        brief = memory_mod.memory_brief(memory)
+        if brief:
+            log(f"[brain] channel memory: {len(memory['gags'])} running gags from "
+                f"{memory['sessions_analyzed']} earlier sessions")
+
     log("[5/6] editorial: asking the LLM for humor/callbacks/punchlines …"
         if (cfg.use_llm and llm.available())
         else "[5/6] editorial: LLM unavailable — signal-only ranking")
-    cands, source, context = editorial_mod.run_editorial(cands, doc, llm, cfg, log=log)
+    cands, source, context = editorial_mod.run_editorial(
+        cands, doc, llm, cfg, memory_brief=brief, log=log)
 
     ranked = rank.rank_candidates(cands, cfg)
     plan = build_edit_plan(ranked, segments, cfg, duration)
 
-    # 5) write the edit sheet
+    # 5) write the edit sheet (+ update the brain with today's findings)
     meta = {"duration": duration, "editorial": source, "reactions": len(reacts),
             "events": len(evs), "candidates": len(cands),
             "session_context": context}
+    if memory is not None:
+        memory = memory_mod.update_memory(memory, context, vod_path.name,
+                                          llm if cfg.use_llm else None, cfg, log=log)
+        memory_mod.save_memory(memory_path, memory)
+        meta["memory"] = {"gags": len(memory["gags"]),
+                          "sessions_analyzed": memory["sessions_analyzed"]}
+        log(f"[brain] memory updated: {len(memory['gags'])} running gags remembered")
     write_edit_sheet(plan, out, vod_name=vod_path.name, meta=meta)
     log(f"[6/6] done: {len(plan)} clips → {out/'edit_sheet.md'}")
     return plan, meta

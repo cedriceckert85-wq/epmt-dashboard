@@ -22,17 +22,27 @@ def _cfg(args):
     return cfg
 
 
+def _memory_path(cfg):
+    p = Path(cfg.memory_file)
+    return p if p.is_absolute() else ROOT / p
+
+
 def cmd_analyze(args):
     cfg = _cfg(args)
     out = Path(args.out or (Path(args.vod).stem + "_clips"))
     if not args.transcript and not Path(args.vod).exists():
         print(f"VOD not found: {args.vod}", file=sys.stderr)
         return 2
+    mem_path = None if args.no_memory else _memory_path(cfg)
     plan, meta = analyze(args.vod, cfg, out, transcript_path=args.transcript,
-                         events_path=args.events, audio_stream=args.audio_stream)
+                         events_path=args.events, audio_stream=args.audio_stream,
+                         memory_path=mem_path)
     print(f"\nEdit sheet: {out/'edit_sheet.md'}")
     print(f"Machine plan: {out/'edit_plan.json'}   ·   CSV: {out/'clips.csv'}")
     print(f"Editorial brain used: {meta['editorial']}  ·  {len(plan)} clips suggested")
+    if meta.get("memory"):
+        print(f"Channel memory: {meta['memory']['gags']} running gags across "
+              f"{meta['memory']['sessions_analyzed']} sessions ({mem_path})")
     if args.cut:
         _cut_all(args.vod, plan, cfg, out)
     return 0
@@ -80,29 +90,68 @@ def cmd_doctor(args):
     return 0 if ok else 3
 
 
+def cmd_memory(args):
+    """Show (default) or clear the channel brain."""
+    from .memory import load_memory, memory_brief
+    cfg = _cfg(args)
+    path = _memory_path(cfg)
+    if args.clear:
+        if path.exists():
+            path.unlink()
+            print(f"Channel memory cleared ({path}).")
+        else:
+            print("Channel memory is already empty.")
+        return 0
+    mem = load_memory(path)
+    brief = memory_brief(mem, max_chars=8000)
+    if not brief:
+        print(f"Channel memory is empty ({path}).\n"
+              "It fills up automatically with every `analyze` run.")
+        return 0
+    print(f"== Channel memory ({path}) ==")
+    print(f"Sessions analyzed: {mem['sessions_analyzed']}\n")
+    print(brief)
+    return 0
+
+
 def cmd_selftest(args):
     """Run the whole editorial→rank→edl→edit-sheet path on the bundled sample
     transcript+events — no VOD, no whisper, no ffmpeg, no network needed.
 
     By default it uses a CANNED editorial brain (clip_lab._demo) so the edit
     sheet shows the full creative output: funny titles, punchline-aware cuts,
-    captions, SFX and callbacks. Pass --signal-only to see the deterministic
-    fallback the tool uses when no LLM is available."""
+    captions, SFX and callbacks — and runs the ANALYSIS TWICE against a scratch
+    channel memory, proving the brain remembers running gags across sessions.
+    Pass --signal-only to see the deterministic no-LLM fallback."""
     cfg = _cfg(args)
     out = Path(args.out or "selftest_out")
     sample_t = ROOT / "samples" / "fixture_transcript.json"
     sample_e = ROOT / "samples" / "fixture_events.json"
+    sample_vod = str(ROOT / "samples" / "sample_vod.mkv")
     if args.signal_only:
         cfg.use_llm = False
-        llm = None
+        plan, meta = analyze(sample_vod, cfg, out,
+                             transcript_path=sample_t, events_path=sample_e, llm=None)
     else:
         from ._demo import demo_llm
         cfg.use_llm = True
-        llm = demo_llm()
-    plan, meta = analyze(str(ROOT / "samples" / "sample_vod.mkv"), cfg, out,
-                         transcript_path=sample_t, events_path=sample_e, llm=llm)
+        mem_path = out / "channel_memory.json"   # scratch brain, not the real one
+        if mem_path.exists():
+            mem_path.unlink()
+        # session 1: brain is empty, gags get learned
+        plan, meta = analyze(sample_vod, cfg, out, transcript_path=sample_t,
+                             events_path=sample_e, llm=demo_llm(),
+                             memory_path=mem_path)
+        # session 2: the brain now knows the gags -> lore refs in the sheet
+        plan, meta = analyze(sample_vod, cfg, out, transcript_path=sample_t,
+                             events_path=sample_e, llm=demo_llm(),
+                             memory_path=mem_path)
     print(f"\nSelf-test OK — editorial brain: {meta['editorial']} — "
           f"{len(plan)} clips → {out/'edit_sheet.md'}")
+    if meta.get("memory"):
+        print(f"Channel memory demo: {meta['memory']['gags']} running gags remembered "
+              f"across {meta['memory']['sessions_analyzed']} sessions "
+              f"(see the 🧠 lines in the edit sheet)")
     print("Open that file to see the suggested cuts, captions and SFX.")
     return 0 if plan else 1
 
@@ -120,6 +169,8 @@ def build_parser():
     a.add_argument("--audio-stream", help="ffmpeg audio stream to use, e.g. a:1 for the mic")
     a.add_argument("--whisper-model", help="tiny|base|small|medium")
     a.add_argument("--no-llm", action="store_true", help="signal-only, no editorial LLM")
+    a.add_argument("--no-memory", action="store_true",
+                   help="skip the channel memory (don't read or update the brain)")
     a.add_argument("--cut", action="store_true", help="also cut the clips with ffmpeg")
     a.add_argument("--encoder", help="auto|amf|x264")
     a.set_defaults(func=cmd_analyze)
@@ -133,6 +184,10 @@ def build_parser():
 
     d = sub.add_parser("doctor", help="check local tooling")
     d.set_defaults(func=cmd_doctor)
+
+    m = sub.add_parser("memory", help="show or clear the channel brain (running gags etc.)")
+    m.add_argument("--clear", action="store_true", help="forget everything")
+    m.set_defaults(func=cmd_memory)
 
     s = sub.add_parser("selftest", help="run the editorial core on the bundled sample")
     s.add_argument("--out")

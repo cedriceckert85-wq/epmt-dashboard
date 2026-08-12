@@ -20,6 +20,9 @@ def _markdown(plan, vod_name, meta):
     L = [f"# Edit Sheet — {vod_name}", ""]
     L.append(f"- Source duration: {hhmmss(meta.get('duration', 0))}")
     L.append(f"- Editorial brain: **{meta.get('editorial', 'signal-only')}**")
+    if meta.get("memory"):
+        L.append(f"- 🧠 Channel memory: {meta['memory'].get('gags', 0)} running gags "
+                 f"across {meta['memory'].get('sessions_analyzed', 0)} analyzed sessions")
     L.append(f"- Reactions found: {meta.get('reactions', 0)} · "
              f"game events: {meta.get('events', 0)} · candidates: {meta.get('candidates', 0)}")
     L.append(f"- Suggested clips: **{len(plan)}**")
@@ -50,6 +53,8 @@ def _markdown(plan, vod_name, meta):
         for ins in p.callback_inserts:
             L.append(f"  - callback insert from `{hhmmss(ins['ref_t0'])}`–"
                      f"`{hhmmss(ins['ref_t1'])}` — {ins.get('note','')}")
+        for ref in p.lore_refs:
+            L.append(f"  - 🧠 running gag (channel lore): {ref}")
         L.append("")
     return "\n".join(L)
 

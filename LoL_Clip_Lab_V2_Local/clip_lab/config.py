@@ -52,6 +52,12 @@ class Config:
     llm_moment_context_s: float = 90.0
     llm_moment_log_chars: int = 60_000
 
+    # --- channel memory (the long-term brain across sessions) ---
+    memory_enabled: bool = True
+    memory_file: str = "channel_memory.json"  # relative -> next to the tool
+    memory_max_gags: int = 40
+    memory_max_sessions: int = 20
+
     # --- rendering (AMD: AMF or CPU x264, no NVENC) ---
     encoder: str = "auto"                 # auto|amf|x264 ; auto=amf if available else x264
     render_crf: int = 20                  # x264 quality

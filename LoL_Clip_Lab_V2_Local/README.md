@@ -33,6 +33,12 @@ Because the 9070 XT is **AMD**, everything avoids CUDA/NVENC: Whisper runs on th
 Es geht hier **nur** ums Editen / Inspiration / Kontext ziehen — kein Streaming,
 kein Upload.
 
+**Neu — das Gedächtnis 🧠:** Das Tool merkt sich Running Gags, Catchphrases und
+Kanal-Lore **über alle Sessions hinweg** (`channel_memory.json`). Taucht ein Gag
+aus Stream #2 in Stream #7 wieder auf, erkennt das LLM ihn und markiert den Clip
+im Edit-Sheet mit `🧠 running gag`. `python -m clip_lab memory` zeigt, was das
+Tool über deinen Kanal weiß; `--clear` löscht es.
+
 ---
 
 ## What it produces
@@ -74,6 +80,43 @@ You also get `edit_plan.json` (machine-readable, feed it to your own tooling) an
 Everything **degrades gracefully**: no LLM → deterministic signal-only ranking;
 no Whisper → supply a transcript; no game events → reactions + editorial still
 work. The only hard requirement for a real VOD is **ffmpeg** (it reads the audio).
+
+---
+
+## The channel memory (the 🧠 across sessions)
+
+The editorial brain understands running gags *within* one VOD. The **channel
+memory** makes them persist *across* VODs: a small JSON file
+(`channel_memory.json`, next to the tool) accumulates with every `analyze` run:
+
+- **running gags** with counters — `"I'll hit a Q eventually" (5x, last: vod_12)`;
+  the more often a gag returns, the more established it is,
+- **catchphrases**, **channel lore / nicknames**,
+- one-line **summaries of recent sessions**.
+
+Before each analysis the memory is injected into the editorial prompts, so the
+LLM recognizes a gag from a previous stream the moment it reappears — and tags
+the clip in the edit sheet: `🧠 running gag (channel lore): …`. Those clips are
+gold for community retention (regulars love recognizing inside jokes).
+
+After each analysis an LLM consolidation pass merges today's findings in:
+known gags get their counter bumped (matched by meaning, not exact wording),
+new ones are added, stale one-offs eventually fall out (caps keep the file
+compact). Without an LLM a deterministic mechanical merge does the same on
+exact matches.
+
+Controls:
+
+```
+python -m clip_lab memory           # show what the brain knows
+python -m clip_lab memory --clear   # forget everything
+python -m clip_lab analyze vod.mkv --no-memory   # one run without the brain
+```
+
+`[memory]` in `config.toml` sets the file location and the caps. The self-test
+demonstrates the whole loop offline: it analyzes the bundled sample twice
+against a scratch brain — the second pass recognizes the gags learned in the
+first (see the 🧠 lines in `selftest_out/edit_sheet.md`).
 
 ---
 
@@ -200,7 +243,7 @@ Edit `config.toml` (read on Python 3.11+). Highlights:
 python -m pytest tests/unit -q
 ```
 
-95 unit + integration tests cover the pure logic (reaction detection, ranking,
+116 unit + integration tests cover the pure logic (reaction detection, ranking,
 punchline-aware cutting, the editorial contract, JSON extraction, event loading,
 config) and an end-to-end run on the bundled fixtures.
 
@@ -222,6 +265,7 @@ clip_lab/            the package
   doctor.py          preflight checks
   pipeline.py        wires the stages together
   cli.py             analyze / cut / doctor / selftest
+  memory.py          the channel brain: running gags remembered across sessions
   _demo.py           canned editorial brain for the offline self-test
 samples/             fixture transcript + events for the self-test
 tests/unit/          the test suite

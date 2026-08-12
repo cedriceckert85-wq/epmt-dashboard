@@ -5,3 +5,4 @@ __pycache__/
 selftest_out/
 *_clips/
 work/
+channel_memory.json

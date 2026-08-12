@@ -32,7 +32,7 @@ Return ONLY JSON:
   "arcs": ["short description of an emotional/narrative arc"],
   "notes": "anything an editor should know"}}
 
-{prior}SESSION LOG{part}:
+{memory}{prior}SESSION LOG{part}:
 {log}
 """
 
@@ -47,12 +47,13 @@ Return ONLY JSON: a list of objects, each:
   "title": "catchy 3-7 word title",
   "why": "one sentence: why it lands",
   "callback_refs": [<earlier seconds>],
+  "lore_refs": ["name of a KNOWN channel gag this moment continues (only if listed in CHANNEL MEMORY)"],
   "captions": [{{"t": <s>, "text": "..."}}],
   "zooms": [{{"t": <s>, "duration": <s>}}],
   "sfx": [{{"t": <s>, "kind": "airhorn|vine_boom|bruh|ding|silence"}}]}}
 Only include a moment if it is actually good. Timestamps must be within the log.
 
-SESSION CONTEXT: {context}
+{memory}SESSION CONTEXT: {context}
 
 CANDIDATE WINDOWS:
 {cands}
@@ -69,14 +70,23 @@ def _clip_score(v, lo, hi):
         return lo
 
 
-def run_editorial(cands, timeline_doc, llm, cfg, *, log=lambda *a: None):
+def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
+                  log=lambda *a: None):
     """Refine candidates in place and return (candidates, source, context).
-    source is 'llm' if the LLM contributed, else 'signal'."""
+    source is 'llm' if the LLM contributed, else 'signal'. memory_brief is the
+    channel brain's summary of PREVIOUS streams (running gags, lore) so the LLM
+    recognizes returning gags."""
     if not (cfg.use_llm and llm and llm.available()):
         return cands, "signal", {}
 
+    memory_block = ""
+    if memory_brief:
+        memory_block = ("CHANNEL MEMORY (from PREVIOUS streams — watch for these "
+                        "gags/lore returning; tag continuations via lore_refs):\n"
+                        + memory_brief + "\n\n")
+
     # 1) session pass — the WHOLE script, chunked + merged if it is long
-    context = _session_pass(llm, timeline_doc, cfg, log)
+    context = _session_pass(llm, timeline_doc, cfg, log, memory_block)
 
     # 2) moment pass (batched)
     cand_json = json.dumps([{"t0": c.t0, "t1": c.t1,
@@ -84,6 +94,7 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, log=lambda *a: None):
                            ensure_ascii=False)
     moments = llm.ask_json(MOMENT_PROMPT.format(
         discover=cfg.discover_no_event_windows,
+        memory=memory_block,
         context=json.dumps(context, ensure_ascii=False)[:8000],
         cands=cand_json,
         log=_relevant_log(timeline_doc, cands,
@@ -97,10 +108,11 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, log=lambda *a: None):
     return refined, "llm", context
 
 
-def _session_pass(llm, timeline_doc, cfg, log):
+def _session_pass(llm, timeline_doc, cfg, log, memory_block=""):
     """Send the WHOLE session log through the session prompt. Long sessions go
     in line-aligned chunks; the merged findings so far ride along into each
-    next chunk so cross-chunk gags/callbacks can be connected. Returns the
+    next chunk so cross-chunk gags/callbacks can be connected. memory_block
+    (channel brain from previous streams) goes into every chunk. Returns the
     merged context dict ({} if nothing usable came back)."""
     chunks = _chunk_lines(timeline_doc, cfg.llm_session_chunk_chars)
     merged = {}
@@ -111,7 +123,8 @@ def _session_pass(llm, timeline_doc, cfg, log):
             prior = ("FINDINGS FROM EARLIER PARTS OF THIS SESSION "
                      "(extend/merge them with what you find below):\n"
                      + json.dumps(merged, ensure_ascii=False)[:6000] + "\n\n")
-        res = llm.ask_json(SESSION_PROMPT.format(prior=prior, part=part, log=chunk))
+        res = llm.ask_json(SESSION_PROMPT.format(memory=memory_block, prior=prior,
+                                                 part=part, log=chunk))
         if isinstance(res, dict):
             merged = _merge_context(merged, res)
         else:
@@ -287,6 +300,8 @@ def _apply_moments(cands, moments, cfg):
             title=(m.get("title") or None),
             why=(m.get("why") or None),
             callback_refs=[x for x in (_num(r) for r in m.get("callback_refs", [])) if x is not None],
+            lore_refs=[str(x).strip()[:120] for x in (m.get("lore_refs") or [])
+                       if isinstance(x, str) and x.strip()][:5],
             caption_suggestions=_clean_overlays(m.get("captions")),
             zoom_suggestions=_clean_overlays(m.get("zooms")),
             sfx_suggestions=_clean_overlays(m.get("sfx")),

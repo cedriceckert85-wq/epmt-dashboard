@@ -61,12 +61,15 @@ You also get `edit_plan.json` (machine-readable, feed it to your own tooling) an
    small JSON/CSV *you* supply (a downloaded VOD has no live Riot API).
 2. **Transcript** — `faster-whisper` (CPU, int8) turns speech into timestamped
    text. Or supply your own transcript and skip Whisper entirely.
-3. **Editorial brain** — the creative core. It reads the whole session
+3. **Editorial brain** — the creative core. It reads the **whole stream script**
    (speech + reactions + events) and asks an LLM to do what statistics can't:
    find the *funny* moments (including pure-talk moments with **no** game event),
    locate the **punchline**, spot **callbacks / running gags**, and suggest the
-   captions / zooms / SFX. By default it calls `claude -p`; any CLI that reads a
-   prompt on stdin and prints JSON works (set it in `config.toml`).
+   captions / zooms / SFX. Long VODs are not truncated: the session pass goes
+   through the entire script in chunks, carrying its findings forward, so a gag
+   set up in minute 3 and paid off in hour 3 still gets connected. By default it
+   calls `claude -p`; any CLI that reads a prompt on stdin and prints JSON works
+   (set it in `config.toml`).
 
 Everything **degrades gracefully**: no LLM → deterministic signal-only ranking;
 no Whisper → supply a transcript; no game events → reactions + editorial still
@@ -197,7 +200,7 @@ Edit `config.toml` (read on Python 3.11+). Highlights:
 python -m pytest tests/unit -q
 ```
 
-81 unit + integration tests cover the pure logic (reaction detection, ranking,
+95 unit + integration tests cover the pure logic (reaction detection, ranking,
 punchline-aware cutting, the editorial contract, JSON extraction, event loading,
 config) and an end-to-end run on the bundled fixtures.
 

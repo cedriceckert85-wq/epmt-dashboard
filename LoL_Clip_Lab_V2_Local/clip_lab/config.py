@@ -44,6 +44,13 @@ class Config:
     llm_timeout_s: int = 240
     llm_max_moment_calls: int = 40
     discover_no_event_windows: int = 8    # pure comedy/talk moments with no game event
+    # the session pass reads the WHOLE stream script; longer sessions are sent
+    # in chunks of this many characters with the findings carried forward
+    llm_session_chunk_chars: int = 150_000
+    # moment pass: timeline seconds of log context around each candidate, and
+    # the total log budget (rest is an even sample across the session)
+    llm_moment_context_s: float = 90.0
+    llm_moment_log_chars: int = 60_000
 
     # --- rendering (AMD: AMF or CPU x264, no NVENC) ---
     encoder: str = "auto"                 # auto|amf|x264 ; auto=amf if available else x264

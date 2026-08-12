@@ -37,6 +37,11 @@ use_llm = true                # the creative core: humor / callbacks / punchline
 llm_cmd = ["claude", "-p"]    # any CLI that reads a prompt on stdin and prints JSON
 llm_timeout_s = 240
 discover_no_event_windows = 8 # let the LLM surface funny talk moments with no game event
+# the session pass reads the WHOLE stream script — long VODs go in chunks of
+# this many characters, with the findings so far carried into the next chunk
+llm_session_chunk_chars = 150000
+llm_moment_context_s = 90.0   # log detail around each candidate in the moment pass
+llm_moment_log_chars = 60000  # total moment-pass log budget (rest = even sample)
 
 [render]
 encoder = "auto"              # auto | amf | x264 ; auto = AMF on the 9070 XT, else CPU x264

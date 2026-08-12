@@ -147,20 +147,35 @@ def fingerprint(path, cfg, *, transcriber=None, run=subprocess.run):
 
 
 def _style_groups(folder):
-    """Reference clips grouped by style: each SUBFOLDER of the references
-    folder is one named style (references/funny/, references/montage/, ...);
-    videos directly in the root are the 'default' style."""
+    """Reference clips grouped by style. Two levels are supported so a
+    CHANNEL can hold several styles:
+
+        references/insta/funny/    -> style 'insta_funny'
+        references/insta/montage/  -> style 'insta_montage'
+        references/yt/             -> style 'yt'
+        references/uncut/          -> style 'uncut'
+
+    Videos directly in a level-1 folder are that folder's own style; videos
+    directly in the root are the 'default' style. Both levels can coexist."""
     folder = Path(folder)
     groups = {}
     root_vids = list_videos(folder)
     if root_vids:
         groups["default"] = root_vids
-    if folder.is_dir():
-        for sub in sorted(p for p in folder.iterdir() if p.is_dir()):
-            name = _style_name(sub.name)
-            vids = list_videos(sub)
-            if name and vids:
-                groups[name] = vids
+    if not folder.is_dir():
+        return groups
+    for sub in sorted(p for p in folder.iterdir() if p.is_dir()):
+        pname = _style_name(sub.name)
+        if not pname:
+            continue
+        vids = list_videos(sub)
+        if vids:
+            groups[pname] = vids
+        for sub2 in sorted(p for p in sub.iterdir() if p.is_dir()):
+            cname = _style_name(sub2.name)
+            vids2 = list_videos(sub2)
+            if cname and vids2:
+                groups[f"{pname}_{cname}"[:40]] = vids2
     return groups
 
 
@@ -359,7 +374,10 @@ def styles_brief(profiles, max_chars=2500):
         return style_brief(profiles["default"], max_chars)
     header = ("STYLE GUIDES (learned from your reference folders). For EVERY "
               "moment decide from the content which style it should be cut in, "
-              'and tag it via "style": "<name>":')
+              'and tag it via "style": "<name>". Names may be '
+              "'<channel>_<flavor>' (e.g. insta_funny vs insta_montage) — pick "
+              "the one matching both where the clip belongs and how it should "
+              "feel:")
     share = max(60, (max_chars - len(header)) // max(1, len(profiles)))
     L = [header]
     for name in sorted(profiles):

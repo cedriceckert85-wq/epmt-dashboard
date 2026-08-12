@@ -205,6 +205,68 @@ def test_demo_pipeline_produces_channel_plans(tmp_path):
     assert penta.channels == ["insta", "yt", "uncut"]
 
 
+# ---------- nested channel/style folders ----------
+
+def test_nested_folders_become_channel_styles(tmp_path, monkeypatch):
+    # references/insta/funny -> insta_funny, insta/montage -> insta_montage,
+    # flat yt/ stays yt — both levels coexist
+    monkeypatch.setattr("clip_lab.style.which", lambda n: "/usr/bin/" + n)
+    monkeypatch.setattr("clip_lab.style._make_transcriber", lambda c: None)
+    (tmp_path / "insta" / "funny").mkdir(parents=True)
+    (tmp_path / "insta" / "montage").mkdir(parents=True)
+    (tmp_path / "yt").mkdir()
+    (tmp_path / "insta" / "funny" / "a.mp4").write_bytes(b"x")
+    (tmp_path / "insta" / "montage" / "b.mp4").write_bytes(b"x")
+    (tmp_path / "yt" / "c.mp4").write_bytes(b"x")
+    profiles, _ = learn_styles(tmp_path, cfg(), None, run=_fake_run())
+    assert set(profiles) == {"insta_funny", "insta_montage", "yt"}
+
+
+def test_channel_folder_with_direct_videos_and_subfolders(tmp_path, monkeypatch):
+    monkeypatch.setattr("clip_lab.style.which", lambda n: "/usr/bin/" + n)
+    monkeypatch.setattr("clip_lab.style._make_transcriber", lambda c: None)
+    (tmp_path / "insta" / "funny").mkdir(parents=True)
+    (tmp_path / "insta" / "direct.mp4").write_bytes(b"x")
+    (tmp_path / "insta" / "funny" / "a.mp4").write_bytes(b"x")
+    profiles, _ = learn_styles(tmp_path, cfg(), None, run=_fake_run())
+    assert set(profiles) == {"insta", "insta_funny"}
+
+
+def test_style_prefix_implies_channel():
+    # a clip cut as insta_funny obviously serves insta, even if the LLM
+    # forgot to tag the channel
+    f = _moment_fields({"style": "insta_funny", "channels": ["yt"]},
+                       style_names=("insta_funny",),
+                       channel_names=("insta", "yt", "uncut"))
+    assert f["style_target"] == "insta_funny"
+    assert f["channels"][0] == "insta" and "yt" in f["channels"]
+    # style exactly equal to a channel name works too
+    g = _moment_fields({"style": "uncut", "channels": []},
+                       style_names=("uncut",),
+                       channel_names=("insta", "yt", "uncut"))
+    assert g["channels"] == ["uncut"]
+    # prefix that is NOT a channel adds nothing
+    h = _moment_fields({"style": "cinematic_slow", "channels": []},
+                       style_names=("cinematic_slow",),
+                       channel_names=("insta", "yt", "uncut"))
+    assert h["channels"] == []
+
+
+def test_fetch_nested_style_path(tmp_path, monkeypatch):
+    import clip_lab.util as util
+    import subprocess as sp
+    from clip_lab.cli import main
+    monkeypatch.setattr(util, "which", lambda n: "/usr/bin/" + n)
+    calls = []
+    def fake_run(cmd, **kw):
+        calls.append(cmd)
+        return SimpleNamespace(returncode=0)
+    monkeypatch.setattr(sp, "run", fake_run)
+    assert main(["fetch", "http://x", "--style", "insta/funny"]) == 0
+    tmpl = calls[0][2]
+    assert "insta" in tmpl and "funny" in tmpl and ".." not in tmpl
+
+
 # ---------- hostile-input regressions (verification findings) ----------
 
 def test_identical_point_windows_are_duplicates():
@@ -302,9 +364,9 @@ def test_fetch_style_is_slugged(tmp_path, monkeypatch):
     tmpl = calls[0][2]
     assert "my_funny" in tmpl                        # learner-compatible slug
     calls.clear()
-    rc = main(["fetch", "http://x", "--style", "../evil"])
-    assert rc == 0
-    assert ".." not in calls[0][2]                   # no path traversal
+    # a traversal attempt is REJECTED outright (".." slugs to empty)
+    assert main(["fetch", "http://x", "--style", "../evil"]) == 2
+    assert not calls
 
 
 # ---------- selftest never builds the second brain (determinism fix) ----------

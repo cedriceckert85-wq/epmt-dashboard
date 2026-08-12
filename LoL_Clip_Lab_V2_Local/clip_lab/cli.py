@@ -117,12 +117,13 @@ def cmd_learn(args):
         return 2
     if not folder.is_dir():
         folder.mkdir(parents=True, exist_ok=True)
-        for sub in ("insta", "yt", "uncut"):
-            (folder / sub).mkdir(exist_ok=True)
-        print(f"Created {folder} (with insta/ yt/ uncut/ example subfolders).\n"
-              "One SUBFOLDER per style — drop example clips you LIKE into them\n"
-              "(rename/add folders as you wish: the folder name is the style name),\n"
-              "then run `learn` again.")
+        for sub in ("insta/funny", "insta/montage", "yt", "uncut"):
+            (folder / sub).mkdir(parents=True, exist_ok=True)
+        print(f"Created {folder} with the channel/style structure:\n"
+              "  insta/funny/    insta/montage/    yt/    uncut/\n"
+              "Drop finished example clips you LIKE into each (channel folders\n"
+              "can hold several style subfolders -> styles like insta_funny;\n"
+              "rename/add folders as you wish), then run `learn` again.")
         return 2
     llm = LLMClient(cfg.llm_cmd, cfg.llm_timeout_s)
     profiles, fps = learn_styles(folder, cfg, llm, log=print)
@@ -223,13 +224,16 @@ def cmd_fetch(args):
         dest = _anchor_to_root(cfg.references_dir)
         if args.style:
             # exact same slugging as the style learner uses for folder names,
-            # so learn finds the clips later — also blocks "../" path tricks
+            # so learn finds the clips later — also blocks "../" path tricks.
+            # nested channel/style works too: --style insta/funny
             from .style import _style_name
-            style = _style_name(args.style)
-            if not style:
+            parts = [x for x in str(args.style).replace("\\", "/").split("/")
+                     if x.strip()][:2]
+            slugs = [_style_name(x) for x in parts]
+            if not slugs or not all(slugs):
                 print(f"Invalid --style name: {args.style}", file=sys.stderr)
                 return 2
-            dest = dest / style
+            dest = dest.joinpath(*slugs)
     if dest.exists() and not dest.is_dir():
         print(f"{dest} is a file, not a folder.", file=sys.stderr)
         return 2

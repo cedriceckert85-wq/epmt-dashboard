@@ -370,6 +370,13 @@ def _moment_fields(m, style_names=(), channel_names=()):
                 cx = x.strip().lower()[:40]
                 if cx in channel_names and cx not in channels:
                     channels.append(cx)
+    # coherence: a style named '<channel>_<flavor>' (insta_funny) or exactly
+    # like a channel implies that channel — a clip cut in an insta style
+    # obviously serves insta, even if the LLM forgot to tag it
+    if style_target and channel_names:
+        prefix = style_target.split("_", 1)[0]
+        if prefix in channel_names and prefix not in channels:
+            channels.insert(0, prefix)
     # category is free LLM text: sanitize to a safe slug — it ends up in CSV
     # columns and in cut FILENAMES, so no commas, slashes or path tricks
     category = re.sub(r"[^a-z0-9_\-]+", "", str(m.get("category", "moment")).lower())

@@ -39,12 +39,12 @@ aus Stream #2 in Stream #7 wieder auf, erkennt das LLM ihn und markiert den Clip
 im Edit-Sheet mit `🧠 running gag`. `python -m clip_lab memory` zeigt, was das
 Tool über deinen Kanal weiß; `--clear` löscht es.
 
-**Neu — Beispiel-Videos 🎬:** Ein **Unterordner pro Kanal-Stil**
-(`references/insta/`, `references/yt/`, `references/uncut/`) — fertige
-Beispiel-Clips rein, `python -m clip_lab learn` laufen lassen, und das Tool
-lernt **pro Kanal** ein Stil-Profil. Bei der Analyse entscheidet dann der
-Inhalt jedes Moments, in welchem Stil er geschnitten wird
-(`Cut as: insta-style`). Und: einen
+**Neu — Beispiel-Videos 🎬:** Ordner **pro Kanal, darin pro Stil**
+(`references/insta/funny/`, `references/insta/montage/`, `references/yt/`,
+`references/uncut/`) — fertige Beispiel-Clips rein, `python -m clip_lab learn`,
+und das Tool lernt **pro Kanal-Stil** ein Profil (`insta_funny`,
+`insta_montage`, …). Der Inhalt jedes Moments entscheidet, welcher Stil passt
+(`Cut as: insta_funny-style`) — der Kanal ergibt sich automatisch mit. Und: einen
 **ganzen Ordner voller VODs** auf `START.bat` ziehen analysiert alle
 nacheinander (Batch), wobei das Gedächtnis über alle mitwächst.
 
@@ -154,10 +154,16 @@ first (see the 🧠 lines in `selftest_out/edit_sheet.md`).
 
 ```
 references/
-  funny/      example clips for your funny style
-  montage/    example clips for your montage style
-  hype/       any category you invent
+  insta/
+    funny/     finished funny-talk reels    -> style 'insta_funny'
+    montage/   finished montage reels       -> style 'insta_montage'
+  yt/          finished main-channel videos -> style 'yt'
+  uncut/       2-3 structure examples       -> style 'uncut'
 ```
+
+Channel folders can hold SEVERAL style subfolders — the learned style is then
+named `channel_flavor` (`insta_funny`), and a clip tagged with such a style is
+automatically routed to that channel too.
 
 Drop **example clips you like** into each (5–15 per style), then:
 
@@ -358,7 +364,7 @@ pip install pytest        # once (the venv ships without it)
 python -m pytest tests/unit -q
 ```
 
-205 unit + integration tests cover the pure logic (reaction detection, ranking,
+209 unit + integration tests cover the pure logic (reaction detection, ranking,
 punchline-aware cutting, the editorial contract, JSON extraction, event loading,
 config) and an end-to-end run on the bundled fixtures.
 

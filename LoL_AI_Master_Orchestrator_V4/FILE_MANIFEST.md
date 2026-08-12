@@ -19,6 +19,7 @@
 - `docs/SECURITY_THREAT_MODEL.md`
 - `docs/TAILSCALE_NETWORK.md`
 - `docs/TEST_PLAN.md`
+- `docs/V4_CERTIFICATION.md`
 - `docs/V4_CHANGES.md`
 - `docs/V4_SECURITY_REVIEW.md`
 - `docs/archive/RED_TEAM_LOGIC_AUDIT_V2_2.md`
@@ -32,6 +33,7 @@
 - `orchestrator/adapters/claude.py`
 - `orchestrator/adapters/codex.py`
 - `orchestrator/adapters/fake.py`
+- `orchestrator/certification.py`
 - `orchestrator/config.py`
 - `orchestrator/doctor.py`
 - `orchestrator/gates.py`
@@ -42,6 +44,7 @@
 - `orchestrator/models.py`
 - `orchestrator/path_policy.py`
 - `orchestrator/phase_loop.py`
+- `orchestrator/plan_linter.py`
 - `orchestrator/process_runner.py`
 - `orchestrator/prompt_builder.py`
 - `orchestrator/resultio.py`
@@ -127,9 +130,11 @@
 - `tests/faults/test_tailscale_disconnect_resume.md`
 - `tests/soak/run_8h_soak.py`
 - `tests/unit/test_acceptance.py`
+- `tests/unit/test_certification.py`
 - `tests/unit/test_e2e_dry_run.py`
 - `tests/unit/test_gates.py`
 - `tests/unit/test_gitops.py`
+- `tests/unit/test_plan_linter.py`
 - `tests/unit/test_process_runner.py`
 - `tests/unit/test_registry_and_config.py`
 - `tests/unit/test_resultio.py`

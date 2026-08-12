@@ -37,3 +37,5 @@ review_prompts:
 - prompts/build/phase-04.md
 - prompts/review/adversarial-clock-domain.md
 - prompts/review/adversarial-tests-lying.md
+depends_on:
+- '03'

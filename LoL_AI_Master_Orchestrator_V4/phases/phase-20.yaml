@@ -33,3 +33,10 @@ review_prompts:
 - prompts/build/phase-20.md
 - prompts/review/adversarial-tests-lying.md
 - prompts/review/adversarial-gate-bypass.md
+depends_on:
+- '19'
+human_review_required: true
+invalidated_by:
+- '18'
+release_required_tests:
+- e2e_real_stream

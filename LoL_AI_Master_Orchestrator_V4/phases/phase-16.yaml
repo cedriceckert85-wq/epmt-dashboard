@@ -31,3 +31,6 @@ metrics:
 review_prompts:
 - prompts/build/phase-16.md
 - prompts/review/adversarial-upload-idempotency.md
+depends_on:
+- '15'
+human_review_required: true

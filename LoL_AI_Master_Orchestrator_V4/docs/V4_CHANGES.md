@@ -118,3 +118,30 @@ Pointen-Timing. V4 ergänzt eine zweischichtige Architektur:
 - Gate-Disziplin bleibt: alle gated Tests mocken das LLM (Test-Umgebungen sind
   secret-frei); Live-Qualität wird an den Human-Review-Punkten (Dashboard/POC)
   beurteilt. rank_determinism gilt für Layer 1 + Merge mit fixem Mock-Fixture.
+
+## 13. Logik-Audit-Fixes (V4.1) — BUILD_PASS vs. RELEASE_CERTIFIED
+Ein externer Logik-Audit zeigte zu Recht: Ein grüner One-Shot bedeutete „alles
+Prüfbare bestand", nicht „das Produkt ist bewiesen". Behoben:
+- **Zwei getrennte Zustände:** BUILD_PASS (Default) vs. RELEASE_CERTIFIED
+  (`orchestrator/certification.py`). Zertifiziert nur, wenn kein reales Test
+  zurückgestellt wurde UND jedes Qualitäts-Gate von einem echten Menschen
+  freigegeben ist. `--certify` erzwingt beides (reale Tests nicht deferbar,
+  Qualitäts-Gates pausieren). Abschlussbericht weist Stand + offene Punkte aus.
+- **Phase 20 nicht mehr ohne POC bestehbar:** in `--certify` blockt eine fehlende
+  Capability statt still zu passieren; `e2e_real_stream` ist als
+  `release_required_tests` markiert.
+- **Maschinen-erzwungene Abhängigkeiten:** jede Phase hat `depends_on`; eine Phase
+  startet erst, wenn alle Vorgänger PASS sind (`--phases 20` blockt auf frischem Zustand).
+- **Downstream-Invalidierung:** `invalidated_by` (Phase 20 ← 18) entfernt eine
+  zertifizierte Phase aus der History, wenn eine optionale/spätere Phase später merged.
+- **Qualitäts-Gates:** Phasen 12/14/16/20 sind `human_review_required`; im Auto-Modus
+  auto-genehmigt (Build läuft), aber nur eine echte Freigabe zählt für die Zertifizierung.
+- **Ungate-te Metrik gefixt:** `stream_dropped_frames_pct_delta` wird jetzt in Phase 08
+  gegatet (war produziert, aber nirgends geprüft).
+- **Phase-10/11-Zirkel entschärft:** `style_profile.json` ist ein RUNTIME-optionaler
+  Input (wie `humor_profile`), keine Build-Abhängigkeit; Personalisierung greift ab
+  Session 2. Kein Rückwärts-`depends_on` mehr.
+- **Plan-Linter** (`orchestrator/plan_linter.py`, im Phase-00-Selbstcheck): fängt diese
+  Fehlerklasse künftig statisch (ungate-te produzierte Metrik, Dead-End-Metrik, fehlendes/
+  zirkuläres depends_on, deferbarer Release-Test ohne release_required, dangling invalidated_by).
+- **Doku entdriftet:** Runbook/MASTER an das Auto/Certify-Gate-Modell angepasst.

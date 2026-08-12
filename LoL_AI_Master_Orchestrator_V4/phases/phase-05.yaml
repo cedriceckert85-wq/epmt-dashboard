@@ -34,3 +34,5 @@ review_prompts:
 - prompts/build/phase-05.md
 - prompts/review/adversarial-segment-crash.md
 - prompts/review/adversarial-concurrency.md
+depends_on:
+- '04'

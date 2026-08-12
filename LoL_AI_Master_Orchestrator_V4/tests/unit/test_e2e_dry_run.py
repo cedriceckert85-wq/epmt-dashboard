@@ -78,7 +78,7 @@ def make_project(tmp_path, *, gate_mode="auto"):
         allowed_write_paths: [reports/]
         gate: {max_blockers: 0, max_unaccepted_high: 0}
         """), encoding="utf-8")
-    for pid, human in (("01", "true"), ("02", "false")):
+    for pid, human, dep in (("01", "true", "00"), ("02", "false", "01")):
         (root / "phases" / f"phase-{pid}.yaml").write_text(textwrap.dedent(f"""\
             id: '{pid}'
             name: Fixture {pid}
@@ -89,6 +89,7 @@ def make_project(tmp_path, *, gate_mode="auto"):
             required_tests: [p{pid}_t]
             allowed_write_paths: [src/, tests/, docs/, reports/]
             gate: {{max_blockers: 0, max_unaccepted_high: 0}}
+            depends_on: ['{dep}']
             """), encoding="utf-8")
 
     ok_cmd = f'"{PY}" -c "print(1)"'
@@ -382,26 +383,26 @@ def test_resume_when_saved_phase_is_outside_window_does_not_restart(tmp_path):
     assert set(st["phase_history"]) >= {"00", "01"}
 
 
-def test_skipped_earlier_phase_is_built_when_window_reincludes_it(tmp_path):
-    # complete {00,02} (01 excluded), then request {00,01,02}: phase 01 (earlier
-    # than the saved phase 02, not in history) MUST get built, not silently done.
+def test_resume_builds_the_not_yet_done_phase_in_a_wider_window(tmp_path):
+    # complete {00,01}, then request {00,01,02}: phase 02 (the not-yet-done one,
+    # its dep 01 satisfied) MUST get built; 00/01 are not rebuilt.
     cfg, store, repo = make_project(tmp_path)
-    status, st = make_engine(cfg, store, repo).run(phases=["00", "02"], capabilities={})
-    assert status == "done" and set(st["phase_history"]) == {"00", "02"}
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "done" and set(st["phase_history"]) == {"00", "01"}
+    merged01 = st["phase_history"]["01"]["merged_commit"]
     status, st = make_engine(cfg, store, repo).run(phases=["00", "01", "02"], capabilities={})
     assert status == "done"
-    assert "01" in st["phase_history"], "phase 01 must be built, not skipped"
+    assert "02" in st["phase_history"]
+    assert st["phase_history"]["01"]["merged_commit"] == merged01  # 01 not rebuilt
 
 
-def test_already_merged_phase_is_not_rerun_on_a_wider_window(tmp_path):
-    # completing {00,02} then requesting a range that also contains the parked
-    # phase must NOT re-run an already-merged phase (no spurious rebuild/block).
+def test_already_merged_phase_is_not_rerun_on_a_repeated_window(tmp_path):
+    # re-running a fully-completed window must NOT re-run any already-merged phase.
     cfg, store, repo = make_project(tmp_path)
-    status, st = make_engine(cfg, store, repo).run(phases=["00", "02"], capabilities={})
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01", "02"], capabilities={})
     merged02 = st["phase_history"]["02"]["merged_commit"]
     status, st = make_engine(cfg, store, repo).run(phases=["00", "01", "02"], capabilities={})
     assert status == "done"
-    # 02 kept its original merge (not rebuilt)
     assert st["phase_history"]["02"]["merged_commit"] == merged02
 
 
@@ -461,6 +462,95 @@ def test_agentless_selfcheck_failure_blocks_directly_not_via_fix_loop(tmp_path):
     assert "self-check" in st["blocked_reason"].lower()
     assert "max fix cycles" not in st["blocked_reason"]
     assert int(st.get("fix_cycles", 0)) == 0     # never entered the fix loop
+
+
+def test_downstream_invalidation_removes_certified_phase(tmp_path):
+    # phase 02 was certified against a system WITHOUT the optional phase 05;
+    # once 05 merges, 02 (invalidated_by [05]) drops out of history so it must
+    # be re-certified — the "phase 18 after phase 20" hole.
+    import yaml
+    cfg, store, repo = make_project(tmp_path)
+    (cfg.root / "phases" / "phase-05.yaml").write_text(yaml.safe_dump({
+        "id": "05", "name": "opt", "builder": "claude", "reviewer": "codex",
+        "cross_vendor_review": True, "human_gate": False, "required_tests": ["p02_t"],
+        "allowed_write_paths": ["src/"], "depends_on": ["02"]}), encoding="utf-8")
+    ph2 = yaml.safe_load((cfg.root / "phases" / "phase-02.yaml").read_text())
+    ph2["invalidated_by"] = ["05"]
+    (cfg.root / "phases" / "phase-02.yaml").write_text(yaml.safe_dump(ph2), encoding="utf-8")
+    engine = make_engine(cfg, store, repo)
+    history = {"00": {"gate": "PASS"}, "01": {"gate": "PASS"}, "02": {"gate": "PASS"}}
+    new = engine._invalidate_downstream(dict(history), "05")
+    assert "02" not in new and "00" in new and "01" in new
+
+
+def test_dependency_not_met_blocks(tmp_path):
+    # requesting phase 02 without 00/01 done must BLOCK (machine-enforced dep),
+    # not build phase 02 against an unbuilt project.
+    cfg, store, repo = make_project(tmp_path)
+    status, st = make_engine(cfg, store, repo).run(phases=["02"], capabilities={})
+    assert status == "blocked"
+    assert st["phase_id"] == "02"
+    assert "depends on" in st["blocked_reason"]
+
+
+def test_certify_mode_blocks_on_missing_capability(tmp_path):
+    # a deferrable hardware test that would defer in build mode must instead
+    # BLOCK in --certify mode (real evidence required for certification).
+    cfg, store, repo = make_project(tmp_path)
+    import yaml
+    reg = yaml.safe_load((cfg.root / "test_registry.yaml").read_text())
+    reg["tests"]["p02_t"]["requires"] = ["gpu"]
+    (cfg.root / "test_registry.yaml").write_text(yaml.safe_dump(reg), encoding="utf-8")
+    ph = yaml.safe_load((cfg.root / "phases" / "phase-02.yaml").read_text())
+    ph["deferrable_tests"] = ["p02_t"]
+    ph["release_required_tests"] = ["p02_t"]
+    (cfg.root / "phases" / "phase-02.yaml").write_text(yaml.safe_dump(ph), encoding="utf-8")
+    repo.add_all_and_commit("certify tweak")
+    # build mode: defers, completes
+    status, st = make_engine(cfg, store, repo).run(
+        phases=["00", "01", "02"], capabilities={"gpu": False})
+    assert status == "done" and st["deferred_tests"].get("02") == ["p02_t"]
+    # certify mode on a fresh project: same missing gpu now BLOCKS at phase 02
+    (tmp_path / "proj2").mkdir(); cfg2, store2, repo2 = make_project(tmp_path / "proj2")
+    reg2 = yaml.safe_load((cfg2.root / "test_registry.yaml").read_text())
+    reg2["tests"]["p02_t"]["requires"] = ["gpu"]
+    (cfg2.root / "test_registry.yaml").write_text(yaml.safe_dump(reg2), encoding="utf-8")
+    ph2 = yaml.safe_load((cfg2.root / "phases" / "phase-02.yaml").read_text())
+    ph2["deferrable_tests"] = ["p02_t"]; ph2["release_required_tests"] = ["p02_t"]
+    (cfg2.root / "phases" / "phase-02.yaml").write_text(yaml.safe_dump(ph2), encoding="utf-8")
+    repo2.add_all_and_commit("certify tweak")
+    status2, st2 = make_engine(cfg2, store2, repo2, certify=True).run(
+        phases=["00", "01", "02"], capabilities={"gpu": False})
+    assert status2 == "blocked" and st2["phase_id"] == "02"
+    assert "certification requires" in st2["blocked_reason"].lower()
+
+
+def test_quality_gate_auto_in_build_but_pauses_in_certify(tmp_path):
+    # mark fixture phase 01 as a quality gate; build auto-approves, certify pauses
+    import yaml
+    cfg, store, repo = make_project(tmp_path)
+    ph = yaml.safe_load((cfg.root / "phases" / "phase-01.yaml").read_text())
+    ph["human_review_required"] = True
+    (cfg.root / "phases" / "phase-01.yaml").write_text(yaml.safe_dump(ph), encoding="utf-8")
+    repo.add_all_and_commit("quality gate tweak")
+    # build (auto): completes, but phase 01 human_review == auto
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "done"
+    assert st["phase_history"]["01"]["human_review"] == "auto"
+    from orchestrator.certification import certification_status
+    cert = certification_status(st, all_phases=[
+        yaml.safe_load((cfg.root / "phases" / f"phase-{p}.yaml").read_text())
+        for p in ("00", "01")])
+    assert not cert["certified"] and "01" in cert["human_review_gaps"]
+    # certify on fresh project: phase 01 quality gate must PAUSE for a human
+    (tmp_path / "proj2").mkdir(); cfg2, store2, repo2 = make_project(tmp_path / "proj2")
+    ph2 = yaml.safe_load((cfg2.root / "phases" / "phase-01.yaml").read_text())
+    ph2["human_review_required"] = True
+    (cfg2.root / "phases" / "phase-01.yaml").write_text(yaml.safe_dump(ph2), encoding="utf-8")
+    repo2.add_all_and_commit("quality gate tweak")
+    status2, st2 = make_engine(cfg2, store2, repo2, certify=True).run(
+        phases=["00", "01"], capabilities={})
+    assert status2 == "waiting_human" and st2["lifecycle"] == "HUMAN_GATE"
 
 
 def test_deferred_hardware_test_recorded_not_faked(tmp_path):

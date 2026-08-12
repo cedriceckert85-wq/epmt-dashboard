@@ -182,11 +182,16 @@ def run_registry_test(name, spec, *, root, run_id, capabilities, deferrable,
                        reason=f"unknown parser {parser}")
 
 
-def run_phase_tests(phase, registry, *, root, run_id, capabilities, strip_env_extra=()):
+def run_phase_tests(phase, registry, *, root, run_id, capabilities,
+                    strip_env_extra=(), deferrable_override=None):
     """Run all required tests of a phase. Returns (outcomes, exit_codes, metrics,
     deferred_names). exit_codes contains 0 only for real passes; deferred
-    tests are excluded from exit_codes (gate handles them explicitly)."""
-    deferrable = set(phase.get("deferrable_tests", []))
+    tests are excluded from exit_codes (gate handles them explicitly).
+
+    deferrable_override lets certify mode pass an empty set so real-world tests
+    can no longer defer (missing capability => UNVERIFIED, phase blocks)."""
+    deferrable = (set(deferrable_override) if deferrable_override is not None
+                  else set(phase.get("deferrable_tests", [])))
     outcomes = []
     exit_codes = {}
     metrics = {}

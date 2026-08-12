@@ -33,3 +33,7 @@ review_prompts:
 - prompts/build/phase-18.md
 - prompts/review/adversarial-tenant-escape.md
 - prompts/review/adversarial-concurrency.md
+depends_on:
+- '17'
+release_required_tests:
+- cross_tenant_tailscale_device_denied

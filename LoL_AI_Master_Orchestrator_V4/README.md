@@ -78,6 +78,17 @@ BUILDING → TESTING → CHECKPOINTED → REVIEWING → GATE → MERGED
   deterministischen Kriterien erfüllt sind, und als SHA-gebundene
   AUTO_GATE-Records dokumentiert. Wer die V3-Disziplin will:
   `START.bat --strict-gates` — dann pausiert der Lauf an jedem Human Gate.
+- **BUILD_PASS vs. RELEASE_CERTIFIED (wichtig!):** Ein grüner Standardlauf heißt
+  **gebaut**, nicht **bewiesen**. Reale Tests (GPU, OBS, echtes Spiel, Tailscale,
+  8h-Soak) werden ohne die Hardware als UNVERIFIED zurückgestellt, Qualitäts-Gates
+  auto-genehmigt. Für das echte Go/No-Go auf dem Ziel-PC:
+  `START.bat --certify` — dann dürfen reale Tests **nicht** zurückgestellt werden
+  und die Qualitäts-Gates (Phasen 12/14/16/20) verlangen eine **echte menschliche**
+  Freigabe. Der Abschlussbericht sagt immer, welchen Stand du erreicht hast und was
+  für die Zertifizierung noch offen ist. Details: `docs/V4_CERTIFICATION.md`.
+- **Phasen-Abhängigkeiten sind maschinell erzwungen:** `--phases 20` auf einem
+  frischen Projekt blockiert („phase 20 depends on 19"), statt Phase 20 gegen ein
+  ungebautes System zu bauen.
 
 ## Humor & Kreativität: die LLM-Editorial-Schicht (Phase 10/12/13)
 

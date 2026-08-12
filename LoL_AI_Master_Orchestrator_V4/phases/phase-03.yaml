@@ -32,3 +32,5 @@ review_prompts:
 - prompts/build/phase-03.md
 - prompts/review/adversarial-riot-duplicates.md
 - prompts/review/adversarial-clock-domain.md
+depends_on:
+- '02'

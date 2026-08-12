@@ -42,3 +42,8 @@ review_prompts:
 - prompts/build/phase-12.md
 - prompts/review/adversarial-concurrency.md
 - prompts/review/adversarial-tests-lying.md
+depends_on:
+- '11'
+human_review_required: true
+release_required_tests:
+- render_fixture_suite

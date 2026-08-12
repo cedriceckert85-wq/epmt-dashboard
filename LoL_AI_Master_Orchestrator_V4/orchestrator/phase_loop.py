@@ -33,12 +33,17 @@ class WaitingForHuman(Exception):
 
 
 class PhaseEngine:
-    def __init__(self, cfg, store, repo, *, dry_run=False, gate_mode=None, log=print):
+    def __init__(self, cfg, store, repo, *, dry_run=False, gate_mode=None,
+                 certify=False, log=print):
         self.cfg = cfg
         self.store = store
         self.repo = repo
         self.dry_run = dry_run
         self.gate_mode = gate_mode or cfg.gate_mode
+        # certify mode: real-world (deferrable) tests may NOT defer and
+        # human-review gates may NOT auto-approve — the bar for a genuine
+        # RELEASE_CERTIFIED run on the target hardware.
+        self.certify = certify
         self.log = log
         self.registry = load_registry(cfg.root / cfg.data["test_registry"])
         self.capabilities = {}
@@ -261,9 +266,24 @@ class PhaseEngine:
             self.repo.restore_paths(set(moved))
 
     # ------------------------------------------------------------------ steps
+    def _check_dependencies(self, st, phase):
+        """Machine-enforced phase dependencies: every phase in depends_on must
+        already be MERGED with gate PASS in phase_history. This is what makes
+        `--phases 20` on a fresh state fail closed instead of building phase 20
+        against a project whose prerequisites were never built."""
+        history = st.get("phase_history", {})
+        missing = [d for d in phase.get("depends_on", [])
+                   if history.get(d, {}).get("gate") != "PASS"]
+        if missing:
+            raise PhaseRunError(
+                f"phase {phase['id']} depends on {', '.join(missing)}, which "
+                f"{'is' if len(missing) == 1 else 'are'} not PASSED yet. Run the "
+                f"prerequisite phases first (a default run does this in order).")
+
     def _step_ready(self, st, phase):
         if not self.repo.is_clean():
             raise PhaseRunError("working tree not clean at phase start — inspect and rerun")
+        self._check_dependencies(st, phase)
         main = self.cfg.project["main_branch"]
         self.repo.checkout(main)
         base_sha = self.repo.head_sha()
@@ -321,10 +341,13 @@ class PhaseEngine:
         artifact_exclude = [str(self.cfg.artifact_root.relative_to(self.cfg.root)).replace("\\", "/")]
         refs_before = self.repo.all_refs()
         pre_snap = integrity.snapshot(self.cfg.root, exclude=artifact_exclude)
+        # certify mode: nothing defers — a genuine release must actually run
+        # every real-world test on the target hardware.
         outcomes, exit_codes, metrics, deferred = run_phase_tests(
             phase, self.registry, root=self.cfg.root, run_id=st["run_id"],
             capabilities=self.capabilities,
-            strip_env_extra=self.cfg.secret_env_vars)
+            strip_env_extra=self.cfg.secret_env_vars,
+            deferrable_override=set() if self.certify else None)
         tamper = integrity.diff_snapshots(pre_snap, integrity.snapshot(self.cfg.root, exclude=artifact_exclude))
         if tamper:
             self.repo.hard_reset_clean()
@@ -364,6 +387,19 @@ class PhaseEngine:
         non_deferrable_unverified = [
             o.name for o in outcomes
             if o.status == "unverified" and not o.deferred]
+        # In certify mode a real-world test that can't run (missing hardware/
+        # network) is a hard stop, NOT a fixable failure — no agent can add a
+        # GPU or a live game. Block with the real cause.
+        if self.certify:
+            cap_unverified = [o for o in outcomes
+                              if o.status == "unverified" and "requirements" in o.reason]
+            if cap_unverified:
+                raise PhaseRunError(
+                    "RELEASE certification requires every real-world test to run on this "
+                    "host, but these could not (missing capability):\n"
+                    + "\n".join(f"  {o.name}: {o.reason}" for o in cap_unverified)
+                    + "\nRun --certify on the target hardware (RTX 2080 + Tailscale + OBS "
+                      "+ a live game), or use a normal build run for BUILD_PASS.")
         if secrets:
             raise PhaseRunError(
                 "secret scan findings in candidate: "
@@ -486,9 +522,15 @@ class PhaseEngine:
     def _step_human_gate(self, st, phase):
         gate_dir = self.cfg.root / self.cfg.data["human_gates"]["record_dir"]
         candidate = st["candidate_commit"]
+        review_required = bool(phase.get("human_review_required"))
         approval = human_gate.load_approval(gate_dir, st["phase_id"], candidate)
         if approval is None:
-            if self.gate_mode == "auto":
+            # Subjective/quality gates (human_review_required) must be approved
+            # by a REAL human for a certified run; auto-approval is only for a
+            # BUILD_PASS one-shot. Everything else keeps the one-shot flowing.
+            can_auto = (self.gate_mode == "auto"
+                        and not (self.certify and review_required))
+            if can_auto:
                 ev = st.get("evidence", {})
                 approval = human_gate.write_approval(
                     gate_dir, phase_id=st["phase_id"], commit_sha=candidate,
@@ -498,16 +540,22 @@ class PhaseEngine:
                         "tests": ev.get("test_exit_codes", {}),
                         "deferred_tests": ev.get("deferred_tests", []),
                         "review_findings": len(st.get("review_findings", [])),
+                        "human_review_required": review_required,
                     })
                 self.store.journal("auto_gate_approved", {
                     "phase_id": st["phase_id"], "commit": candidate,
-                    "approval_id": approval["approval_id"]})
+                    "approval_id": approval["approval_id"],
+                    "human_review_required": review_required})
             else:
                 import os as _os
                 launcher = "START.bat" if _os.name == "nt" else "./start.sh"
+                what = ("QUALITY REVIEW — a human must actually watch the output and "
+                        "confirm it is publishable" if review_required
+                        else "human approval")
                 raise WaitingForHuman(
-                    f"Phase {st['phase_id']} waits for human approval of commit {candidate}.\n"
-                    f"Approve by running (from this folder):\n"
+                    f"Phase {st['phase_id']} waits for {what} of commit {candidate}.\n"
+                    + (f"Review the rendered clips / dashboard, then " if review_required else "")
+                    + f"approve by running (from this folder):\n"
                     f"  {launcher} approve --phase {st['phase_id']} "
                     f"--commit {candidate} --approver YOUR_NAME --decision APPROVE\n"
                     f"then run {launcher} again to resume.\n"
@@ -515,8 +563,11 @@ class PhaseEngine:
                     f"'python -m orchestrator' on your system Python may lack dependencies.)")
         if approval.get("decision") != "APPROVE":
             raise PhaseRunError(f"human gate rejected for commit {candidate}")
+        human_review = ("human" if approval.get("mode") != "auto"
+                        else ("auto" if review_required else "n/a"))
         st = self.store.save({**st, "approved_commit": candidate,
-                              "human_approval_id": approval.get("approval_id")})
+                              "human_approval_id": approval.get("approval_id"),
+                              "last_human_review": human_review})
         dec = self._evaluate_gate(st, phase, approval=approval)
         if not dec.passed:
             return self._gate_failure(st, phase, dec)
@@ -579,18 +630,61 @@ class PhaseEngine:
                 raise PhaseRunError("merge validation failed: " + "; ".join(dec.reasons))
         if st.get("candidate_branch"):
             self.repo.delete_branch(st["candidate_branch"])
+        pid = st["phase_id"]
+        review_required = bool(phase.get("human_review_required"))
         history = dict(st.get("phase_history", {}))
-        history[st["phase_id"]] = {
+        history[pid] = {
             "gate": "PASS",
             "merged_commit": merged,
             "deferred": st.get("evidence", {}).get("deferred_tests", []),
+            "human_review_required": review_required,
+            "human_review": st.get("last_human_review", "n/a") if phase.get("human_gate") else "n/a",
+            "certify_run": self.certify,
         }
+        # Downstream invalidation: merging a phase that a certified phase was
+        # validated against (invalidated_by) drops that phase — and everything
+        # depending on it — back out of history, so certification must be redone.
+        history = self._invalidate_downstream(history, pid)
         deferred_all = dict(st.get("deferred_tests", {}))
+        # a certify re-run of a phase clears its prior deferred record
+        if self.certify:
+            deferred_all.pop(pid, None)
         if st.get("evidence", {}).get("deferred_tests"):
-            deferred_all[st["phase_id"]] = st["evidence"]["deferred_tests"]
+            deferred_all[pid] = st["evidence"]["deferred_tests"]
+        else:
+            deferred_all.pop(pid, None)
         return self._transition(st, phase, Lifecycle.MERGED,
                                 merged_commit=merged, phase_history=history,
-                                deferred_tests=deferred_all, main_baseline=merged)
+                                deferred_tests=deferred_all, main_baseline=merged,
+                                last_human_review="n/a")
+
+    def _invalidate_downstream(self, history, merged_pid):
+        """Remove from history every phase that declares merged_pid in its
+        invalidated_by, then transitively any phase depending on a removed one.
+        Those phases (and their certification) must be redone."""
+        removed = set()
+        changed = True
+        while changed:
+            changed = False
+            for pid in list(history):
+                if pid == merged_pid:
+                    continue
+                try:
+                    ph = load_phase(self.cfg.root, pid)
+                except Exception:
+                    continue
+                inval = set(ph.get("invalidated_by", []))
+                deps = set(ph.get("depends_on", []))
+                if (merged_pid in inval) or (deps & removed):
+                    history.pop(pid, None)
+                    removed.add(pid)
+                    changed = True
+        if removed:
+            self.store.journal("downstream_invalidated", {
+                "trigger": merged_pid, "invalidated": sorted(removed)})
+            self.log(f"[phase {merged_pid}] invalidated downstream phases: "
+                     f"{', '.join(sorted(removed))} (must be re-run/re-certified)")
+        return history
 
     def _enter_phase(self, st, pid):
         """Reset run-scoped fields and move to phase `pid` in READY."""

@@ -36,9 +36,16 @@ metrics:
 - name: sync_error_p95_ms_at_8h
   op: <=
   value: 100
+- name: stream_dropped_frames_pct_delta
+  op: <=
+  value: 0.5
 deferrable_tests:
 - soak_8h_pipeline
 review_prompts:
 - prompts/build/phase-08.md
 - prompts/review/adversarial-8h-leak.md
 - prompts/review/adversarial-orchestrator-crash.md
+depends_on:
+- '07'
+release_required_tests:
+- soak_8h_pipeline

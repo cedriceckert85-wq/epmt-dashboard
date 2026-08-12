@@ -41,3 +41,9 @@ review_prompts:
 - prompts/review/adversarial-tenant-escape.md
 - prompts/review/adversarial-auth-replay-secrets.md
 - prompts/review/adversarial-tailscale-network.md
+depends_on:
+- '05'
+release_required_tests:
+- app_auth_over_tailscale
+- cross_tenant_tailscale_device_denied
+- receiver_tailscale_binding

@@ -31,3 +31,5 @@ review_prompts:
 - prompts/build/phase-19.md
 - prompts/review/adversarial-concurrency.md
 - prompts/review/adversarial-8h-leak.md
+depends_on:
+- '17'

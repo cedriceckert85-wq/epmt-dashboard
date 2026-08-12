@@ -11,14 +11,22 @@ Do NOT start Phase 01 unless:
 - timeout kills process tree
 - crash recovery never skips gate
 - invalid JSON never passes
-- human gate never auto-approved
+- human gate approval is SHA-bound (auto OR real human, per gate_mode — see note)
 - immutable path edits blocked
 - secret findings block
 - dirty main blocks
 - fix-loop escalation works
 - 8h fake orchestrator soak PASS
 - cross-vendor review PASS
-- human Phase-00 approval for exact commit
+- Phase-00 approval bound to the exact commit (AUTO_GATE in build mode, or a
+  real human via `orchestrator approve` in --strict-gates / --certify)
+
+NOTE (V4 gate model): with the default `gate_mode: auto` (one-shot), human
+gates are AUTO-approved AFTER all deterministic criteria hold, and the run
+reaches BUILD_PASS. A genuine Go/No-Go — RELEASE_CERTIFIED — additionally
+requires every real-world (deferrable) test to actually run (`--certify` on the
+target hardware) and every quality gate (`human_review_required`: phases 12,
+14, 16, 20) to be approved by a real human. See docs/V4_CERTIFICATION.md.
 
 Additional V2.2 blockers:
 - reviewer findings cannot self-accept

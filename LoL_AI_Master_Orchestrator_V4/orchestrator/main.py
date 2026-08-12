@@ -16,6 +16,7 @@ from pathlib import Path
 
 from . import doctor as doctor_mod
 from . import human_gate
+from .certification import certification_status, format_status
 from .config import ConfigError, load_config, load_phase, list_phase_ids
 from .gitops import GitError, GitRepo
 from .phase_loop import PhaseEngine
@@ -60,6 +61,13 @@ def _write_final_report(cfg, st, status):
         f"- Overall status: **{status.upper()}**",
         f"- Current phase: {st['phase_id']} ({st['lifecycle']})",
     ]
+    try:
+        cert = certification_status(
+            st, all_phases=[load_phase(cfg.root, p) for p in list_phase_ids(cfg.root)])
+        lines += ["", "## Build vs release certification", "",
+                  format_status(cert, overall=status)]
+    except (ConfigError, OSError):
+        pass
     if st.get("blocked_reason"):
         launcher = "START.bat" if os.name == "nt" else "./start.sh"
         lines += ["", "## Blocked reason", "", "```", str(st["blocked_reason"]), "```",
@@ -127,15 +135,23 @@ def cmd_run(cfg, args):
               "See ONE_SHOT_REPORT.md.", file=sys.stderr)
         return 3
 
+    certify = getattr(args, "certify", False)
     with SingleWriterLock(cfg.lock_file):
         engine = PhaseEngine(cfg, store, repo, dry_run=args.dry_run,
-                             gate_mode=("strict" if args.strict_gates else None))
+                             gate_mode=("strict" if args.strict_gates else None),
+                             certify=certify)
         status, st = engine.run(phases=phase_ids, capabilities=rep.capabilities)
 
     report = _write_final_report(cfg, st, status)
     print("\n" + report)
     if status == "done":
-        print("ALL REQUESTED PHASES MERGED.")
+        cert = certification_status(
+            st, all_phases=[load_phase(cfg.root, p) for p in list_phase_ids(cfg.root)])
+        if cert["certified"]:
+            print("ALL REQUESTED PHASES MERGED — RELEASE_CERTIFIED.")
+        else:
+            print("ALL REQUESTED PHASES BUILT (BUILD_PASS). NOT yet RELEASE_CERTIFIED — "
+                  "see ONE_SHOT_REPORT.md for the open real-world tests / quality reviews.")
         return 0
     if status == "waiting_human":
         return 0
@@ -267,6 +283,10 @@ def main(argv=None):
     sp_run.add_argument("--smoke", action="store_true",
                         help="also run live CLI smoke prompts in doctor "
                              "(off by default — --version + first real agent run verify login)")
+    sp_run.add_argument("--certify", action="store_true",
+                        help="RELEASE certification run: real-world (deferrable) tests may NOT "
+                             "defer and quality gates need a real human approval. Run this on "
+                             "the target hardware for a genuine Go/No-Go.")
     sub.add_parser("status", help="print canonical state")
     sp_doc = sub.add_parser("doctor", help="preflight checks")
     sp_doc.add_argument("--dry-run", action="store_true")

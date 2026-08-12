@@ -39,11 +39,18 @@ This layer is what turns "event compilation" into "entertaining video".
 - Final score = w_signal·signal + w_semantic·semantic (config, default 0.4/0.6);
   LLM-discovered windows enter ranking with signal=0. Top-N per hour + global
   top-K as before; reason_json now carries both layers' reasons.
-- **Personalization inputs (loaded into the editorial prompts when present,
-  both schema-validated, both optional):** humor_profile.json (few-shot
-  examples from the phase-14 dashboard ratings — the user's own humor) and
-  style_profile.json edit conventions (phase 11 — caption/zoom/SFX density
-  of the reference channels). Absence ⇒ neutral defaults, flagged in report.
+- **Personalization inputs are RUNTIME-optional, load-if-present — NOT build
+  dependencies.** Two files, both produced by LATER phases, both consumed at
+  RUN TIME only if they already exist on disk, else neutral defaults:
+  humor_profile.json (phase-14 dashboard ratings — the user's own humor) and
+  style_profile.json edit conventions (phase 11 — caption/zoom/SFX density).
+  IMPORTANT: phase 10 does NOT depend on phase 11/14 at build time (that would
+  be circular — depends_on in phase-10.yaml is [09]). On the very first
+  streaming session both files are absent and phase 10 uses neutral defaults;
+  from the next session onward (after phase 11 built style_profile and the
+  dashboard collected ratings) the editorial layer picks them up automatically.
+  Personalization therefore becomes effective from session 2, by design — do
+  NOT try to consume a phase-11 artifact during the phase-10 BUILD.
 - Also build tests/harness/editorial_eval.py: offline eval tool comparing
   editorial output against hand-labeled funny moments of a session
   (found-rate, median |punchline_ts − label|). Not part of gated tests

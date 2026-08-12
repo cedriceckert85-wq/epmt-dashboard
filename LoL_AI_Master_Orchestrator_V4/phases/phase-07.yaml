@@ -25,8 +25,6 @@ gate:
   max_unaccepted_high: 0
 network_transport: tailscale_mvp
 metrics:
-# every gate metric MUST be produced by one of this phase's required_tests
-# (stream_dropped_frames_pct_delta is a soak metric and belongs to phase 08)
 - name: resume_duplicate_objects
   op: ==
   value: 0
@@ -46,3 +44,10 @@ review_prompts:
 - prompts/review/adversarial-upload-idempotency.md
 - prompts/review/adversarial-stream-starvation.md
 - prompts/review/adversarial-tailscale-network.md
+depends_on:
+- '06'
+release_required_tests:
+- tailscale_disconnect_resume
+- tailscale_no_public_fallback
+- tailscale_preflight
+- tailscale_tenant_isolation

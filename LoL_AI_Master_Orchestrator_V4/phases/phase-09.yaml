@@ -37,3 +37,8 @@ deferrable_tests:
 review_prompts:
 - prompts/build/phase-09.md
 - prompts/review/adversarial-tests-lying.md
+depends_on:
+- 08
+release_required_tests:
+- asr_fixture_suite
+- reaction_precision_fixture

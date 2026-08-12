@@ -1,7 +1,3 @@
-# V4 adaptation: the orchestrator ships fully implemented, so Phase 00 is
-# no longer "build the orchestrator" — it is the fail-closed SELF-CHECK:
-# doctor + full orchestrator unit test suite must pass before any live
-# agent phase starts. No agents run in this phase (agentless).
 id: '00'
 name: Orchestrator Self-Check
 builder: claude
@@ -18,3 +14,4 @@ gate:
   max_unaccepted_high: 0
 preconditions:
 - no prior phase gate required
+depends_on: []

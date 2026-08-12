@@ -27,3 +27,5 @@ metrics:
 review_prompts:
 - prompts/build/phase-11.md
 - prompts/review/adversarial-tests-lying.md
+depends_on:
+- '10'

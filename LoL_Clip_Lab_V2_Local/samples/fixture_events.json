@@ -1,0 +1,11 @@
+{
+  "_comment": "Optional game events for `clip_lab selftest`. A downloaded VOD has no live Riot API, so you supply events like this (or leave it out entirely and rely on audio reactions + the editorial brain). Times are seconds from the start of the VOD. weight overrides the built-in default for that kind.",
+  "events": [
+    {"t": 150.0, "kind": "first_blood", "weight": 3, "detail": {"champion": "Yasuo"}},
+    {"t": 342.0, "kind": "double", "weight": 2},
+    {"t": 498.0, "kind": "triple", "weight": 4, "detail": {"note": "1v3 outplay"}},
+    {"t": 930.0, "kind": "dragon", "weight": 3},
+    {"t": 1002.0, "kind": "baron", "weight": 4},
+    {"t": 1332.0, "kind": "penta", "weight": 10, "detail": {"note": "pentakill closes the game"}}
+  ]
+}

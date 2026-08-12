@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+selftest_out/
+*_clips/
+work/

@@ -1,0 +1,69 @@
+{
+  "_comment": "Sample transcript for `clip_lab selftest`. A ~23 min Yasuo game with a running gag ('I'll hit a Q eventually') that pays off on a pentakill. Times are seconds. Word timestamps are included on a few segments to show the real shape; whisper produces this automatically.",
+  "segments": [
+    {"t0": 12.0, "t1": 18.5, "text": "Yo yo yo what's up chat, we are locking in Yasuo again, I know, I know."},
+    {"t0": 19.0, "t1": 26.0, "text": "Listen, today is the day the mechanics finally show up. I can feel it."},
+    {"t0": 74.0, "t1": 83.0, "text": "Okay watch this, I swear I'm gonna hit a Q eventually, just watch, it's coming.",
+      "words": [
+        {"t0": 74.0, "t1": 74.4, "text": "Okay"},
+        {"t0": 74.5, "t1": 74.9, "text": "watch"},
+        {"t0": 75.0, "t1": 75.3, "text": "this,"},
+        {"t0": 76.0, "t1": 76.3, "text": "I"},
+        {"t0": 76.3, "t1": 76.7, "text": "swear"},
+        {"t0": 76.7, "t1": 77.0, "text": "I'm"},
+        {"t0": 77.0, "t1": 77.3, "text": "gonna"},
+        {"t0": 77.3, "t1": 77.6, "text": "hit"},
+        {"t0": 77.6, "t1": 77.8, "text": "a"},
+        {"t0": 77.8, "t1": 78.1, "text": "Q"},
+        {"t0": 80.0, "t1": 80.6, "text": "eventually"}
+      ]},
+    {"t0": 84.0, "t1": 88.0, "text": "Missed. Okay that one doesn't count, the minion moved."},
+    {"t0": 120.0, "t1": 127.0, "text": "They're diving me, they're diving me — okay okay stay calm, wait for it."},
+    {"t0": 146.0, "t1": 154.0, "text": "There it is! First blood! I actually hit the Q, did you see that, chat?!",
+      "words": [
+        {"t0": 146.0, "t1": 146.4, "text": "There"},
+        {"t0": 146.4, "t1": 146.7, "text": "it"},
+        {"t0": 146.7, "t1": 147.0, "text": "is!"},
+        {"t0": 148.0, "t1": 148.5, "text": "First"},
+        {"t0": 148.5, "t1": 149.0, "text": "blood!"},
+        {"t0": 151.0, "t1": 151.3, "text": "I"},
+        {"t0": 151.3, "t1": 151.9, "text": "actually"},
+        {"t0": 151.9, "t1": 152.2, "text": "hit"},
+        {"t0": 152.2, "t1": 152.4, "text": "the"},
+        {"t0": 152.4, "t1": 152.7, "text": "Q"}
+      ]},
+    {"t0": 186.0, "t1": 197.0, "text": "Okay I'm gonna flash over the wall and — no. NO. Why is there a wall there?! Who put that there?!"},
+    {"t0": 198.0, "t1": 204.0, "text": "I flashed directly into the wall. Straight into it. That's a me problem, that's on me."},
+    {"t0": 300.0, "t1": 307.0, "text": "Alright we're scaling, we're scaling, just farm it up, don't int, do not int."},
+    {"t0": 338.0, "t1": 346.0, "text": "Double kill! Okay okay the wind wall carried, the wind wall is so good."},
+    {"t0": 486.0, "t1": 494.0, "text": "They're all on me, I'm dead, I'm dead, I'm so dead, there's three of them."},
+    {"t0": 498.0, "t1": 508.0, "text": "Wait. WAIT. What?! Triple kill! How did I live that, how am I alive right now?!",
+      "words": [
+        {"t0": 498.0, "t1": 498.4, "text": "Wait."},
+        {"t0": 499.0, "t1": 499.5, "text": "WAIT."},
+        {"t0": 500.5, "t1": 501.0, "text": "What?!"},
+        {"t0": 503.0, "t1": 503.5, "text": "Triple"},
+        {"t0": 503.5, "t1": 504.0, "text": "kill!"}
+      ]},
+    {"t0": 509.0, "t1": 515.0, "text": "That's the outplay of the year, clip that, somebody clip that right now."},
+    {"t0": 712.0, "t1": 721.0, "text": "And THAT is a clean Q. See? See, I told you. I told you I'd hit the Q eventually."},
+    {"t0": 722.0, "t1": 727.0, "text": "Two hours in but we got there. Growth. That's called growth, chat."},
+    {"t0": 924.0, "t1": 932.0, "text": "Dragon's up, everybody group, we take this and we're basically winning."},
+    {"t0": 996.0, "t1": 1005.0, "text": "Baron! We got Baron, nobody's contesting, this game is ours, end it, end it."},
+    {"t0": 1120.0, "t1": 1128.0, "text": "Okay they're grouping mid for the last fight, this is it, this is for the game."},
+    {"t0": 1316.0, "t1": 1325.0, "text": "I'm going in. I don't care. Windwall's up, ult's up, let's go, all of them."},
+    {"t0": 1330.0, "t1": 1342.0, "text": "Double — triple — QUADRA — PENTAKILL! PENTAKILL! I hit all of them! I HIT ALL OF THEM!",
+      "words": [
+        {"t0": 1330.0, "t1": 1330.6, "text": "Double"},
+        {"t0": 1332.0, "t1": 1332.6, "text": "triple"},
+        {"t0": 1334.0, "t1": 1334.8, "text": "QUADRA"},
+        {"t0": 1336.0, "t1": 1337.0, "text": "PENTAKILL!"},
+        {"t0": 1338.0, "t1": 1338.5, "text": "I"},
+        {"t0": 1338.5, "t1": 1338.8, "text": "hit"},
+        {"t0": 1338.8, "t1": 1339.1, "text": "all"},
+        {"t0": 1339.1, "t1": 1339.4, "text": "of"},
+        {"t0": 1339.4, "t1": 1339.9, "text": "them!"}
+      ]},
+    {"t0": 1343.0, "t1": 1352.0, "text": "From the guy who couldn't hit a single Q at minute one. We did it. GG. GG chat."}
+  ]
+}

@@ -1,0 +1,44 @@
+# LoL Clip Lab — local config. Every value here has a sane default in code;
+# this file just makes them easy to tweak. Tuned for a Ryzen 7 5800X3D +
+# Radeon RX 9070 XT (AMD): CPU whisper, AMF/x264 encoding, no CUDA/NVENC.
+# Requires Python 3.11+ to be read (older Python ignores this file and uses the
+# built-in defaults, which are identical to what is written here).
+
+[whisper]
+whisper_model = "small"       # tiny | base | small | medium  (small = good speed/quality on 5800X3D)
+whisper_device = "cpu"        # cpu is correct for AMD; "cuda" is NVIDIA-only
+whisper_compute_type = "int8" # int8 = fast on CPU
+whisper_language = "auto"     # auto | de | en
+whisper_vad = true            # skip silence -> much faster on long VODs
+
+[reactions]
+reaction_frame_ms = 50
+reaction_min_gap_s = 2.0
+reaction_prominence = 0.55    # 0..1 — higher = only the biggest reactions
+reaction_baseline_window_s = 20.0
+
+[ranking]
+w_signal = 0.45               # how much the raw audio/event signal counts
+w_semantic = 0.55             # how much the editorial brain's judgement counts
+cluster_merge_gap_s = 10.0
+top_k = 12
+top_per_10min = 4             # per-10-min cap so one busy stretch can't crowd out the rest
+
+[cuts]
+clip_min_s = 8.0
+clip_max_s = 45.0
+funny_setup_preroll_s = 6.0   # comedy needs its setup
+punchline_decay_s = 2.5       # end a beat shortly after its punchline
+default_preroll_s = 4.0
+default_postroll_s = 3.0
+
+[editorial]
+use_llm = true                # the creative core: humor / callbacks / punchlines
+llm_cmd = ["claude", "-p"]    # any CLI that reads a prompt on stdin and prints JSON
+llm_timeout_s = 240
+discover_no_event_windows = 8 # let the LLM surface funny talk moments with no game event
+
+[render]
+encoder = "auto"              # auto | amf | x264 ; auto = AMF on the 9070 XT, else CPU x264
+render_crf = 20               # x264 quality (lower = better/bigger)
+render_vertical = false       # also emit a 9:16 crop for shorts/TikTok

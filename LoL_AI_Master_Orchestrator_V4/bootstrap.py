@@ -112,6 +112,9 @@ def ensure_git_repo():
                      ("user.email", "orchestrator@localhost")):
         if git("config", "--get", key, check=False).returncode != 0:
             git("config", key, val)
+    # repo-local signing OFF so no commit in this repo ever invokes a signer
+    git("config", "commit.gpgsign", "false", check=False)
+    git("config", "tag.gpgsign", "false", check=False)
     if git("rev-parse", "HEAD", check=False).returncode != 0:
         info("Erzeuge Baseline-Commit …")
         git("add", "-A")

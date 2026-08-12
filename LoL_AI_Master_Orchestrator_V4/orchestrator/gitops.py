@@ -58,6 +58,12 @@ class GitRepo:
                          ("user.email", "orchestrator@localhost")):
             if self._run("config", "--get", key, check=False).returncode != 0:
                 self._run("config", key, val)
+        # repo-local signing OFF, unconditionally: makes EVERY commit in this
+        # repo unsigned regardless of the user's global commit.gpgsign, so a
+        # headless-failing signer can never abort a commit (belt-and-suspenders
+        # beyond the per-invocation -c flags).
+        self._run("config", "commit.gpgsign", "false", check=False)
+        self._run("config", "tag.gpgsign", "false", check=False)
 
     def has_commits(self):
         return self._run("rev-parse", "HEAD", check=False).returncode == 0

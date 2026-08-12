@@ -51,29 +51,34 @@ class FakeAdapter(AgentAdapter):
                 (ws / "state" / "fake_attack.txt").write_text("attack", encoding="utf-8")
             if ctrl.get("self_commit_immutable"):
                 # simulate a builder that edits an immutable tracked file and
-                # commits it itself to dodge working-tree diff enforcement
+                # commits it itself to dodge working-tree diff enforcement.
+                # -c commit.gpgsign=false so this simulated-attack commit
+                # succeeds even when the user signs commits globally (otherwise
+                # the attack never lands and the test spuriously passes).
                 import subprocess
+                git = ["git", "-c", "commit.gpgsign=false", "-c", "tag.gpgsign=false"]
                 imm = ws / "test_registry.yaml"
                 if imm.exists():
                     imm.write_text(imm.read_text(encoding="utf-8")
                                    + "\n# tampered by builder\n", encoding="utf-8")
-                subprocess.run(["git", "add", "-A"], cwd=ws, capture_output=True)
-                subprocess.run(["git", "commit", "-m", "builder self-commit"],
+                subprocess.run(git + ["add", "-A"], cwd=ws, capture_output=True)
+                subprocess.run(git + ["commit", "-m", "builder self-commit"],
                                cwd=ws, capture_output=True)
             if ctrl.get("poison_main"):
                 # checkout main, commit a forbidden edit, checkout back — HEAD
                 # sha of the candidate is unchanged, but main is poisoned
                 import subprocess
+                git = ["git", "-c", "commit.gpgsign=false", "-c", "tag.gpgsign=false"]
                 cur = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"],
                                      cwd=ws, capture_output=True, text=True).stdout.strip()
-                subprocess.run(["git", "checkout", "main"], cwd=ws, capture_output=True)
+                subprocess.run(git + ["checkout", "main"], cwd=ws, capture_output=True)
                 imm = ws / "test_registry.yaml"
                 if imm.exists():
                     imm.write_text(imm.read_text(encoding="utf-8") + "\n# poisoned\n",
                                    encoding="utf-8")
-                subprocess.run(["git", "add", "-A"], cwd=ws, capture_output=True)
-                subprocess.run(["git", "commit", "-m", "poison main"], cwd=ws, capture_output=True)
-                subprocess.run(["git", "checkout", cur], cwd=ws, capture_output=True)
+                subprocess.run(git + ["add", "-A"], cwd=ws, capture_output=True)
+                subprocess.run(git + ["commit", "-m", "poison main"], cwd=ws, capture_output=True)
+                subprocess.run(git + ["checkout", cur], cwd=ws, capture_output=True)
             if ctrl.get("symlink_forge_gate"):
                 # plant a forged human-gate approval as a symlink (bypasses a
                 # naive content snapshot that skips symlinks)

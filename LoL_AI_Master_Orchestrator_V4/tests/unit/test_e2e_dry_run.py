@@ -421,6 +421,34 @@ def test_reset_phase_removes_it_from_history_so_it_reruns(tmp_path):
     assert status == "done" and "01" in st["phase_history"]
 
 
+def test_crash_debris_in_testing_is_cleaned_not_blocked(tmp_path):
+    # simulate a crash mid-TESTING that left an untracked debris file: the
+    # resume must clean it and re-test, not BLOCK on 'working tree dirty'.
+    from orchestrator.models import Lifecycle
+    cfg, store, repo = make_project(tmp_path)
+    # get phase 00 done so phase 01 has a clean base + baseline
+    make_engine(cfg, store, repo).run(phases=["00"], capabilities={})
+    main = cfg.project["main_branch"]
+    repo.checkout(main)
+    base = repo.head_sha()
+    repo.create_branch("phase/01", main)
+    (cfg.root / "src").mkdir(exist_ok=True)
+    (cfg.root / "src" / "impl.txt").write_text("builder work\n", encoding="utf-8")
+    cand = repo.add_all_and_commit("phase 01 candidate")
+    # hand-craft a mid-TESTING crash state, then drop untracked debris
+    st = store.load()
+    store.save({**st, "phase_id": "01", "lifecycle": Lifecycle.TESTING.value,
+                "candidate_branch": "phase/01", "candidate_commit": cand,
+                "base_commit": base, "run_id": "run-01-crash", "main_baseline": base,
+                "attempt": 1, "fix_cycles": 0, "evidence": {}, "review_findings": []})
+    (cfg.root / "src" / "leftover_from_crash.tmp").write_text("debris", encoding="utf-8")
+    assert not repo.is_clean()
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "done", st.get("blocked_reason")
+    assert "dirty before testing" not in (st.get("blocked_reason") or "")
+    assert "01" in st["phase_history"]
+
+
 def test_agentless_selfcheck_failure_blocks_directly_not_via_fix_loop(tmp_path):
     cfg, store, repo = make_project(tmp_path)
     import yaml

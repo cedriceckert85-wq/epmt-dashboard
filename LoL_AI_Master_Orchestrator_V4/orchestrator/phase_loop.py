@@ -309,8 +309,11 @@ class PhaseEngine:
 
     def _step_testing(self, st, phase, *, retest=False):
         self.repo.checkout(st["candidate_branch"])
-        if not self.repo.is_clean():
-            raise PhaseRunError("working tree dirty before testing")
+        # clear any leftover files from a run that crashed mid-test (same
+        # crash-debris cleanup every other step does); the committed candidate
+        # is preserved, only untracked/modified debris is dropped so a resume
+        # re-tests cheaply instead of blocking on a dirty tree.
+        self.repo.hard_reset_clean()
         # candidate test code is untrusted and runs with FS access. Guard the
         # control plane (state/, records, projections, .venv, .orchestrator
         # minus its own evidence dir) so a malicious test cannot plant a forged

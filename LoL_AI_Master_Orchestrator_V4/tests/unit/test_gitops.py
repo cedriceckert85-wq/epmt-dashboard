@@ -30,6 +30,16 @@ def test_commits_ignore_global_gpgsign(tmp_path):
     assert sha and len(sha) >= 7
 
 
+def test_init_sets_repo_local_gpgsign_false(tmp_path):
+    # repo-local signing OFF makes EVERY commit in the repo unsigned regardless
+    # of the user's global config or which code path (even a raw agent git)
+    # performs the commit.
+    _init(tmp_path)
+    got = subprocess.run(["git", "config", "--local", "commit.gpgsign"],
+                         cwd=tmp_path, capture_output=True, text=True).stdout.strip()
+    assert got == "false"
+
+
 def test_hooks_are_neutralized(tmp_path):
     repo = _init(tmp_path)
     hooks = tmp_path / ".git" / "hooks"

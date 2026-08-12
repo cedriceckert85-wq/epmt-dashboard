@@ -157,6 +157,40 @@ def test_relevant_log_respects_budget():
     assert len(out) <= 4000 * 1.2
 
 
+def test_thinning_does_not_starve_sparse_late_candidate():
+    # regression (found by fuzzing): when one dense candidate window blows the
+    # budget, the old uniform-stride thinning could drop EVERY line of a sparse
+    # late candidate. The fair-share split must keep its closest line.
+    lines = [f"[{t//60}:{t%60:05.2f}] SPEECH: blah blah blah blah" for t in range(1800)]
+    lines.append("[150:00.00] SPEECH: the only line near the late candidate")
+    doc = "\n".join(lines)
+    cands = [Candidate(t0=10.0, t1=1700.0, signal_score=1),       # dense, huge
+             Candidate(t0=9000.0, t1=9000.0, signal_score=1)]     # sparse, late
+    out = _relevant_log(doc, cands, window_s=30, max_chars=2000)
+    assert len(out) <= 2000 * 1.2
+    late_lines = [ln for ln in out.splitlines()
+                  if (_parse_ts(ln) or 0) >= 9000 - 30 and (_parse_ts(ln) or 0) <= 9000 + 30]
+    assert late_lines, "late sparse candidate must keep its context line"
+
+
+def test_chunking_preserves_trailing_blank_line():
+    # regression (found by fuzzing): a doc ending in a blank line lost that
+    # line in the chunk/rejoin round-trip.
+    doc = "a\n\n"
+    chunks = _chunk_lines(doc, 2)
+    assert "\n".join(chunks) == doc.rstrip("\n") + "\n" or "\n".join(chunks) == doc
+    assert "\n".join(chunks).split("\n") == doc.split("\n")
+
+
+def test_relevant_log_never_empty_for_nonempty_doc():
+    # regression (found by fuzzing): all lines longer than the budget used to
+    # return an empty string instead of any context at all.
+    doc = "\n".join(f"[{i}:00.00] " + "Q" * 900 for i in range(200))
+    out = _relevant_log(doc, [], window_s=30, max_chars=500)
+    assert out
+    assert len(out) <= 500 * 1.2
+
+
 def test_parse_ts():
     assert _parse_ts("[22:12.00] GAME: penta") == 22 * 60 + 12.0
     assert _parse_ts("[130:05.50] SPEECH: late") == 130 * 60 + 5.5

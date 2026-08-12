@@ -127,7 +127,9 @@ def _chunk_lines(doc, max_chars):
     if len(doc) <= max_chars:
         return [doc]
     chunks, cur, cur_len = [], [], 0
-    for line in doc.splitlines():
+    # split("\n") (not splitlines) so a trailing blank line survives the
+    # chunk/rejoin round-trip instead of being silently dropped
+    for line in doc.split("\n"):
         add = len(line) + 1
         if cur and cur_len + add > max_chars:
             chunks.append("\n".join(cur))
@@ -200,12 +202,44 @@ def _relevant_log(doc, cands, *, window_s, max_chars):
 
     used = sum(len(lines[i]) + 1 for i in keep)
     if used > max_chars:
-        # even the candidate context is too big: thin it evenly instead of
-        # cutting the tail (late-VOD candidates keep their context too)
-        ordered = sorted(keep)
-        stride = int(used // max_chars) + 1
-        keep = set(ordered[::stride])
-        used = sum(len(lines[i]) + 1 for i in keep)
+        # Even the candidate context is too big. Split the budget FAIRLY per
+        # candidate (closest lines to each candidate first) — a uniform stride
+        # over all kept lines would let one dense stretch starve a sparse or
+        # late candidate out of its only context line.
+        assigned = {}
+        for i in sorted(keep):
+            t = times[i]
+            for ci, (lo, hi) in enumerate(windows):
+                if lo <= t <= hi:
+                    assigned.setdefault(ci, []).append(i)
+                    break
+        keep = set()
+        used = 0
+        share = max_chars // max(1, len(assigned))
+        for ci, idxs in assigned.items():
+            mid = (cands[ci].t0 + cands[ci].t1) / 2.0
+            idxs.sort(key=lambda i: abs((times[i] if times[i] is not None else mid) - mid))
+            spent = 0
+            for i in idxs:
+                if i in keep:
+                    continue
+                add = len(lines[i]) + 1
+                if spent + add > share or used + add > max_chars:
+                    continue
+                keep.add(i)
+                spent += add
+                used += add
+        # rescue: a candidate whose every line is longer than its share still
+        # gets its single closest line if the global budget allows
+        for ci, idxs in assigned.items():
+            if any(i in keep for i in idxs):
+                continue
+            for i in idxs:  # already sorted closest-first
+                add = len(lines[i]) + 1
+                if used + add <= max_chars:
+                    keep.add(i)
+                    used += add
+                    break
 
     rest = [i for i in range(len(lines)) if i not in keep]
     budget = max_chars - used
@@ -222,6 +256,10 @@ def _relevant_log(doc, cands, *, window_s, max_chars):
                 budget -= add
 
     out = "\n".join(lines[i] for i in sorted(keep))
+    if not out and doc:
+        # pathological case (every line longer than the budget): a truncated
+        # slice is still better context than nothing at all
+        out = doc[:max_chars]
     # hard safety net in case of wildly uneven line lengths
     if len(out) > max_chars * 1.2:
         out = out[: int(max_chars * 1.2)]

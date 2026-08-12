@@ -68,7 +68,10 @@ class ProcessRunner:
                 argv, cwd=cwd, env=env,
                 stdin=subprocess.PIPE if use_stdin else None,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                text=True,
+                text=True, encoding="utf-8", errors="replace",
+                # non-UTF-8 bytes from a child must never crash us with a
+                # UnicodeDecodeError (that would escape run() and abort the
+                # whole orchestrator instead of failing the one test closed)
                 start_new_session=start_new_session,
                 creationflags=creationflags
             )

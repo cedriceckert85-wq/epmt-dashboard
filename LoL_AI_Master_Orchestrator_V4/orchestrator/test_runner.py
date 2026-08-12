@@ -9,6 +9,7 @@
 import json
 import os
 import shlex
+import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -118,7 +119,7 @@ def run_registry_test(name, spec, *, root, run_id, capabilities, deferrable,
             name=name, status="unverified", deferred=name in deferrable,
             reason=f"unmet host requirements: {', '.join(unmet)}")
 
-    command = spec["command"].replace("{run_id}", run_id)
+    command = spec["command"].replace("{run_id}", run_id).replace("{python}", sys.executable)
     evidence = str(spec["evidence"]).replace("{run_id}", run_id)
     evidence_abs = root / evidence
     evidence_abs.parent.mkdir(parents=True, exist_ok=True)
@@ -131,6 +132,11 @@ def run_registry_test(name, spec, *, root, run_id, capabilities, deferrable,
 
     cwd = root / spec.get("cwd", ".")
     argv = shlex.split(command, posix=(os.name != "nt"))
+    # a bare `python`/`python3` may not exist on the host (Debian/Ubuntu ship
+    # only python3, some only `python`). Always run registry commands with the
+    # SAME interpreter the orchestrator runs under, which is guaranteed present.
+    if argv and argv[0] in ("python", "python3", "python3.exe", "python.exe"):
+        argv[0] = sys.executable
     res = runner.run(argv, cwd=cwd, timeout_s=int(spec["timeout_s"]),
                      env=stripped_env(strip_env_extra))
 

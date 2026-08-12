@@ -602,12 +602,20 @@ class PhaseEngine:
         st = self.store.load()
         phase_ids = phases or self._all_phase_ids()
         if st["phase_id"] not in phase_ids:
-            # resume point outside requested window: start at first requested phase
+            # The saved phase is outside the requested window (e.g. an optional
+            # phase 18 was just run, and now a default run excludes it). Do NOT
+            # restart at phase_ids[0] — that would re-run the whole pipeline.
+            # Resume at the first REQUESTED phase not yet PASSed in history; if
+            # every requested phase is already done, we are done.
             if st["lifecycle"] not in ("READY", "MERGED"):
                 return "blocked", self.store.save({
                     **st, "blocked_reason":
                     f"state is mid-phase {st['phase_id']} but that phase was excluded"})
-            st = self.store.save({**st, "phase_id": phase_ids[0], "lifecycle": "READY"})
+            history = st.get("phase_history", {})
+            todo = [p for p in phase_ids if p not in history]
+            if not todo:
+                return "done", st
+            st = self.store.save({**st, "phase_id": todo[0], "lifecycle": "READY"})
 
         while True:
             phase = self._phase(st)

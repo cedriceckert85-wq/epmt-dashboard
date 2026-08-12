@@ -196,10 +196,17 @@ def cmd_unblock(cfg, args):
     # the operator chose to retry: clean the tree (evidence lives in
     # .orchestrator/artifacts and the journal) so READY can start
     repo = GitRepo(cfg.root)
+    repo.checkout(cfg.project["main_branch"])
     repo.hard_reset_clean()
-    st = store.transition(st, "READY", blocked_reason=None)
+    # Re-derive the ref baseline from wherever main is NOW: the operator may
+    # have legitimately committed a fix to main (e.g. correcting an immutable
+    # config) as part of the recovery. Without this, the cross-window check
+    # would treat that expected move as tampering and block forever.
+    new_baseline = repo.branch_sha(cfg.project["main_branch"])
+    st = store.transition(st, "READY", blocked_reason=None, main_baseline=new_baseline)
     render_projections(cfg.root, st, load_phase(cfg.root, st["phase_id"]))
-    print(f"phase {st['phase_id']} reset to READY (BLOCKED->READY). Run START to retry.")
+    print(f"phase {st['phase_id']} reset to READY (BLOCKED->READY), main baseline "
+          f"re-pinned to {str(new_baseline)[:12]}. Run START to retry.")
     return 0
 
 
@@ -208,17 +215,23 @@ def cmd_reset_phase(cfg, args):
     repo = GitRepo(cfg.root)
     st = store.load()
     branch = st.get("candidate_branch")
-    repo.checkout(cfg.project["main_branch"])
+    main = cfg.project["main_branch"]
+    repo.checkout(main)
     repo.hard_reset_clean()
     if branch:
         repo.delete_branch(branch)
+    # re-pin the ref baseline to current main (operator may have committed a
+    # fix); otherwise a restarted phase would block on the stale baseline.
+    new_baseline = repo.branch_sha(main)
     st = store.save({**st, "lifecycle": "READY", "candidate_branch": None,
                      "candidate_commit": None, "tested_commit": None,
                      "reviewed_commit": None, "approved_commit": None,
+                     "main_baseline": new_baseline,
                      "blocked_reason": None, "fix_cycles": 0,
                      "review_findings": [], "evidence": {}})
     store.journal("phase_reset", {"phase_id": st["phase_id"]})
-    print(f"phase {st['phase_id']} reset to READY; candidate branch dropped.")
+    print(f"phase {st['phase_id']} reset to READY; candidate branch dropped, "
+          f"main baseline re-pinned to {str(new_baseline)[:12]}.")
     return 0
 
 

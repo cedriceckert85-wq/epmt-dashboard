@@ -62,7 +62,21 @@ fully defend against:
    an ordinary file between runs). The process-group reap, `main` baseline
    check, disabled git hooks and widened venv guard raise the bar but cannot
    fully close a session-detached daemon.
-2. A **compromised host** or any other process running as the same user.
+2. A **deliberately malicious agent poisoning the Python environment** in a way
+   the source-file tripwire cannot see: a crafted `.venv/**/__pycache__/*.pyc`
+   (CPython runs the cached bytecode on next import when its header matches the
+   unchanged source) or a rewritten `.venv/bin/` console-script/interpreter
+   shim. These execute in the *next* `python -m orchestrator` process. The venv
+   guard hashes `.py/.pth/native` files as a tripwire for accidental writes,
+   but cannot hash `.pyc`/`bin` shims without false-positiving on the ordinary
+   Python runs that legitimately regenerate them.
+3. A **compromised host** or any other process running as the same user.
+
+Round 3 confirmed items 1–2 are real for a *hostile* agent. They are out of
+scope for the filesystem-integrity layers by construction; the honest fix is
+the OS sandbox below. Note the realistic threat model for this project is
+"Claude and Codex help me build my app" — those CLIs are not supply-chain
+attackers — so these are defense-in-depth residuals, not day-one exposures.
 
 For those threat models, run the builder/reviewer CLIs inside an **OS sandbox**
 — a container, a dedicated low-privilege user, or a Windows Job Object — so the
@@ -70,3 +84,16 @@ agent process cannot outlive its run or touch anything outside the workspace.
 The default one-shot `gate_mode: auto` is not a human-trust boundary anyway (it
 auto-approves once deterministic criteria hold); the strict human gate is the
 one that assumes no attacker-controlled background process on the host.
+
+## Round 3 — third pass (real one-shot completion fixes)
+
+Round 3 confirmed the venv residuals above (documented, not whack-a-moled) and
+found real, non-adversarial bugs that would break the one-shot for an ordinary
+user. All fixed:
+
+| Area | Problem | Fix |
+|------|---------|-----|
+| interpreter | Registry commands used bare `python`; hosts with only `python3` (Debian/Ubuntu, many Linux/CI) would dead-end at phase 00. | Registry commands run under the orchestrator's own interpreter (`sys.executable`); bare `python`/`python3`/`{python}` are resolved to it. |
+| recovery | The `main` baseline check I added made `unblock`/`reset-phase` permanently BLOCK once the operator's fix committed to `main` (the documented recovery path). | `unblock` and `reset-phase` re-pin the baseline to current `main`. |
+| robustness | A candidate test emitting a non-UTF-8 byte crashed the orchestrator (UnicodeDecodeError escaped `run()`). | Child output is decoded `errors="replace"`; a test can no longer crash the run. |
+| resume | After running an optional phase explicitly (`--phases 18`), a later default run restarted the whole pipeline. | Resume picks the first requested phase not yet in history instead of restarting at phase 00. |

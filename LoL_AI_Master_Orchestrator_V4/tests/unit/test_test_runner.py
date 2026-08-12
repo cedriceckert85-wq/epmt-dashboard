@@ -172,6 +172,28 @@ def test_bearer_token_env_vars_are_stripped(monkeypatch):
     assert env.get("HARMLESS_VALUE") == "keepme"
 
 
+def test_bare_python_resolved_to_running_interpreter(tmp_path):
+    # a registry command using bare `python` must run even on a host with only
+    # python3 — it is resolved to sys.executable.
+    (tmp_path / "ev").mkdir()
+    s = spec('python -c "import os;os.makedirs(\'ev\',exist_ok=True);open(\'ev/out.json\',\'w\').write(\'x\')"')
+    out = run_registry_test("t", s, root=tmp_path, run_id="r", capabilities={}, deferrable=set())
+    assert out.status == "pass"
+
+
+def test_python_placeholder_substituted(tmp_path):
+    s = spec('{python} -c "print(1)"')
+    out = run_registry_test("t", s, root=tmp_path, run_id="r", capabilities={}, deferrable=set())
+    assert out.status == "pass"
+
+
+def test_non_utf8_output_does_not_crash(tmp_path):
+    # a test emitting a raw non-UTF-8 byte must not raise UnicodeDecodeError
+    s = spec(f'{PY} -c "import os,sys;os.write(1, b\'\\xff\\xfe\');sys.exit(0)"')
+    out = run_registry_test("t", s, root=tmp_path, run_id="r", capabilities={}, deferrable=set())
+    assert out.status == "pass"
+
+
 def test_env_stripping():
     env = stripped_env()
     for k in DEFAULT_STRIP_ENV:

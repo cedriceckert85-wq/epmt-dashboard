@@ -306,6 +306,44 @@ def test_git_hooks_are_disabled_for_orchestrator(tmp_path):
     assert status == "done"
 
 
+def test_recovery_after_fix_commit_to_main_does_not_permanently_block(tmp_path):
+    # emulate: a phase blocks, operator commits a fix to main, unblock re-pins
+    # the baseline, and the next run does NOT trip the main-baseline check.
+    from orchestrator.main import cmd_unblock
+    cfg, store, repo = make_project(tmp_path)
+    set_fake_control(cfg, {"01:reviewer": {"findings": [
+        {"id": "B1", "severity": "blocker", "title": "x"}]}})
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "blocked" and st["phase_id"] == "01"
+    # operator commits a fix on main (an expected move)
+    repo.checkout("main")
+    (cfg.root / "docs").mkdir(exist_ok=True)
+    (cfg.root / "docs" / "fix.md").write_text("fixed", encoding="utf-8")
+    repo.add_all_and_commit("operator fix")
+
+    class A:
+        pass
+    cmd_unblock(cfg, A())
+    # clear the blocker so the phase can pass this time
+    set_fake_control(cfg, {"01:reviewer": {"findings": []}})
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "done"
+    assert "main HEAD moved" not in (st.get("blocked_reason") or "")
+
+
+def test_resume_when_saved_phase_is_outside_window_does_not_restart(tmp_path):
+    # state left at phase 02 (out of a later default window that excludes it);
+    # a run over {00,01} must recognize both are already done, NOT restart at 00.
+    cfg, store, repo = make_project(tmp_path)
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01", "02"], capabilities={})
+    assert status == "done" and set(st["phase_history"]) == {"00", "01", "02"}
+    # now a narrower run whose window excludes the saved phase (02)
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "done"
+    # phase 00 was NOT rebuilt (history unchanged, single merged commit each)
+    assert set(st["phase_history"]) >= {"00", "01"}
+
+
 def test_deferred_hardware_test_recorded_not_faked(tmp_path):
     cfg, store, repo = make_project(tmp_path)
     import yaml

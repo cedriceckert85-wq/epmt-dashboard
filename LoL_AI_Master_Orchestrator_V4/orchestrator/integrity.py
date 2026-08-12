@@ -37,11 +37,16 @@ HASH_PATHS = [
     "ONE_SHOT_REPORT.md",
 ]
 
-# Inside the venv, guard every file Python can IMPORT AND EXECUTE — that is
-# the real injection surface an attacker uses to run code on the next
-# `python -m orchestrator` invocation. Data/cache files (font caches, proj.db,
-# .nbi, __pycache__/.pyc) are NOT executable-as-source and are excluded so a
-# benign lazy cache write never false-positives into a BLOCK.
+# Inside the venv we hash importable source files (.py/.pth/native ext) as a
+# BEST-EFFORT tripwire for accidental/confused writes into the environment.
+# This is NOT a complete defense: a deliberately malicious agent can poison a
+# compiled __pycache__/*.pyc (executed on next import when its header matches
+# the source) or a .venv/bin console-script shim, neither of which can be
+# guarded here without false-positiving on the very Python runs that produce
+# them. Comprehensive protection of the venv against a hostile agent requires
+# OS sandboxing (see docs/V4_SECURITY_REVIEW.md "Trust boundary"). Data/cache
+# files (font caches, proj.db, .nbi, .pyc) are excluded so benign lazy caches
+# never wrongly BLOCK a clean build.
 VENV_ROOTS = [".venv"]
 VENV_CODE_SUFFIXES = (".py", ".pth", ".so", ".pyd", ".dll", ".egg-link")
 

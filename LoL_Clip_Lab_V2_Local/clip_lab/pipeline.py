@@ -91,11 +91,19 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
             log(f"[style] using style guide learned from "
                 f"{style_profile.get('learned_from', '?')} reference clips")
 
+    # optional second brain (e.g. Codex) — reviews every clip too
+    llm_b = None
+    if cfg.use_llm and cfg.llm_cmd_b:
+        llm_b = LLMClient(cfg.llm_cmd_b, cfg.llm_timeout_s)
+        if not llm_b.available():
+            llm_b = None
+
     log("[5/6] editorial: asking the LLM for humor/callbacks/punchlines …"
         if (cfg.use_llm and llm.available())
         else "[5/6] editorial: LLM unavailable — signal-only ranking")
     cands, source, context = editorial_mod.run_editorial(
-        cands, doc, llm, cfg, memory_brief=brief, style_brief=sbrief, log=log)
+        cands, doc, llm, cfg, memory_brief=brief, style_brief=sbrief,
+        llm_b=llm_b, log=log)
 
     ranked = rank.rank_candidates(cands, cfg)
     plan = build_edit_plan(ranked, segments, cfg, duration)

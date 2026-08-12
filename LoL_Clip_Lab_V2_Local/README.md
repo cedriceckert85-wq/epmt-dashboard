@@ -88,6 +88,19 @@ Everything **degrades gracefully**: no LLM → deterministic signal-only ranking
 no Whisper → supply a transcript; no game events → reactions + editorial still
 work. The only hard requirement for a real VOD is **ffmpeg** (it reads the audio).
 
+### Two brains: Claude + Codex look at every clip
+
+With both CLIs installed, **every clip gets a second opinion**: the moment pass
+runs through `llm_cmd` (Claude) AND `llm_cmd_b` (Codex, enabled by default in
+`config.toml`) — on the **identical** evidence. Where both agree the semantic
+scores are **averaged** (the sheet notes `[2nd opinion: x/10]`), a moment only
+the second brain spotted is adopted, and the sheet header shows
+`Editorial brain: llm+2nd`. If the second CLI isn't installed it is skipped
+silently — set `llm_cmd_b = []` to disable it explicitly, or point it at any
+other CLI (use a `"{prompt}"` placeholder if it takes the prompt as an argument
+instead of stdin). The session pass and the channel-memory consolidation stay
+with the primary brain.
+
 ---
 
 ## The channel memory (the 🧠 across sessions)
@@ -148,6 +161,20 @@ editorial judgement — it is not model training.
 Change the clips → run `learn` again. Delete `style_profile.json` (or use
 `analyze --no-style`) to go back to neutral. `[style]` in `config.toml` tunes
 the folder, sampling window and scene sensitivity.
+
+**How many clips?** 5–15 is the sweet spot (~10 is ideal). Consistency beats
+volume: only clips whose style you actually want — mixing two styles averages
+into mush. Beyond ~25 the extra clips get truncated from the prompt anyway.
+
+**Grabbing references by URL** (needs [yt-dlp](https://github.com/yt-dlp/yt-dlp)):
+
+```
+pip install yt-dlp
+python -m clip_lab fetch "https://youtube.com/watch?v=..." "https://..."
+```
+
+Downloads straight into `references/` — run `learn` afterwards. Only download
+videos you have the rights or permission to use.
 
 ## Batch: a whole folder of VODs
 
@@ -291,7 +318,7 @@ Edit `config.toml` (read on Python 3.11+). Highlights:
 python -m pytest tests/unit -q
 ```
 
-150 unit + integration tests cover the pure logic (reaction detection, ranking,
+160 unit + integration tests cover the pure logic (reaction detection, ranking,
 punchline-aware cutting, the editorial contract, JSON extraction, event loading,
 config) and an end-to-end run on the bundled fixtures.
 

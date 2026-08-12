@@ -30,6 +30,14 @@ def run_doctor(cfg):
     add("LLM CLI (" + cfg.llm_cmd[0] + ")", llm.available(),
         "editorial brain: humor/callbacks/punchlines (else signal-only)")
 
+    if cfg.llm_cmd_b:
+        llm_b = LLMClient(cfg.llm_cmd_b, cfg.llm_timeout_s)
+        add("2nd LLM (" + cfg.llm_cmd_b[0] + ")", llm_b.available(),
+            "second opinion: reviews every clip too (optional)")
+
+    add("yt-dlp", which("yt-dlp") is not None,
+        "`fetch` downloads reference videos by URL (optional)")
+
     add("AMD AMF encoder", _amf_available(),
         "hardware clip encoding on the Radeon (else CPU x264 is used)")
 

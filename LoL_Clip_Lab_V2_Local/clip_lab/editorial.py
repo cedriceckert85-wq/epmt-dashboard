@@ -71,7 +71,7 @@ def _clip_score(v, lo, hi):
 
 
 def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
-                  style_brief="", log=lambda *a: None):
+                  style_brief="", llm_b=None, log=lambda *a: None):
     """Refine candidates in place and return (candidates, source, context).
     source is 'llm' if the LLM contributed, else 'signal'. memory_brief is the
     channel brain's summary of PREVIOUS streams (running gags, lore) so the LLM
@@ -91,11 +91,12 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
     # 1) session pass — the WHOLE script, chunked + merged if it is long
     context = _session_pass(llm, timeline_doc, cfg, log, memory_block)
 
-    # 2) moment pass (batched)
+    # 2) moment pass (batched). The SAME prompt is reused for the optional
+    # second brain, so both judge identical evidence.
     cand_json = json.dumps([{"t0": c.t0, "t1": c.t1,
                              "signals": c.reasons[:6]} for c in cands[: cfg.llm_max_moment_calls]],
                            ensure_ascii=False)
-    moments = llm.ask_json(MOMENT_PROMPT.format(
+    mprompt = MOMENT_PROMPT.format(
         discover=cfg.discover_no_event_windows,
         style=style_block,
         memory=memory_block,
@@ -103,13 +104,26 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
         cands=cand_json,
         log=_relevant_log(timeline_doc, cands,
                           window_s=cfg.llm_moment_context_s,
-                          max_chars=cfg.llm_moment_log_chars)))
+                          max_chars=cfg.llm_moment_log_chars))
+    moments = llm.ask_json(mprompt)
     if not isinstance(moments, list):
         log("editorial: moment pass returned no usable JSON — signal-only ranking")
         return cands, "signal", context
 
     refined = _apply_moments(cands, moments, cfg)
-    return refined, "llm", context
+    source = "llm"
+
+    # 3) optional second brain (e.g. Codex): reviews the very same clips;
+    # agreement is averaged into the score, extra finds are added
+    if llm_b is not None and llm_b.available():
+        moments_b = llm_b.ask_json(mprompt)
+        if isinstance(moments_b, list):
+            _blend_second_opinion(refined, moments_b)
+            source = "llm+2nd"
+            log("editorial: second brain reviewed the clips too — scores blended")
+        else:
+            log("editorial: second brain gave no usable JSON — primary only")
+    return refined, source, context
 
 
 def _session_pass(llm, timeline_doc, cfg, log, memory_block=""):
@@ -283,46 +297,91 @@ def _relevant_log(doc, cands, *, window_s, max_chars):
     return out
 
 
+def _moment_window(m):
+    """Validated (t0, t1) of an LLM moment, or None."""
+    if not isinstance(m, dict):
+        return None
+    t0 = _num(m.get("t0"))
+    t1 = _num(m.get("t1"))
+    if t0 is None or t1 is None or t1 < t0:
+        return None
+    return t0, t1
+
+
+def _moment_fields(m):
+    """Sanitized editorial fields from one LLM moment dict."""
+    return dict(
+        category=str(m.get("category", "moment")),
+        semantic_score=_clip_score(m.get("semantic_score", 0), 0, 10),
+        punchline_t=_num(m.get("punchline_t")),
+        title=(m.get("title") or None),
+        why=(m.get("why") or None),
+        callback_refs=[x for x in (_num(r) for r in (m.get("callback_refs") or []))
+                       if x is not None],
+        lore_refs=[str(x).strip()[:120] for x in (m.get("lore_refs") or [])
+                   if isinstance(x, str) and x.strip()][:5],
+        caption_suggestions=_clean_overlays(m.get("captions")),
+        zoom_suggestions=_clean_overlays(m.get("zooms")),
+        sfx_suggestions=_clean_overlays(m.get("sfx")),
+        editorial_source="llm",
+    )
+
+
+def _discovered(t0, t1, fields):
+    c = Candidate(t0=round(t0, 3), t1=round(t1, 3), signal_score=0.0,
+                  reasons=["llm-discovered"])
+    for k, v in fields.items():
+        setattr(c, k, v)
+    return c
+
+
 def _apply_moments(cands, moments, cfg):
     """Match LLM moments back to candidates by time overlap; unmatched LLM
     moments (with no game event) become discovered candidates."""
     used = set()
     out = list(cands)
     for m in moments:
-        if not isinstance(m, dict):
+        win = _moment_window(m)
+        if win is None:
             continue
-        t0 = _num(m.get("t0"))
-        t1 = _num(m.get("t1"))
-        if t0 is None or t1 is None or t1 < t0:
-            continue
+        t0, t1 = win
         target = _best_overlap(cands, t0, t1, used)
-        sem = _clip_score(m.get("semantic_score", 0), 0, 10)
-        fields = dict(
-            category=str(m.get("category", "moment")),
-            semantic_score=sem,
-            punchline_t=_num(m.get("punchline_t")),
-            title=(m.get("title") or None),
-            why=(m.get("why") or None),
-            callback_refs=[x for x in (_num(r) for r in m.get("callback_refs", [])) if x is not None],
-            lore_refs=[str(x).strip()[:120] for x in (m.get("lore_refs") or [])
-                       if isinstance(x, str) and x.strip()][:5],
-            caption_suggestions=_clean_overlays(m.get("captions")),
-            zoom_suggestions=_clean_overlays(m.get("zooms")),
-            sfx_suggestions=_clean_overlays(m.get("sfx")),
-            editorial_source="llm",
-        )
+        fields = _moment_fields(m)
         if target is not None:
             used.add(id(target))
             for k, v in fields.items():
                 setattr(target, k, v)
         else:
-            # discovered no-event window
-            c = Candidate(t0=round(t0, 3), t1=round(t1, 3), signal_score=0.0,
-                          reasons=["llm-discovered"])
-            for k, v in fields.items():
-                setattr(c, k, v)
-            out.append(c)
+            out.append(_discovered(t0, t1, fields))
     return out
+
+
+def _blend_second_opinion(cands, moments_b):
+    """Fold the second brain's read into the (already refined) candidates:
+    - a clip both brains rated -> semantic scores are averaged and the second
+      score is noted in the 'why' line;
+    - a clip only the second brain liked (or discovered) -> adopted whole.
+    Mutates `cands` in place (appends discovered windows)."""
+    used = set()
+    for m in moments_b or []:
+        win = _moment_window(m)
+        if win is None:
+            continue
+        t0, t1 = win
+        target = _best_overlap(cands, t0, t1, used)
+        sem_b = _clip_score(m.get("semantic_score", 0), 0, 10)
+        if target is None:
+            cands.append(_discovered(t0, t1, _moment_fields(m)))
+            continue
+        used.add(id(target))
+        if target.editorial_source == "llm" and target.semantic_score > 0:
+            target.semantic_score = round((target.semantic_score + sem_b) / 2, 2)
+            if target.why:
+                target.why = f"{target.why} [2nd opinion: {sem_b:g}/10]"
+        else:
+            # the primary brain skipped this candidate — adopt the second read
+            for k, v in _moment_fields(m).items():
+                setattr(target, k, v)
 
 
 def _best_overlap(cands, t0, t1, used):

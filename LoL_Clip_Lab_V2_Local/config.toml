@@ -35,6 +35,11 @@ default_postroll_s = 3.0
 [editorial]
 use_llm = true                # the creative core: humor / callbacks / punchlines
 llm_cmd = ["claude", "-p"]    # any CLI that reads a prompt on stdin and prints JSON
+# SECOND brain: Codex reviews every clip too — scores get blended, extra finds
+# added, the sheet shows "llm+2nd". Skipped automatically when the CLI is not
+# installed. Set [] to disable. If your CLI takes the prompt as an ARGUMENT
+# instead of stdin, use a "{prompt}" placeholder (mind OS arg-length limits).
+llm_cmd_b = ["codex", "exec", "-"]
 llm_timeout_s = 240
 discover_no_event_windows = 8 # let the LLM surface funny talk moments with no game event
 # the session pass reads the WHOLE stream script — long VODs go in chunks of

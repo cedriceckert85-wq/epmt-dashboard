@@ -172,6 +172,37 @@ def cmd_doctor(args):
     return 0 if ok else 3
 
 
+def cmd_fetch(args):
+    """Download videos by URL (e.g. YouTube) into the references folder,
+    via yt-dlp. Only download material you have the rights/permission to use."""
+    import subprocess
+    from .util import which
+    cfg = _cfg(args)
+    if which("yt-dlp") is None:
+        print("yt-dlp is not installed. Install it first:\n"
+              "  pip install yt-dlp        (any OS)\n"
+              "  winget install yt-dlp     (Windows)", file=sys.stderr)
+        return 2
+    dest = Path(args.to) if args.to else _anchor_to_root(cfg.references_dir)
+    if dest.exists() and not dest.is_dir():
+        print(f"{dest} is a file, not a folder.", file=sys.stderr)
+        return 2
+    dest.mkdir(parents=True, exist_ok=True)
+    ok = 0
+    for url in args.urls:
+        print(f"fetching {url} …")
+        p = subprocess.run(["yt-dlp", "-o", str(dest / "%(title)s.%(ext)s"), url])
+        if p.returncode == 0:
+            ok += 1
+        else:
+            print(f"  FAIL: {url}", file=sys.stderr)
+    print(f"\n{ok}/{len(args.urls)} downloaded to {dest}")
+    if ok and not args.to:
+        print("Run `learn` next so the style profile picks them up.")
+    print("Note: only download videos you have the rights/permission to use.")
+    return 0 if ok else 1
+
+
 def cmd_memory(args):
     """Show (default) or clear the channel brain."""
     from .memory import load_memory, memory_brief
@@ -275,6 +306,11 @@ def build_parser():
     l.add_argument("folder", nargs="?",
                    help="folder with example clips (default: references/ next to the tool)")
     l.set_defaults(func=cmd_learn)
+
+    fe = sub.add_parser("fetch", help="download videos by URL into references/ (needs yt-dlp)")
+    fe.add_argument("urls", nargs="+")
+    fe.add_argument("--to", help="target folder (default: references/)")
+    fe.set_defaults(func=cmd_fetch)
 
     c = sub.add_parser("cut", help="cut clips from an existing edit_plan.json")
     c.add_argument("vod")

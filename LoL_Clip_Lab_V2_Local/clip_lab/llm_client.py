@@ -83,15 +83,25 @@ class LLMClient:
         return which(self.cmd[0]) is not None
 
     def ask_json(self, prompt):
-        """Return parsed JSON (dict/list) or None."""
+        """Return parsed JSON (dict/list) or None.
+
+        The prompt goes to the CLI via stdin by default. If the configured
+        command contains a "{prompt}" placeholder, it is substituted as an
+        ARGUMENT instead (for CLIs that don't read stdin) — note that OS
+        argument-length limits make this unsuitable for very long prompts."""
         if self._runner is not None:
             out = self._runner(prompt)
             return _extract_json(out) if isinstance(out, str) else out
+        cmd = list(self.cmd)
+        stdin_input = prompt
+        if any("{prompt}" in c for c in cmd):
+            cmd = [c.replace("{prompt}", prompt) for c in cmd]
+            stdin_input = None
         try:
-            p = subprocess.run(self.cmd, input=prompt, capture_output=True,
+            p = subprocess.run(cmd, input=stdin_input, capture_output=True,
                                text=True, timeout=self.timeout_s,
                                encoding="utf-8", errors="replace")
-        except (OSError, subprocess.TimeoutExpired):
+        except (OSError, subprocess.TimeoutExpired, ValueError):
             return None
         if p.returncode != 0:
             return None

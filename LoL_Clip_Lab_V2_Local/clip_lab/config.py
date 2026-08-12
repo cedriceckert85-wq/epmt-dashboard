@@ -41,6 +41,10 @@ class Config:
     # --- editorial LLM (the creative brain) ---
     use_llm: bool = True
     llm_cmd: list = field(default_factory=lambda: ["claude", "-p"])
+    # optional SECOND brain (e.g. Codex): reviews every clip too — scores are
+    # blended, extra finds added. Empty list = disabled. "{prompt}" in an entry
+    # passes the prompt as an argument instead of stdin.
+    llm_cmd_b: list = field(default_factory=list)
     llm_timeout_s: int = 240
     llm_max_moment_calls: int = 40
     discover_no_event_windows: int = 8    # pure comedy/talk moments with no game event

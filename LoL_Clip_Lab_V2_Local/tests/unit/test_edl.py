@@ -46,6 +46,34 @@ def test_max_length_is_enforced_keeping_end():
     assert t1 - t0 <= 45.0 + 1e-6
 
 
+def test_min_length_holds_at_end_of_vod():
+    # regression: a climactic moment in the last seconds of the VOD must still
+    # get a full clip_min_s clip, not a stub shrunk against the media boundary.
+    c = cfg(clip_min_s=8.0)
+    cand = Candidate(t0=1000.0, t1=1000.0, signal_score=1, category="moment")
+    t0, t1 = _clip_bounds(cand, c, duration=1000.0)
+    assert t1 <= 1000.0
+    assert t1 - t0 >= 8.0 - 1e-6
+
+
+def test_min_length_holds_at_start_of_vod():
+    # regression: a moment at t=0 must still get a full-length clip.
+    c = cfg(clip_min_s=8.0)
+    cand = Candidate(t0=0.0, t1=0.0, signal_score=1, category="funny")
+    t0, t1 = _clip_bounds(cand, c, duration=2000.0)
+    assert t0 >= 0.0
+    assert t1 - t0 >= 8.0 - 1e-6
+
+
+def test_clip_never_exceeds_media_even_when_min_length_wanted():
+    # a VOD shorter than clip_min_s can only yield the whole VOD, honestly.
+    c = cfg(clip_min_s=8.0)
+    cand = Candidate(t0=2.0, t1=2.0, signal_score=1, category="hype")
+    t0, t1 = _clip_bounds(cand, c, duration=5.0)
+    assert t0 >= 0.0 and t1 <= 5.0
+    assert t1 > t0
+
+
 def test_bounds_clamped_to_media():
     c = cfg(clip_min_s=8.0)
     cand = Candidate(t0=1.0, t1=2.0, signal_score=1, category="hype")

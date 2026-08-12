@@ -26,24 +26,27 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
     work.mkdir(parents=True, exist_ok=True)
 
     # 1) transcript (from file, or transcribe the VOD)
+    audio_wav = None  # set only when WE extract audio this run
     if transcript_path:
         log(f"[1/6] transcript: loading {transcript_path}")
         segments = transcribe.load_transcript(transcript_path)
         duration = _duration_from(segments)
     else:
         log("[1/6] audio: extracting mono track with ffmpeg …")
-        wav = ingest.extract_audio(vod_path, work / "audio.wav", audio_stream=audio_stream)
+        audio_wav = Path(ingest.extract_audio(vod_path, work / "audio.wav",
+                                              audio_stream=audio_stream))
         duration = ingest.probe_duration(vod_path)
         log("[2/6] transcribe: running whisper (CPU) …")
-        segments = transcribe.transcribe(wav, cfg, log=log)
+        segments = transcribe.transcribe(audio_wav, cfg, log=log)
         transcribe.save_transcript(segments, work / "transcript.json")
 
-    # 2) reactions (need the audio; if transcript-only, skip)
+    # 2) reactions. Gate on audio WE extracted this run, not on a file existing
+    # on disk — a stale audio.wav from a prior full run into the same --out dir
+    # must not be paired with a different session's transcript.
     reacts = []
-    wav_file = work / "audio.wav"
-    if wav_file.exists():
+    if audio_wav is not None and audio_wav.exists():
         log("[3/6] reactions: scanning audio energy …")
-        samples, sr = ingest.read_wav_mono(wav_file)
+        samples, sr = ingest.read_wav_mono(audio_wav)
         reacts = reactions.detect_reactions(
             samples, sr, frame_ms=cfg.reaction_frame_ms,
             min_gap_s=cfg.reaction_min_gap_s, prominence=cfg.reaction_prominence,

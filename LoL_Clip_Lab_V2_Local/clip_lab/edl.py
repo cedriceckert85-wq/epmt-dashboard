@@ -9,7 +9,6 @@ The point of this stage is the 'edit intelligence' the user asked for:
 - caption/zoom/SFX suggestions are clamped into the clip.
 """
 from .models import EditPlanItem
-from .util import clamp
 from .timeline import transcript_excerpt
 
 
@@ -33,19 +32,26 @@ def _clip_bounds(c, cfg, duration):
     else:
         end = c.t1 + post
 
-    # clamp length
-    length = end - start
-    if length < cfg.clip_min_s:
-        # grow symmetrically to reach the minimum
-        grow = (cfg.clip_min_s - length) / 2
-        start -= grow
-        end += grow
-    if end - start > cfg.clip_max_s:
-        # keep the punchline/end, trim the front
-        start = end - cfg.clip_max_s
+    # Desired length, clamped to the sane clip range. We then place a window of
+    # exactly this length rather than clamping the raw edges — clamping edges to
+    # the media bounds could push one edge in without re-extending the other and
+    # silently break the clip_min_s guarantee near t=0 or t=duration (e.g. a
+    # pentakill in the last seconds of the VOD would yield a 3s clip).
+    target_len = min(cfg.clip_max_s, max(cfg.clip_min_s, end - start))
+    has_media = bool(duration and duration > 0)
+    if has_media:
+        target_len = min(target_len, float(duration))  # can't exceed the whole VOD
 
-    start = clamp(start, 0.0, max(0.0, duration))
-    end = clamp(end, start + 0.5, max(start + 0.5, duration))
+    # keep the end anchor (punchline / natural end), then slide the fixed-length
+    # window to fit inside [0, duration] without shrinking it
+    start = end - target_len
+    if has_media and end > duration:
+        end = float(duration)
+        start = end - target_len
+    if start < 0:
+        start = 0.0
+        end = start + target_len
+
     return round(start, 3), round(end, 3)
 
 

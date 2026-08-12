@@ -69,6 +69,17 @@ def test_artifacts_written_to_disk(tmp_path):
     assert (Path(tmp_path) / "clips.csv").exists()
 
 
+def test_transcript_only_ignores_stale_audio(tmp_path):
+    # regression: a leftover audio.wav from a prior full run into the same out
+    # dir must NOT be read and paired with a transcript-only run.
+    work = tmp_path / "work"
+    work.mkdir(parents=True)
+    (work / "audio.wav").write_bytes(b"not a real wav, must never be read")
+    plan, meta = _run(tmp_path, use_llm=True)
+    assert meta["reactions"] == 0          # stale audio ignored, not parsed
+    assert len(plan) >= 1                  # run still succeeds
+
+
 def test_deterministic_across_runs(tmp_path):
     a, _ = _run(tmp_path / "a", use_llm=True)
     b, _ = _run(tmp_path / "b", use_llm=True)

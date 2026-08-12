@@ -53,7 +53,7 @@ Return ONLY JSON: a list of objects, each:
   "sfx": [{{"t": <s>, "kind": "airhorn|vine_boom|bruh|ding|silence"}}]}}
 Only include a moment if it is actually good. Timestamps must be within the log.
 
-{memory}SESSION CONTEXT: {context}
+{style}{memory}SESSION CONTEXT: {context}
 
 CANDIDATE WINDOWS:
 {cands}
@@ -71,11 +71,13 @@ def _clip_score(v, lo, hi):
 
 
 def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
-                  log=lambda *a: None):
+                  style_brief="", log=lambda *a: None):
     """Refine candidates in place and return (candidates, source, context).
     source is 'llm' if the LLM contributed, else 'signal'. memory_brief is the
     channel brain's summary of PREVIOUS streams (running gags, lore) so the LLM
-    recognizes returning gags."""
+    recognizes returning gags; style_brief is the STYLE GUIDE learned from the
+    user's reference clips (goes into the moment pass, where cutting decisions
+    are made)."""
     if not (cfg.use_llm and llm and llm.available()):
         return cands, "signal", {}
 
@@ -84,6 +86,7 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
         memory_block = ("CHANNEL MEMORY (from PREVIOUS streams — watch for these "
                         "gags/lore returning; tag continuations via lore_refs):\n"
                         + memory_brief + "\n\n")
+    style_block = (style_brief + "\n\n") if style_brief else ""
 
     # 1) session pass — the WHOLE script, chunked + merged if it is long
     context = _session_pass(llm, timeline_doc, cfg, log, memory_block)
@@ -94,6 +97,7 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
                            ensure_ascii=False)
     moments = llm.ask_json(MOMENT_PROMPT.format(
         discover=cfg.discover_no_event_windows,
+        style=style_block,
         memory=memory_block,
         context=json.dumps(context, ensure_ascii=False)[:8000],
         cands=cand_json,

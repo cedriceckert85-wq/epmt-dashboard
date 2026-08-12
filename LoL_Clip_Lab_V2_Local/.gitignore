@@ -7,3 +7,6 @@ selftest_out/
 work/
 channel_memory.json
 selftest_memory*.json
+style_profile.json
+references/*
+!references/README.txt

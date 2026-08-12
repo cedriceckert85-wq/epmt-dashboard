@@ -39,6 +39,13 @@ aus Stream #2 in Stream #7 wieder auf, erkennt das LLM ihn und markiert den Clip
 im Edit-Sheet mit `🧠 running gag`. `python -m clip_lab memory` zeigt, was das
 Tool über deinen Kanal weiß; `--clear` löscht es.
 
+**Neu — Beispiel-Videos 🎬:** Wirf viele Clips, deren **Stil** dir gefällt, in den
+Ordner `references/` und lass `python -m clip_lab learn` laufen — das Tool lernt
+daraus deinen Ziel-Stil (Clip-Länge, Schnitt-Tempo, Humor-Art, Caption-Stil) und
+zielt ab dann bei jeder Analyse darauf. Und: einen **ganzen Ordner voller VODs**
+auf `START.bat` ziehen analysiert alle nacheinander (Batch), wobei das Gedächtnis
+über alle mitwächst.
+
 ---
 
 ## What it produces
@@ -120,6 +127,41 @@ first (see the 🧠 lines in `selftest_out/edit_sheet.md`).
 
 ---
 
+## Learning your style from reference videos (🎬 `references/`)
+
+Drop **many example clips you like** into `references/` — your best uploads or
+well-edited clips from other creators — then:
+
+```
+python -m clip_lab learn
+```
+
+Each clip gets fingerprinted: duration, **editing pace** (cuts per minute via
+ffmpeg scene detection on a sample window), and a **transcript sample** (CPU
+whisper, skipped if not installed). The LLM distills all fingerprints into ONE
+style guide — ideal clip length, pace/energy, humor traits, caption style —
+saved as `style_profile.json`. From then on every `analyze` injects it into the
+editorial pass, so titles, cut lengths and caption suggestions aim at **your**
+target style instead of a generic one. Honest scope: this steers the LLM's
+editorial judgement — it is not model training.
+
+Change the clips → run `learn` again. Delete `style_profile.json` (or use
+`analyze --no-style`) to go back to neutral. `[style]` in `config.toml` tunes
+the folder, sampling window and scene sensitivity.
+
+## Batch: a whole folder of VODs
+
+```
+python -m clip_lab batch "C:\vods"        # or drag the folder onto START.bat
+```
+
+Analyzes every video in the folder one after the other (each gets its own
+`<name>_clips/` folder next to it). The 🧠 channel memory grows across the whole
+batch — analyzing your backlog in one go is exactly how you feed the brain.
+Single-file failures don't stop the rest.
+
+---
+
 ## Install / first run
 
 You need **Python 3.11+** and **ffmpeg** on your PATH.
@@ -152,6 +194,12 @@ python -m clip_lab analyze game1.mkv --events game1_events.json
 
 # your VOD has a separate mic track? point at it (e.g. second audio stream)
 python -m clip_lab analyze game1.mkv --audio-stream a:1
+
+# a WHOLE FOLDER of VODs in one go (the channel memory grows across all)
+python -m clip_lab batch "C:\vods"
+
+# learn your target style from example clips in references/
+python -m clip_lab learn
 
 # signal-only, no LLM (fast, deterministic, no creative layer)
 python -m clip_lab analyze game1.mkv --no-llm
@@ -243,7 +291,7 @@ Edit `config.toml` (read on Python 3.11+). Highlights:
 python -m pytest tests/unit -q
 ```
 
-122 unit + integration tests cover the pure logic (reaction detection, ranking,
+142 unit + integration tests cover the pure logic (reaction detection, ranking,
 punchline-aware cutting, the editorial contract, JSON extraction, event loading,
 config) and an end-to-end run on the bundled fixtures.
 
@@ -266,6 +314,7 @@ clip_lab/            the package
   pipeline.py        wires the stages together
   cli.py             analyze / cut / doctor / selftest
   memory.py          the channel brain: running gags remembered across sessions
+  style.py           style learning from your reference clips (references/)
   _demo.py           canned editorial brain for the offline self-test
 samples/             fixture transcript + events for the self-test
 tests/unit/          the test suite

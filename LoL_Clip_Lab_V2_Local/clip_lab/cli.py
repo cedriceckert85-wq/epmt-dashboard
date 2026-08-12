@@ -22,16 +22,24 @@ def _cfg(args):
     return cfg
 
 
-def _memory_path(cfg):
-    p = Path(cfg.memory_file)
+def _anchor_to_root(value):
+    p = Path(value)
     if p.is_absolute():
         return p
     if p.drive:
         # Windows drive-relative oddity like "C:mem.json": joining it onto ROOT
-        # would silently DISCARD ROOT (drive-reset join semantics) and the brain
+        # would silently DISCARD ROOT (drive-reset join semantics) and the file
         # would move around with the current directory — anchor to ROOT instead
         p = Path(p.name)
     return ROOT / p
+
+
+def _memory_path(cfg):
+    return _anchor_to_root(cfg.memory_file)
+
+
+def _style_path(cfg):
+    return _anchor_to_root(cfg.style_file)
 
 
 def cmd_analyze(args):
@@ -41,17 +49,80 @@ def cmd_analyze(args):
         print(f"VOD not found: {args.vod}", file=sys.stderr)
         return 2
     mem_path = None if args.no_memory else _memory_path(cfg)
+    sty_path = None if getattr(args, "no_style", False) else _style_path(cfg)
     plan, meta = analyze(args.vod, cfg, out, transcript_path=args.transcript,
                          events_path=args.events, audio_stream=args.audio_stream,
-                         memory_path=mem_path)
+                         memory_path=mem_path, style_path=sty_path)
     print(f"\nEdit sheet: {out/'edit_sheet.md'}")
     print(f"Machine plan: {out/'edit_plan.json'}   ·   CSV: {out/'clips.csv'}")
     print(f"Editorial brain used: {meta['editorial']}  ·  {len(plan)} clips suggested")
+    if meta.get("style"):
+        print(f"Style guide: learned from {meta['style']['learned_from']} reference clips")
     if meta.get("memory"):
         print(f"Channel memory: {meta['memory']['gags']} running gags across "
               f"{meta['memory']['sessions_analyzed']} sessions ({mem_path})")
     if args.cut:
         _cut_all(args.vod, plan, cfg, out)
+    return 0
+
+
+def cmd_batch(args):
+    """Analyze every video in a folder, one after the other. The channel
+    memory grows across all of them — exactly how the brain is meant to be
+    fed. Failures on single files don't stop the rest."""
+    from .style import list_videos
+    cfg = _cfg(args)
+    folder = Path(args.folder)
+    vids = list_videos(folder)
+    if not vids:
+        print(f"No videos found in {folder} (looked for "
+              "mp4/mkv/webm/mov/avi/ts/m4v).", file=sys.stderr)
+        return 2
+    mem_path = None if args.no_memory else _memory_path(cfg)
+    sty_path = None if args.no_style else _style_path(cfg)
+    print(f"Batch: {len(vids)} videos in {folder}\n")
+    ok, failed = 0, []
+    for i, v in enumerate(vids, 1):
+        out = v.parent / (v.stem + "_clips")
+        print(f"=== [{i}/{len(vids)}] {v.name} ===")
+        try:
+            plan, meta = analyze(str(v), cfg, out, memory_path=mem_path,
+                                 style_path=sty_path)
+            print(f"  -> {len(plan)} clips, {out/'edit_sheet.md'}\n")
+            ok += 1
+        except Exception as e:
+            print(f"  FAIL {v.name}: {e}\n", file=sys.stderr)
+            failed.append(v.name)
+    print(f"Batch done: {ok}/{len(vids)} analyzed"
+          + (f", failed: {', '.join(failed)}" if failed else ""))
+    return 0 if ok else 1
+
+
+def cmd_learn(args):
+    """Learn the target style from the reference-videos folder."""
+    from .llm_client import LLMClient
+    from .style import learn_styles, save_profile, style_brief
+    cfg = _cfg(args)
+    folder = Path(args.folder) if args.folder else _anchor_to_root(cfg.references_dir)
+    if not folder.is_dir():
+        folder.mkdir(parents=True, exist_ok=True)
+        print(f"Created {folder}.\nDrop example clips you LIKE in there "
+              "(your best uploads or other creators' edits), then run "
+              "`learn` again.")
+        return 2
+    llm = LLMClient(cfg.llm_cmd, cfg.llm_timeout_s)
+    profile, fps = learn_styles(folder, cfg, llm, log=print)
+    if profile is None:
+        print(f"No videos found in {folder} (looked for "
+              "mp4/mkv/webm/mov/avi/ts/m4v).", file=sys.stderr)
+        return 2
+    path = _style_path(cfg)
+    save_profile(path, profile)
+    print(f"\nStyle profile saved: {path}")
+    print(style_brief(profile))
+    print("\nEvery `analyze` from now on aims at this style. "
+          "Re-run `learn` after changing the reference clips; "
+          "delete the file to forget the style.")
     return 0
 
 
@@ -182,9 +253,24 @@ def build_parser():
     a.add_argument("--no-llm", action="store_true", help="signal-only, no editorial LLM")
     a.add_argument("--no-memory", action="store_true",
                    help="skip the channel memory (don't read or update the brain)")
+    a.add_argument("--no-style", action="store_true",
+                   help="ignore the learned style profile for this run")
     a.add_argument("--cut", action="store_true", help="also cut the clips with ffmpeg")
     a.add_argument("--encoder", help="auto|amf|x264")
     a.set_defaults(func=cmd_analyze)
+
+    b = sub.add_parser("batch", help="analyze every video in a folder (brain grows across all)")
+    b.add_argument("folder")
+    b.add_argument("--no-llm", action="store_true")
+    b.add_argument("--no-memory", action="store_true")
+    b.add_argument("--no-style", action="store_true")
+    b.add_argument("--whisper-model")
+    b.set_defaults(func=cmd_batch)
+
+    l = sub.add_parser("learn", help="learn your target style from the references folder")
+    l.add_argument("folder", nargs="?",
+                   help="folder with example clips (default: references/ next to the tool)")
+    l.set_defaults(func=cmd_learn)
 
     c = sub.add_parser("cut", help="cut clips from an existing edit_plan.json")
     c.add_argument("vod")

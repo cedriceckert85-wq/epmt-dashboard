@@ -18,17 +18,26 @@ if errorlevel 1 (
 
 set "VENVPY=.venv\Scripts\python.exe"
 
-rem If you dragged a VOD onto this .bat, analyze it now.
+rem Dragged something onto this .bat? A folder -> batch-analyze everything in
+rem it (the channel memory grows across all videos); a file -> analyze it.
 if not "%~1"=="" (
   echo.
-  echo === Analyzing "%~1" ===
-  "%VENVPY%" -m clip_lab analyze "%~1"
+  if exist "%~1\" (
+    echo === Batch-analyzing folder "%~1" ===
+    "%VENVPY%" -m clip_lab batch "%~1"
+  ) else (
+    echo === Analyzing "%~1" ===
+    "%VENVPY%" -m clip_lab analyze "%~1"
+  )
   echo.
-  echo Done. Look in the *_clips folder next to your VOD for edit_sheet.md
+  echo Done. Look in the *_clips folder(s) next to your video(s) for edit_sheet.md
 )
 
 echo.
-echo Tip: drag-and-drop a VOD file onto START.bat to analyze it, or run:
-echo     .venv\Scripts\python -m clip_lab analyze "C:\path\to\your_vod.mp4"
+echo Tips:
+echo   - drag a VOD file onto START.bat to analyze it
+echo   - drag a FOLDER of VODs onto START.bat to analyze them all
+echo   - put example clips you like into references\ and run:
+echo         .venv\Scripts\python -m clip_lab learn
 echo.
 pause

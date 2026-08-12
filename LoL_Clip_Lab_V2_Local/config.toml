@@ -49,6 +49,13 @@ memory_file = "channel_memory.json" # relative -> stored next to the tool; delet
 memory_max_gags = 40                # keep the brain compact: most-seen gags survive
 memory_max_sessions = 20            # session summaries kept
 
+[style]
+style_enabled = true                # aim suggestions at the style learned from your reference clips
+style_file = "style_profile.json"   # written by `clip_lab learn`; delete to forget the style
+references_dir = "references"       # drop example clips you LIKE here, then run `learn`
+style_probe_s = 120                 # seconds sampled per reference clip for cut-pace detection
+style_scene_threshold = 0.35        # ffmpeg scene-change sensitivity (lower = more cuts detected)
+
 [render]
 encoder = "auto"              # auto | amf | x264 ; auto = AMF on the 9070 XT, else CPU x264
 render_crf = 20               # x264 quality (lower = better/bigger)

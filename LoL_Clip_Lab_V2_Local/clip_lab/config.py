@@ -58,6 +58,13 @@ class Config:
     memory_max_gags: int = 40
     memory_max_sessions: int = 20
 
+    # --- style learning from reference videos ---
+    style_enabled: bool = True
+    style_file: str = "style_profile.json"    # relative -> next to the tool
+    references_dir: str = "references"        # drop example clips you LIKE here
+    style_probe_s: int = 120                  # seconds sampled per clip for cut-pace
+    style_scene_threshold: float = 0.35       # ffmpeg scene-change sensitivity
+
     # --- rendering (AMD: AMF or CPU x264, no NVENC) ---
     encoder: str = "auto"                 # auto|amf|x264 ; auto=amf if available else x264
     render_crf: int = 20                  # x264 quality

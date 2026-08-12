@@ -239,3 +239,64 @@ def test_pipeline_uses_style_profile(tmp_path):
 def test_cli_batch_empty_folder(tmp_path):
     from clip_lab.cli import main
     assert main(["batch", str(tmp_path)]) == 2
+
+
+# ---------- hostile-input regressions (found by fuzzing) ----------
+
+def test_brief_survives_none_and_string_humor_style():
+    assert "humor" not in style_brief({"learned_from": 2, "humor_style": None})
+    # a plain string must not be iterated character by character
+    out = style_brief({"learned_from": 2, "humor_style": "funny"})
+    assert "- humor: f" not in out
+
+
+def test_load_profile_survives_deeply_nested_json(tmp_path):
+    p = tmp_path / "deep.json"
+    p.write_bytes(b"[" * 100000)                    # invalid AND deep
+    assert load_profile(p) is None
+    p.write_bytes(b"[" * 100000 + b"]" * 100000)    # valid but pathologically deep
+    assert load_profile(p) is None
+
+
+def test_memory_survives_deeply_nested_json(tmp_path):
+    from clip_lab.memory import empty_memory, load_memory
+    p = tmp_path / "deep.json"
+    p.write_bytes(b"[" * 100000 + b"]" * 100000)
+    assert load_memory(p) == empty_memory()
+
+
+def test_probe_duration_rejects_nonfinite_and_negative(monkeypatch):
+    monkeypatch.setattr("clip_lab.style.which", lambda n: "/usr/bin/" + n)
+    for bad in ("nan", "inf", "-inf", "-42", "0"):
+        assert probe_duration("v.mp4", run=fake_run(stdout=bad)) is None, bad
+
+
+def test_mechanical_profile_filters_nonfinite_durations():
+    fps = [{"duration_s": float("nan")}, {"duration_s": -5.0},
+           {"duration_s": 30.0}]
+    prof = _mechanical_profile(fps)
+    assert prof["target_clip_s"] == 30.0
+
+
+def test_sanitize_fallback_target_is_clamped_too():
+    out = _sanitize_profile({"target_clip_s": "abc"},
+                            {"learned_from": 1, "target_clip_s": float("nan")})
+    assert "target_clip_s" not in out
+    out2 = _sanitize_profile({"target_clip_s": None},
+                             {"learned_from": 1, "target_clip_s": 300.0})
+    assert out2["target_clip_s"] == 90.0
+
+
+def test_extract_json_bounded_on_brace_flood():
+    import time
+    from clip_lab.llm_client import _extract_json
+    t0 = time.monotonic()
+    assert _extract_json("{" * 100000) is None
+    assert time.monotonic() - t0 < 5.0              # bounded, not O(n^2)
+
+
+def test_cli_learn_on_a_file_path(tmp_path):
+    from clip_lab.cli import main
+    f = tmp_path / "not_a_folder.mp4"
+    f.write_bytes(b"x")
+    assert main(["learn", str(f)]) == 2             # friendly error, no traceback

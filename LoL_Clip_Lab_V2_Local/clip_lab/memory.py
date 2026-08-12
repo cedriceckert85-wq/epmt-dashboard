@@ -79,7 +79,7 @@ def load_memory(path):
         return empty_memory()
     try:
         raw = read_json(p)
-    except (OSError, ValueError):
+    except (OSError, ValueError, RecursionError):
         return empty_memory()
     if not isinstance(raw, dict):
         return empty_memory()

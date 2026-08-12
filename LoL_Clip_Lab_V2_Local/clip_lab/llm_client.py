@@ -42,23 +42,31 @@ def _balanced_at(text, start):
             if depth == 0:
                 try:
                     return json.loads(text[start:i + 1])
-                except json.JSONDecodeError:
+                except (json.JSONDecodeError, RecursionError):
                     return None
     return None
 
 
-def _extract_json(text):
+def _extract_json(text, max_attempts=64):
     """Return the first top-level JSON value in `text`, scanning left to right.
 
     LLM CLIs wrap JSON in prose and may return either an object OR an array, so
     we start at the EARLIEST bracket (whichever comes first) rather than always
     trying '{' before '['. Trying '{' first would grab the first element of a
-    top-level array instead of the array itself."""
+    top-level array instead of the array itself.
+
+    max_attempts bounds the number of failed start positions tried: a hostile
+    reply of e.g. 100k unbalanced braces would otherwise cost O(n^2) — minutes
+    of CPU — while any legitimate reply succeeds within the first few."""
+    attempts = 0
     for i, ch in enumerate(text):
         if ch in _CLOSER:
             parsed = _balanced_at(text, i)
             if parsed is not None:
                 return parsed
+            attempts += 1
+            if attempts >= max_attempts:
+                return None
     return None
 
 

@@ -291,7 +291,7 @@ Edit `config.toml` (read on Python 3.11+). Highlights:
 python -m pytest tests/unit -q
 ```
 
-142 unit + integration tests cover the pure logic (reaction detection, ranking,
+150 unit + integration tests cover the pure logic (reaction detection, ranking,
 punchline-aware cutting, the editorial contract, JSON extraction, event loading,
 config) and an end-to-end run on the bundled fixtures.
 
@@ -312,7 +312,7 @@ clip_lab/            the package
   ingest.py          ffmpeg audio extract + wav read
   doctor.py          preflight checks
   pipeline.py        wires the stages together
-  cli.py             analyze / cut / doctor / selftest
+  cli.py             analyze / batch / cut / learn / memory / doctor / selftest
   memory.py          the channel brain: running gags remembered across sessions
   style.py           style learning from your reference clips (references/)
   _demo.py           canned editorial brain for the offline self-test

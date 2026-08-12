@@ -79,10 +79,12 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
             log(f"[brain] channel memory: {len(memory['gags'])} running gags from "
                 f"{memory['sessions_analyzed']} earlier sessions")
 
-    # style guide learned from the user's reference clips (optional)
+    # style guide learned from the user's reference clips (optional; only
+    # loaded when the LLM will actually consume it — a --no-llm run should
+    # not claim a style guide was used)
     style_profile = None
     sbrief = ""
-    if style_path and cfg.style_enabled:
+    if style_path and cfg.style_enabled and cfg.use_llm:
         style_profile = style_mod.load_profile(style_path)
         sbrief = style_mod.style_brief(style_profile)
         if sbrief:

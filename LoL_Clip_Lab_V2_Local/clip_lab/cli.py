@@ -1,4 +1,4 @@
-"""Command line: analyze / cut / doctor / selftest."""
+"""Command line: analyze / batch / cut / learn / memory / doctor / selftest."""
 import argparse
 import sys
 from pathlib import Path
@@ -104,6 +104,10 @@ def cmd_learn(args):
     from .style import learn_styles, save_profile, style_brief
     cfg = _cfg(args)
     folder = Path(args.folder) if args.folder else _anchor_to_root(cfg.references_dir)
+    if folder.exists() and not folder.is_dir():
+        print(f"{folder} is a file, not a folder — pass the folder that "
+              "contains your example clips.", file=sys.stderr)
+        return 2
     if not folder.is_dir():
         folder.mkdir(parents=True, exist_ok=True)
         print(f"Created {folder}.\nDrop example clips you LIKE in there "

@@ -50,16 +50,21 @@ def list_videos(folder):
 
 def probe_duration(path, *, run=subprocess.run):
     """Tolerant duration probe — None instead of raising (a broken reference
-    file should not kill the whole learn run)."""
+    file should not kill the whole learn run). Rejects non-finite and
+    non-positive values too: ffprobe can report 'nan' or negative durations
+    for corrupt files, and those must never leak into the style profile."""
     if not which("ffprobe"):
         return None
     try:
         p = run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
                  "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
                 capture_output=True, text=True, timeout=60)
-        return float((p.stdout or "").strip())
+        d = float((p.stdout or "").strip())
     except (OSError, subprocess.TimeoutExpired, ValueError):
         return None
+    if d != d or d in (float("inf"), float("-inf")) or d <= 0:
+        return None
+    return d
 
 
 def detect_cut_pace(path, duration, *, threshold=0.35, probe_s=120,
@@ -170,12 +175,21 @@ def _consolidate(fps, llm, cfg, log):
         return mechanical
 
 
+def _finite_pos(values):
+    out = []
+    for v in values:
+        f = _num_or(v, None)
+        if f is not None and f > 0:
+            out.append(f)
+    return sorted(out)
+
+
 def _mechanical_profile(fps):
     prof = {"learned_from": len(fps)}
-    durs = sorted(f["duration_s"] for f in fps if f.get("duration_s"))
-    cpms = sorted(f["cuts_per_min"] for f in fps if f.get("cuts_per_min"))
+    durs = _finite_pos(f.get("duration_s") for f in fps)
+    cpms = _finite_pos(f.get("cuts_per_min") for f in fps)
     if durs:
-        prof["target_clip_s"] = round(durs[len(durs) // 2], 1)
+        prof["target_clip_s"] = round(min(90.0, max(5.0, durs[len(durs) // 2])), 1)
     if cpms:
         prof["pace"] = f"~{cpms[len(cpms) // 2]:.1f} cuts/min in the reference clips"
     return prof
@@ -193,11 +207,13 @@ def _num_or(v, default):
 
 def _sanitize_profile(res, fallback):
     out = {"learned_from": fallback.get("learned_from", 0)}
+    # the fallback value goes through the exact same clamp as the LLM value —
+    # a NaN/Infinity that sneaked into a stored profile must not round-trip
     t = _num_or(res.get("target_clip_s"), None)
+    if t is None:
+        t = _num_or(fallback.get("target_clip_s"), None)
     if t is not None:
         out["target_clip_s"] = round(min(90.0, max(5.0, t)), 1)
-    elif "target_clip_s" in fallback:
-        out["target_clip_s"] = fallback["target_clip_s"]
     for key, cap in (("pace", 200), ("caption_style", 200), ("notes", 400)):
         v = res.get(key)
         if isinstance(v, str) and v.strip():
@@ -216,13 +232,14 @@ def save_profile(path, profile):
 
 
 def load_profile(path):
-    """Load a saved profile; missing/corrupt -> None (analyze just runs plain)."""
+    """Load a saved profile; missing/corrupt -> None (analyze just runs plain).
+    RecursionError guards against pathologically nested JSON files."""
     p = Path(path)
     if not p.exists():
         return None
     try:
         raw = read_json(p)
-    except (OSError, ValueError):
+    except (OSError, ValueError, RecursionError):
         return None
     if not isinstance(raw, dict):
         return None
@@ -244,7 +261,8 @@ def style_brief(profile, max_chars=1500):
         L.append(f"- ideal clip length ≈ {profile['target_clip_s']}s")
     if profile.get("pace"):
         L.append(f"- pace: {profile['pace']}")
-    for t in profile.get("humor_style", []):
+    traits = profile.get("humor_style")
+    for t in (traits if isinstance(traits, list) else []):
         L.append(f"- humor: {t}")
     if profile.get("caption_style"):
         L.append(f"- captions: {profile['caption_style']}")

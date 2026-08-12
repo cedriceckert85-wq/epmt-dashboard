@@ -1,5 +1,7 @@
 @echo off
-setlocal enabledelayedexpansion
+rem plain setlocal: delayed expansion would eat "!" in dragged paths like
+rem "CRAZY PENTA!!!.mp4" (no !var! expansion is used anywhere in this script)
+setlocal
 cd /d "%~dp0"
 
 echo === LoL Clip Lab (local test edition) ===
@@ -19,7 +21,9 @@ if errorlevel 1 (
 set "VENVPY=.venv\Scripts\python.exe"
 
 rem Dragged something onto this .bat? A folder -> batch-analyze everything in
-rem it (the channel memory grows across all videos); a file -> analyze it.
+rem it - the channel memory grows across all videos. A file -> analyze it.
+rem NOTE: no unescaped parentheses inside this block - a bare ")" in an echo
+rem would terminate the if-block early and kill the whole script.
 if not "%~1"=="" (
   echo.
   if exist "%~1\" (
@@ -30,7 +34,7 @@ if not "%~1"=="" (
     "%VENVPY%" -m clip_lab analyze "%~1"
   )
   echo.
-  echo Done. Look in the *_clips folder(s) next to your video(s) for edit_sheet.md
+  echo Done. Look in the *_clips folders next to your videos for edit_sheet.md
 )
 
 echo.

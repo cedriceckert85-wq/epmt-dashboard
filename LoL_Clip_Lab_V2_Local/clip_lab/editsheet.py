@@ -87,7 +87,7 @@ def _channel_plans(plan):
         for p in clips:
             # over-60s note on any short-form-named channel, incl. common
             # renames (the user's channels are config-driven)
-            shortish = any(k in name for k in ("short", "kurz", "tiktok", "reel"))
+            shortish = any(k in name for k in ("short", "kurz", "tiktok", "reel", "insta", "ig"))
             warn = "  ⚠️ over 60s" if shortish and p.duration > 60 else ""
             L.append(f"- {p.rank}. {p.title}  ({p.duration:.1f}s{warn})")
         L.append("")

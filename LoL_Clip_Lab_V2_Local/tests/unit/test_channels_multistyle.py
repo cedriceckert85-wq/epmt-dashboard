@@ -115,7 +115,7 @@ def test_moment_channels_validated_against_config():
 
 def test_channels_block_from_config():
     block = _channels_block(cfg())
-    assert "[shorts]" in block and "[main]" in block and "[uncut]" in block
+    assert "[insta]" in block and "[yt]" in block and "[uncut]" in block
     assert _channels_block(cfg(channels=[])) == ""
 
 
@@ -125,13 +125,13 @@ def test_tags_flow_through_editorial():
     def runner(prompt):
         if "CANDIDATE WINDOWS" in prompt:
             return json.dumps([{"t0": 90, "t1": 110, "semantic_score": 8,
-                                "style": "montage", "channels": ["shorts", "main"]}])
+                                "style": "montage", "channels": ["insta", "yt"]}])
         return "{}"
 
     out, _, _ = run_editorial(cands, "log", LLMClient(["x"], runner=runner),
                               cfg(), style_names=("montage",))
     assert out[0].style_target == "montage"
-    assert out[0].channels == ["shorts", "main"]
+    assert out[0].channels == ["insta", "yt"]
 
 
 # ---------- sheet: channel plans + chapters ----------
@@ -202,7 +202,7 @@ def test_demo_pipeline_produces_channel_plans(tmp_path):
     assert "## 📺 Channel plans" in md
     assert (tmp_path / "chapters.txt").exists()
     penta = [p for p in plan if "PENTAKILL" in (p.title or "")][0]
-    assert penta.channels == ["shorts", "main", "uncut"]
+    assert penta.channels == ["insta", "yt", "uncut"]
 
 
 # ---------- hostile-input regressions (verification findings) ----------

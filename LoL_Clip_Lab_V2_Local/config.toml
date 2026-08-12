@@ -9,9 +9,9 @@
 # the edit sheet ends with a per-channel plan (+ chapters.txt for the uncut
 # upload). Rename these to your actual channels.
 channels = [
-  { name = "shorts", note = "vertical 9:16 short, hook in the first 2 seconds, ideally under 60s" },
-  { name = "main",   note = "edited highlight video for the main channel" },
-  { name = "uncut",  note = "full-session upload; the best moments become chapter markers" },
+  { name = "insta", note = "vertical 9:16 reel/short, hook in the first 2 seconds, ideally under 60s" },
+  { name = "yt",    note = "edited highlight video for the main YouTube channel" },
+  { name = "uncut", note = "full-session upload; the best moments become chapter markers" },
 ]
 
 [whisper]

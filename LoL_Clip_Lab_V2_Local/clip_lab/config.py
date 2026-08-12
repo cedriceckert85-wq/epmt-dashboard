@@ -64,10 +64,10 @@ class Config:
 
     # --- target channels (each moment gets tagged with the channels it serves) ---
     channels: list = field(default_factory=lambda: [
-        {"name": "shorts",
-         "note": "vertical 9:16 short, hook in the first 2 seconds, ideally under 60s"},
-        {"name": "main",
-         "note": "edited highlight video for the main channel"},
+        {"name": "insta",
+         "note": "vertical 9:16 reel/short, hook in the first 2 seconds, ideally under 60s"},
+        {"name": "yt",
+         "note": "edited highlight video for the main YouTube channel"},
         {"name": "uncut",
          "note": "full-session upload; the best moments become chapter markers"},
     ])

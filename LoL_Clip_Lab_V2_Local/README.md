@@ -39,17 +39,18 @@ aus Stream #2 in Stream #7 wieder auf, erkennt das LLM ihn und markiert den Clip
 im Edit-Sheet mit `🧠 running gag`. `python -m clip_lab memory` zeigt, was das
 Tool über deinen Kanal weiß; `--clear` löscht es.
 
-**Neu — Beispiel-Videos 🎬:** Ein **Unterordner pro Stil** (`references/funny/`,
-`references/montage/`, …) — Clips rein, deren Stil dir gefällt, `python -m
-clip_lab learn` laufen lassen, und das Tool lernt **pro Kategorie** ein
-Stil-Profil. Bei der Analyse entscheidet dann der Inhalt jedes Moments, in
-welchem Stil er geschnitten wird (`Cut as: montage-style`). Und: einen
+**Neu — Beispiel-Videos 🎬:** Ein **Unterordner pro Kanal-Stil**
+(`references/insta/`, `references/yt/`, `references/uncut/`) — fertige
+Beispiel-Clips rein, `python -m clip_lab learn` laufen lassen, und das Tool
+lernt **pro Kanal** ein Stil-Profil. Bei der Analyse entscheidet dann der
+Inhalt jedes Moments, in welchem Stil er geschnitten wird
+(`Cut as: insta-style`). Und: einen
 **ganzen Ordner voller VODs** auf `START.bat` ziehen analysiert alle
 nacheinander (Batch), wobei das Gedächtnis über alle mitwächst.
 
 **Neu — deine drei Kanäle 📺:** Jeder Moment wird getaggt, welchen Kanal er
-bedient — **shorts** (vertikal, <60s), **main** (Highlight-Video) oder
-**uncut** (ganze Session). Das Edit-Sheet endet mit Kanal-Plänen, und für den
+bedient — **insta** (Reel/Short, vertikal, <60s), **yt** (Highlight-Video für
+den Haupt-Kanal) oder **uncut** (ganze Session). Das Edit-Sheet endet mit Kanal-Plänen, und für den
 Uncut-Upload fällt eine fertige **`chapters.txt`** ab (YouTube-Kapitelmarker
 zum Reinkopieren in die Beschreibung). Kanäle umbenennen: `config.toml`.
 
@@ -193,15 +194,15 @@ python -m clip_lab fetch "https://youtube.com/watch?v=..." "https://..."
 Downloads straight into `references/` — run `learn` afterwards. Only download
 videos you have the rights or permission to use.
 
-## Your three channels (📺 shorts / main / uncut)
+## Your three channels (📺 insta / yt / uncut)
 
 Every moment gets tagged with the channels it serves — decided by the LLM from
 the content, alongside category and style:
 
-- **shorts** — vertical 9:16, hook first, ideally under 60s (the sheet warns
-  when a shorts-tagged clip runs long)
-- **main** — the edited highlight video; the sheet's channel plan is your
-  rough cut list with total runtime
+- **insta** — vertical 9:16 reel/short, hook first, ideally under 60s (the
+  sheet warns when a clip tagged for it runs long)
+- **yt** — the edited highlight video for the main channel; the sheet's
+  channel plan is your rough cut list with total runtime
 - **uncut** — the full-session upload; `chapters.txt` is generated on every
   analyze: ready-to-paste YouTube chapter markers (`00:00 Intro`,
   `02:26 First Blood, Finally`, …) for the video description

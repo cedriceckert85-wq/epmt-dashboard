@@ -117,9 +117,9 @@ def cmd_learn(args):
         return 2
     if not folder.is_dir():
         folder.mkdir(parents=True, exist_ok=True)
-        (folder / "funny").mkdir(exist_ok=True)
-        (folder / "montage").mkdir(exist_ok=True)
-        print(f"Created {folder} (with funny/ and montage/ example subfolders).\n"
+        for sub in ("insta", "yt", "uncut"):
+            (folder / sub).mkdir(exist_ok=True)
+        print(f"Created {folder} (with insta/ yt/ uncut/ example subfolders).\n"
               "One SUBFOLDER per style — drop example clips you LIKE into them\n"
               "(rename/add folders as you wish: the folder name is the style name),\n"
               "then run `learn` again.")

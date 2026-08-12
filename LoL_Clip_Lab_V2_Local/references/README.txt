@@ -3,9 +3,10 @@ REFERENCES / BEISPIEL-CLIPS
 
 DE: EIN UNTERORDNER PRO STIL — der Ordnername ist der Stilname:
 
-    references/funny/     <- Beispiel-Clips fuer deinen Funny-Stil
-    references/montage/   <- Beispiel-Clips fuer deinen Montage-Stil
-    references/hype/      <- beliebige eigene Kategorien anlegen
+    references/insta/     <- fertige Reels/Shorts, wie sie auf Insta aussehen sollen
+    references/yt/        <- fertige Highlight-Videos fuer den Haupt-Kanal
+    references/uncut/     <- 2-3 Beispiele, wie Uncut-Videos aufgebaut sind
+    (beliebige weitere Ordner moeglich - Ordnername = Stilname)
 
 Wirf in jeden Unterordner viele Clips, deren STIL dir gefaellt — deine besten
 Uploads oder gute Edits von anderen Creators (mp4/mkv/webm/mov/...). 5-15 pro
@@ -20,7 +21,7 @@ welchem Stil er geschnitten werden soll — im Edit-Sheet steht z.B.
 "Cut as: montage-style". Clips direkt in references/ (ohne Unterordner)
 ergeben ein allgemeines Profil. YouTube-Links laden (yt-dlp noetig):
 
-    python -m clip_lab fetch "https://..." --style funny
+    python -m clip_lab fetch "https://..." --style insta
 
 Clips austauschen + nochmal `learn` = neu lernen.
 style_profile.json loeschen = alles vergessen.

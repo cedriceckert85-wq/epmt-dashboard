@@ -64,8 +64,10 @@ BUILDING → TESTING → CHECKPOINTED → REVIEWING → GATE → MERGED
   fort** (Zustand liegt in `state/`).
 - **BLOCKED ist Absicht:** Wenn etwas nicht verifizierbar ist oder 2
   Fix-Zyklen nicht reichen, stoppt der Lauf fail-closed. `ONE_SHOT_REPORT.md`
-  sagt genau warum. Danach: Ursache beheben und START erneut ausführen,
-  oder `python -m orchestrator reset-phase` / `unblock`.
+  sagt genau warum. Danach: Ursache beheben, dann `START.bat unblock`
+  (Linux/macOS: `./start.sh unblock`) und erneut starten — oder
+  `START.bat reset-phase`, um die Phase komplett neu zu bauen. Ein bloßes
+  erneutes START räumt ein BLOCKED **nicht** weg (Absicht).
 - **Hardware-Tests werden nie gefaked:** Tests, die GPU, Tailscale, OBS,
   ein echtes Riot-Spiel oder den 8h-Soak brauchen, werden auf Maschinen
   ohne diese Fähigkeiten als **UNVERIFIED/deferred** protokolliert (siehe

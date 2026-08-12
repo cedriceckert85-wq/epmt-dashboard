@@ -46,7 +46,15 @@ def main():
 
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         for rel in files:
-            z.write(ROOT / rel, f"{PKG_NAME}/{rel.as_posix()}")
+            arcname = f"{PKG_NAME}/{rel.as_posix()}"
+            zi = zipfile.ZipInfo.from_file(ROOT / rel, arcname)
+            # ensure the shell launcher extracts executable on Linux/macOS
+            # (otherwise `./start.sh` fails with 'Permission denied')
+            if rel.name.endswith(".sh"):
+                zi.external_attr = (0o755 << 16)
+            zi.compress_type = zipfile.ZIP_DEFLATED
+            with open(ROOT / rel, "rb") as fh:
+                z.writestr(zi, fh.read())
         for d in RUNTIME_DIRS:
             z.writestr(f"{PKG_NAME}/{d}/.gitkeep", "")
     print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB, {len(files)} files)")

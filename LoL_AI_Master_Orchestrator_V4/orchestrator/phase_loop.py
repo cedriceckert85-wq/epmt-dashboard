@@ -187,8 +187,11 @@ class PhaseEngine:
                     time.sleep(0 if self.dry_run else delay)
                     continue
                 raise PhaseRunError(
-                    f"{role.value} agent failed after {infra_failures} infra attempts "
-                    f"(exit {run_res.exit_code}, timed_out={run_res.timed_out})")
+                    f"{role.value} agent ({provider}) failed after {infra_failures} infra "
+                    f"attempts (exit {run_res.exit_code}, timed_out={run_res.timed_out}). "
+                    f"Most common cause: the {provider} CLI is installed but NOT logged in — "
+                    f"run `{provider}` once in a terminal and sign in, then retry. "
+                    f"(Other causes: rate limit / quota / network.)")
 
             result, problems = read_agent_result(
                 self.cfg.root, expected_phase=st["phase_id"], expected_role=role.value)
@@ -574,12 +577,9 @@ class PhaseEngine:
                                 merged_commit=merged, phase_history=history,
                                 deferred_tests=deferred_all, main_baseline=merged)
 
-    def _advance(self, st, phase, phase_ids):
-        idx = phase_ids.index(st["phase_id"])
-        if idx + 1 >= len(phase_ids):
-            return None
-        nxt = phase_ids[idx + 1]
-        st = self.store.transition(st, Lifecycle.READY, phase_id=nxt, attempt=0,
+    def _enter_phase(self, st, pid):
+        """Reset run-scoped fields and move to phase `pid` in READY."""
+        st = self.store.transition(st, Lifecycle.READY, phase_id=pid, attempt=0,
                                    fix_cycles=0, run_id=None, candidate_branch=None,
                                    candidate_commit=None, tested_commit=None,
                                    reviewed_commit=None, approved_commit=None,
@@ -587,6 +587,21 @@ class PhaseEngine:
                                    blocked_reason=None, review_findings=[], evidence={})
         render_projections(self.cfg.root, st, self._phase(st))
         return st
+
+    def _next_todo(self, st, phase_ids):
+        """The first REQUESTED phase not yet merged (in phase_history), by
+        registry order. History-driven so it works regardless of the saved
+        phase's position — never skips an earlier requested phase and never
+        re-runs an already-merged one."""
+        history = st.get("phase_history", {})
+        todo = [p for p in phase_ids if p not in history]
+        return todo[0] if todo else None
+
+    def _advance(self, st, phase, phase_ids):
+        nxt = self._next_todo(st, phase_ids)
+        if nxt is None:
+            return None
+        return self._enter_phase(st, nxt)
 
     # ------------------------------------------------------------------ main
     STEPS = {
@@ -606,21 +621,28 @@ class PhaseEngine:
         self.capabilities = capabilities or {}
         st = self.store.load()
         phase_ids = phases or self._all_phase_ids()
-        if st["phase_id"] not in phase_ids:
-            # The saved phase is outside the requested window (e.g. an optional
-            # phase 18 was just run, and now a default run excludes it). Do NOT
-            # restart at phase_ids[0] — that would re-run the whole pipeline.
-            # Resume at the first REQUESTED phase not yet PASSed in history; if
-            # every requested phase is already done, we are done.
-            if st["lifecycle"] not in ("READY", "MERGED"):
-                return "blocked", self.store.save({
-                    **st, "blocked_reason":
-                    f"state is mid-phase {st['phase_id']} but that phase was excluded"})
-            history = st.get("phase_history", {})
-            todo = [p for p in phase_ids if p not in history]
-            if not todo:
+        lc = st["lifecycle"]
+
+        # A phase mid-flight AND inside the requested window continues exactly
+        # where it stopped (resume). Anything else — a completed/READY phase, or
+        # a saved phase outside the window — is reconciled against phase_history:
+        # jump to the first REQUESTED phase not yet merged. This never restarts
+        # the whole pipeline, never skips an earlier requested phase, and never
+        # silently re-runs an already-merged one (e.g. re-including phase 18 via
+        # a range that also contains the parked final phase).
+        midflight_inwindow = (lc not in ("READY", "MERGED", "BLOCKED")
+                              and st["phase_id"] in phase_ids)
+        if lc == "BLOCKED" and st["phase_id"] not in phase_ids:
+            return "blocked", self.store.save({
+                **st, "blocked_reason":
+                f"state is BLOCKED at phase {st['phase_id']} but that phase was excluded "
+                f"— include it in --phases to recover, then unblock"})
+        if not midflight_inwindow and lc != "BLOCKED":
+            nxt = self._next_todo(st, phase_ids)
+            if nxt is None:
                 return "done", st
-            st = self.store.save({**st, "phase_id": todo[0], "lifecycle": "READY"})
+            if st["phase_id"] != nxt or lc != "READY":
+                st = self._enter_phase(st, nxt)
 
         while True:
             phase = self._phase(st)

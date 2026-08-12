@@ -261,13 +261,24 @@ def test_agent_poison_main_via_checkout_is_caught(tmp_path):
     assert "poisoned" not in (cfg.root / "test_registry.yaml").read_text(encoding="utf-8")
 
 
+def _symlinks_work():
+    import os
+    import tempfile
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            t = os.path.join(d, "t"); open(t, "w").close()
+            os.symlink(t, os.path.join(d, "l"))
+            return True
+    except (OSError, NotImplementedError, AttributeError):
+        return False
+
+
 def test_symlink_forged_human_gate_is_caught(tmp_path):
     # a builder that plants a forged human-gate approval as a symlink must be
     # detected by the integrity snapshot (symlinks recorded, not skipped).
-    import os
-    if not hasattr(os, "symlink"):
+    if not _symlinks_work():
         import pytest
-        pytest.skip("symlinks unsupported")
+        pytest.skip("symlinks unavailable (non-admin Windows)")
     cfg, store, repo = make_project(tmp_path)  # auto mode: phase 00 auto-approves
     set_fake_control(cfg, {"01:builder": {"symlink_forge_gate": True}})
     status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
@@ -369,6 +380,45 @@ def test_resume_when_saved_phase_is_outside_window_does_not_restart(tmp_path):
     assert status == "done"
     # phase 00 was NOT rebuilt (history unchanged, single merged commit each)
     assert set(st["phase_history"]) >= {"00", "01"}
+
+
+def test_skipped_earlier_phase_is_built_when_window_reincludes_it(tmp_path):
+    # complete {00,02} (01 excluded), then request {00,01,02}: phase 01 (earlier
+    # than the saved phase 02, not in history) MUST get built, not silently done.
+    cfg, store, repo = make_project(tmp_path)
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "02"], capabilities={})
+    assert status == "done" and set(st["phase_history"]) == {"00", "02"}
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01", "02"], capabilities={})
+    assert status == "done"
+    assert "01" in st["phase_history"], "phase 01 must be built, not skipped"
+
+
+def test_already_merged_phase_is_not_rerun_on_a_wider_window(tmp_path):
+    # completing {00,02} then requesting a range that also contains the parked
+    # phase must NOT re-run an already-merged phase (no spurious rebuild/block).
+    cfg, store, repo = make_project(tmp_path)
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "02"], capabilities={})
+    merged02 = st["phase_history"]["02"]["merged_commit"]
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01", "02"], capabilities={})
+    assert status == "done"
+    # 02 kept its original merge (not rebuilt)
+    assert st["phase_history"]["02"]["merged_commit"] == merged02
+
+
+def test_reset_phase_removes_it_from_history_so_it_reruns(tmp_path):
+    from orchestrator.main import cmd_reset_phase
+    cfg, store, repo = make_project(tmp_path)
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "done" and "01" in st["phase_history"]
+
+    class A:
+        pass
+    # point state at phase 01 and reset it
+    store.save({**store.load(), "phase_id": "01"})
+    cmd_reset_phase(cfg, A())
+    assert "01" not in store.load().get("phase_history", {})
+    status, st = make_engine(cfg, store, repo).run(phases=["00", "01"], capabilities={})
+    assert status == "done" and "01" in st["phase_history"]
 
 
 def test_deferred_hardware_test_recorded_not_faked(tmp_path):

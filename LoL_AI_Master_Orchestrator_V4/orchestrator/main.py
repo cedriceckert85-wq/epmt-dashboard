@@ -238,10 +238,14 @@ def cmd_reset_phase(cfg, args):
     # re-pin the ref baseline to current main (operator may have committed a
     # fix); otherwise a restarted phase would block on the stale baseline.
     new_baseline = repo.branch_sha(main)
+    # "restart from scratch" means this phase is no longer done: drop it from
+    # history so the resume logic actually re-runs it.
+    history = dict(st.get("phase_history", {}))
+    history.pop(st["phase_id"], None)
     st = store.save({**st, "lifecycle": "READY", "candidate_branch": None,
                      "candidate_commit": None, "tested_commit": None,
                      "reviewed_commit": None, "approved_commit": None,
-                     "main_baseline": new_baseline,
+                     "main_baseline": new_baseline, "phase_history": history,
                      "blocked_reason": None, "fix_cycles": 0,
                      "review_findings": [], "evidence": {}})
     store.journal("phase_reset", {"phase_id": st["phase_id"]})

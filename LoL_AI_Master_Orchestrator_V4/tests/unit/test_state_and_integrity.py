@@ -1,5 +1,6 @@
 import json
 import os
+import tempfile
 
 import pytest
 
@@ -7,6 +8,24 @@ from orchestrator import integrity
 from orchestrator.models import Lifecycle
 from orchestrator.state import (DEFAULT_STATE, SingleWriterLock, StateError,
                                 StateStore)
+
+
+def _symlinks_work():
+    # these tests are the Phase-00 self-check; on a normal (non-admin,
+    # Developer-Mode-off) Windows box os.symlink raises OSError [WinError 1314].
+    # Skip rather than fail the whole self-check and block the user at phase 00.
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            t = os.path.join(d, "t"); open(t, "w").close()
+            os.symlink(t, os.path.join(d, "l"))
+            return True
+    except (OSError, NotImplementedError, AttributeError):
+        return False
+
+
+requires_symlinks = pytest.mark.skipif(
+    not _symlinks_work(),
+    reason="symlink creation unavailable (non-admin Windows without Developer Mode)")
 
 
 def make_store(tmp_path):
@@ -155,6 +174,7 @@ def test_integrity_content_hash_defeats_mtime_reset(tmp_path):
                integrity.diff_snapshots(before, integrity.snapshot(tmp_path)))
 
 
+@requires_symlinks
 def test_integrity_detects_planted_symlink(tmp_path):
     # a forged record planted as a symlink (not followed) must show up as
     # an added entry, not be silently skipped.
@@ -168,6 +188,7 @@ def test_integrity_detects_planted_symlink(tmp_path):
     assert any("added: reports/human-gates/phase-01-abc.json" in d for d in diffs)
 
 
+@requires_symlinks
 def test_integrity_symlinked_venv_entrypoint_detected(tmp_path):
     sp = tmp_path / ".venv" / "lib" / "site-packages"
     sp.mkdir(parents=True)

@@ -111,9 +111,12 @@ def _memory_reply(prompt):
 def demo_runner(prompt):
     """Emulate a CLI that prints JSON on stdout (with a little prose around it,
     to exercise the client's JSON extraction)."""
-    if "LONG-TERM MEMORY" in prompt:
+    # route on structural markers (prompt start / section header), not bare
+    # substrings — brain content echoed into a prompt (e.g. a gag literally
+    # named "LONG-TERM MEMORY") must not misroute the reply
+    if prompt.startswith("You are the LONG-TERM MEMORY"):
         return _memory_reply(prompt)
-    if "CANDIDATE WINDOWS" in prompt:
+    if "\nCANDIDATE WINDOWS:\n" in prompt:
         moments = _moment_reply()
         # when the channel brain already knows the gags (2nd+ session), tag the
         # continuations so the edit sheet shows the lore connection

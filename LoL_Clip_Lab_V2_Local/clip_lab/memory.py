@@ -29,8 +29,51 @@ def empty_memory():
             "gags": [], "catchphrases": [], "lore": [], "sessions": []}
 
 
+def _int_or(v, default):
+    """int(v) that survives None, strings, NaN and Infinity (json.loads accepts
+    the non-standard Infinity literal, so LLM replies and files can carry it)."""
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return default
+    if f != f or f in (float("inf"), float("-inf")):
+        return default
+    try:
+        return int(f)
+    except (OverflowError, ValueError):
+        return default
+
+
+def _as_list(v):
+    return v if isinstance(v, list) else []
+
+
+def _clean_gag(g):
+    """Return a schema-true gag dict, or None if unusable."""
+    if not isinstance(g, dict):
+        return None
+    name = str(g.get("name", "")).strip()[:120]
+    if not name:
+        return None
+    return {"name": name,
+            "description": str(g.get("description", "") or "")[:200],
+            "times_seen": max(1, _int_or(g.get("times_seen"), 1)),
+            "first_seen": str(g.get("first_seen", "") or "")[:120],
+            "last_seen": str(g.get("last_seen", "") or "")[:120]}
+
+
+def _clean_session_row(s):
+    if not isinstance(s, dict):
+        return None
+    return {"vod": str(s.get("vod", "") or "")[:120],
+            "date": str(s.get("date", "") or "")[:40],
+            "summary": str(s.get("summary", "") or "")[:300]}
+
+
 def load_memory(path):
-    """Load the brain; missing/corrupt/odd-typed files yield a fresh one."""
+    """Load the brain; missing/corrupt files yield a fresh one, and every
+    ELEMENT is sanitized too — a hand-edited or half-written file must never
+    crash the pipeline later (brief/merge trust the loaded shape)."""
     p = Path(path)
     if not p.exists():
         return empty_memory()
@@ -41,9 +84,16 @@ def load_memory(path):
     if not isinstance(raw, dict):
         return empty_memory()
     mem = empty_memory()
-    for k in mem:
-        if k in raw and isinstance(raw[k], type(mem[k])):
-            mem[k] = raw[k]
+    mem["sessions_analyzed"] = max(0, _int_or(raw.get("sessions_analyzed"), 0))
+    mem["gags"] = [g for g in (_clean_gag(x) for x in _as_list(raw.get("gags")))
+                   if g is not None]
+    mem["catchphrases"] = [str(x)[:120] for x in _as_list(raw.get("catchphrases"))
+                           if isinstance(x, str) and x.strip()]
+    mem["lore"] = [str(x)[:200] for x in _as_list(raw.get("lore"))
+                   if isinstance(x, str) and x.strip()]
+    mem["sessions"] = [s for s in (_clean_session_row(x)
+                                   for x in _as_list(raw.get("sessions")))
+                       if s is not None]
     return mem
 
 
@@ -61,6 +111,8 @@ def memory_brief(mem, max_chars=4000):
     if mem.get("gags"):
         L.append("Known running gags (times seen, most established first):")
         for g in mem["gags"]:
+            if not isinstance(g, dict):
+                continue
             line = f'- "{g.get("name", "?")}" ({g.get("times_seen", 1)}x'
             if g.get("last_seen"):
                 line += f', last: {g["last_seen"]}'
@@ -73,6 +125,8 @@ def memory_brief(mem, max_chars=4000):
     if mem.get("lore"):
         L.append("Channel lore: " + "; ".join(str(x) for x in mem["lore"]))
     for s in mem.get("sessions", [])[-3:]:
+        if not isinstance(s, dict):
+            continue
         L.append(f'Previous session ({s.get("vod", "?")}): {s.get("summary", "")}')
     text = "\n".join(L)
     return text[:max_chars]
@@ -112,59 +166,48 @@ def update_memory(mem, session_context, vod_name, llm, cfg, *,
     'the Q gag' with 'he never hits his Qs' — meaning, not wording); otherwise
     a deterministic mechanical merge on exact names. Never raises."""
     today = today or date.today().isoformat()
+    session_context = session_context or {}
     mechanical = _mechanical_merge(mem, session_context, vod_name, cfg, today)
     if not (llm and getattr(cfg, "use_llm", True) and llm.available()):
         return mechanical
 
-    payload = {k: session_context.get(k) for k in
-               ("running_gags", "callbacks", "arcs", "notes")
-               if session_context.get(k)}
-    res = llm.ask_json(MEMORY_PROMPT.format(
-        max_gags=cfg.memory_max_gags, max_sessions=cfg.memory_max_sessions,
-        memory=json.dumps(mem, ensure_ascii=False)[:12000],
-        vod=str(vod_name), date=today,
-        session=json.dumps(payload, ensure_ascii=False)[:8000]))
-    if not (isinstance(res, dict) and isinstance(res.get("gags"), list)):
-        log("memory: LLM consolidation returned no usable JSON — mechanical merge")
+    # The LLM's reply is untrusted end to end: any exception in consolidation
+    # or sanitizing falls back to the mechanical merge — the pipeline must
+    # never lose a run to a weird reply (Infinity, null-for-list, ...).
+    try:
+        payload = {k: session_context.get(k) for k in
+                   ("running_gags", "callbacks", "arcs", "notes")
+                   if session_context.get(k)}
+        res = llm.ask_json(MEMORY_PROMPT.format(
+            max_gags=cfg.memory_max_gags, max_sessions=cfg.memory_max_sessions,
+            memory=json.dumps(mem, ensure_ascii=False)[:12000],
+            vod=str(vod_name), date=today,
+            session=json.dumps(payload, ensure_ascii=False)[:8000]))
+        if not (isinstance(res, dict) and isinstance(res.get("gags"), list)):
+            log("memory: LLM consolidation returned no usable JSON — mechanical merge")
+            return mechanical
+        return _sanitize(res, mechanical, cfg)
+    except Exception as e:  # noqa: BLE001 — the contract is 'never raises'
+        log(f"memory: LLM consolidation failed ({type(e).__name__}) — mechanical merge")
         return mechanical
-    return _sanitize(res, mechanical, cfg)
 
 
 def _sanitize(res, fallback, cfg):
-    """Never trust LLM output shape: clamp types, lengths and counts."""
+    """Never trust LLM output shape: clamp types, lengths and counts. Every
+    accessor tolerates null-instead-of-list, Infinity, and junk elements."""
     out = empty_memory()
-    try:
-        out["sessions_analyzed"] = max(int(res.get("sessions_analyzed", 0)),
-                                       fallback["sessions_analyzed"])
-    except (TypeError, ValueError):
-        out["sessions_analyzed"] = fallback["sessions_analyzed"]
-    gags = []
-    for g in res["gags"][: cfg.memory_max_gags]:
-        if not isinstance(g, dict):
-            continue
-        name = str(g.get("name", "")).strip()[:120]
-        if not name:
-            continue
-        try:
-            seen = max(1, int(g.get("times_seen", 1)))
-        except (TypeError, ValueError):
-            seen = 1
-        gags.append({"name": name,
-                     "description": str(g.get("description", ""))[:200],
-                     "times_seen": seen,
-                     "first_seen": str(g.get("first_seen", ""))[:120],
-                     "last_seen": str(g.get("last_seen", ""))[:120]})
-    out["gags"] = gags
-    out["catchphrases"] = [str(x)[:120] for x in res.get("catchphrases", [])
+    out["sessions_analyzed"] = max(_int_or(res.get("sessions_analyzed"), 0),
+                                   fallback["sessions_analyzed"])
+    out["gags"] = [g for g in (_clean_gag(x)
+                               for x in _as_list(res.get("gags"))[: cfg.memory_max_gags])
+                   if g is not None]
+    out["catchphrases"] = [str(x)[:120] for x in _as_list(res.get("catchphrases"))
                            if isinstance(x, str) and x.strip()][:30]
-    out["lore"] = [str(x)[:200] for x in res.get("lore", [])
+    out["lore"] = [str(x)[:200] for x in _as_list(res.get("lore"))
                    if isinstance(x, str) and x.strip()][:30]
-    sessions = []
-    for s in res.get("sessions", []):
-        if isinstance(s, dict):
-            sessions.append({"vod": str(s.get("vod", ""))[:120],
-                             "date": str(s.get("date", ""))[:40],
-                             "summary": str(s.get("summary", ""))[:300]})
+    sessions = [s for s in (_clean_session_row(x)
+                            for x in _as_list(res.get("sessions")))
+                if s is not None]
     out["sessions"] = sessions[-cfg.memory_max_sessions:]
     return out
 
@@ -173,7 +216,9 @@ def _mechanical_merge(mem, ctx, vod, cfg, today):
     """Deterministic fallback: exact-name (casefold) gag matching, counter
     bumps, session summary from the first arc / the notes."""
     out = json.loads(json.dumps(mem))  # deep copy
-    out["sessions_analyzed"] = int(out.get("sessions_analyzed", 0)) + 1
+    out["sessions_analyzed"] = _int_or(out.get("sessions_analyzed"), 0) + 1
+    out["gags"] = [g for g in _as_list(out.get("gags")) if isinstance(g, dict)]
+    out["sessions"] = _as_list(out.get("sessions"))
     known = {str(g.get("name", "")).casefold(): g for g in out["gags"]}
     for gag in (ctx or {}).get("running_gags") or []:
         if not isinstance(gag, str) or not gag.strip():
@@ -181,14 +226,14 @@ def _mechanical_merge(mem, ctx, vod, cfg, today):
         name = gag.strip()[:120]
         key = name.casefold()
         if key in known:
-            known[key]["times_seen"] = int(known[key].get("times_seen", 1)) + 1
+            known[key]["times_seen"] = _int_or(known[key].get("times_seen"), 1) + 1
             known[key]["last_seen"] = str(vod)
         else:
             g = {"name": name, "description": "", "times_seen": 1,
                  "first_seen": str(vod), "last_seen": str(vod)}
             out["gags"].append(g)
             known[key] = g
-    out["gags"].sort(key=lambda g: -int(g.get("times_seen", 1)))
+    out["gags"].sort(key=lambda g: -_int_or(g.get("times_seen"), 1))
     out["gags"] = out["gags"][: cfg.memory_max_gags]
 
     arcs = (ctx or {}).get("arcs") or []

@@ -149,6 +149,22 @@ def test_no_memory_path_means_no_brain(tmp_path):
     assert not (tmp_path / "channel_memory.json").exists()
 
 
+def test_signal_only_runs_do_not_pollute_the_brain(tmp_path):
+    # regression: without editorial context there is nothing to remember —
+    # empty session rows must not be appended (they would slowly evict the
+    # real summaries from the capped list)
+    from clip_lab.memory import load_memory
+    mem_path = tmp_path / "brain.json"
+    cfg = Config()
+    cfg.use_llm = False
+    for run in ("r1", "r2", "r3"):
+        analyze(str(SAMPLES / "sample_vod.mkv"), cfg, tmp_path / run,
+                transcript_path=SAMPLES / "fixture_transcript.json",
+                events_path=SAMPLES / "fixture_events.json",
+                llm=None, memory_path=mem_path, log=lambda *a: None)
+    assert not mem_path.exists() or load_memory(mem_path)["sessions"] == []
+
+
 def test_deterministic_across_runs(tmp_path):
     a, _ = _run(tmp_path / "a", use_llm=True)
     b, _ = _run(tmp_path / "b", use_llm=True)

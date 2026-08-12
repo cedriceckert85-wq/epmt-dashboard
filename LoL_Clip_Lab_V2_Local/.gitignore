@@ -6,3 +6,4 @@ selftest_out/
 *_clips/
 work/
 channel_memory.json
+selftest_memory*.json

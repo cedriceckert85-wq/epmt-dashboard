@@ -142,6 +142,63 @@ def test_memory_prompt_receives_current_memory():
     assert "new gag" in prompts[0]                          # today's findings visible
 
 
+# ---------- hostile inputs (found by fuzzing): update_memory must NEVER raise ----------
+
+def _hostile_update(reply_text):
+    llm = LLMClient(["x"], runner=lambda p: reply_text)
+    return update_memory(empty_memory(), CTX, "v.mp4", llm, cfg(), today="d")
+
+
+def test_infinity_times_seen_does_not_crash():
+    # json.loads accepts the non-standard Infinity literal, so a text reply
+    # can smuggle it in; int(inf) raises OverflowError which except(TypeError,
+    # ValueError) used to miss
+    mem = _hostile_update('{"gags": [{"name": "g", "times_seen": Infinity}], '
+                          '"version": 1, "sessions_analyzed": 2, '
+                          '"catchphrases": [], "lore": [], "sessions": []}')
+    assert mem["gags"][0]["times_seen"] >= 1          # clamped, not crashed
+
+
+def test_infinity_sessions_analyzed_does_not_crash():
+    mem = _hostile_update('{"gags": [], "version": 1, "sessions_analyzed": Infinity, '
+                          '"catchphrases": [], "lore": [], "sessions": []}')
+    assert isinstance(mem["sessions_analyzed"], int)
+
+
+def test_null_instead_of_lists_does_not_crash():
+    mem = _hostile_update('{"gags": [], "version": 1, "sessions_analyzed": 2, '
+                          '"catchphrases": null, "lore": 7, "sessions": null}')
+    assert mem["catchphrases"] == [] and mem["lore"] == [] and mem["sessions"] == []
+
+
+def test_none_session_context_with_llm_does_not_crash():
+    llm = LLMClient(["x"], runner=lambda p: '{"gags": [], "version": 1, '
+                    '"sessions_analyzed": 1, "catchphrases": [], "lore": [], '
+                    '"sessions": []}')
+    mem = update_memory(empty_memory(), None, "v.mp4", llm, cfg(), today="d")
+    assert isinstance(mem, dict)
+
+
+def test_corrupt_element_file_survives_full_cycle(tmp_path):
+    # a hand-edited brain with junk ELEMENTS must not crash brief or merge
+    p = tmp_path / "m.json"
+    p.write_text(json.dumps({"version": 1, "sessions_analyzed": 1,
+                             "gags": ["just a string",
+                                      {"name": "g", "times_seen": "abc"},
+                                      {"name": "h", "times_seen": 1e999},
+                                      {"no_name": True}],
+                             "catchphrases": None, "lore": "x",
+                             "sessions": ["nope", {"vod": "v"}]}),
+                 encoding="utf-8")
+    mem = load_memory(p)
+    names = [g["name"] for g in mem["gags"]]
+    assert names == ["g", "h"]                        # junk dropped, real kept
+    assert all(g["times_seen"] >= 1 for g in mem["gags"])
+    assert memory_brief(mem)                          # no raise
+    out = update_memory(mem, CTX, "v2", None, cfg(), today="d")
+    assert out["sessions_analyzed"] == 2              # no raise, counter moves
+
+
 # ---------- brief ----------
 
 def test_brief_empty_for_fresh_brain():

@@ -91,12 +91,21 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
             "events": len(evs), "candidates": len(cands),
             "session_context": context}
     if memory is not None:
-        memory = memory_mod.update_memory(memory, context, vod_path.name,
-                                          llm if cfg.use_llm else None, cfg, log=log)
-        memory_mod.save_memory(memory_path, memory)
+        # update only when the LLM actually understood something this run —
+        # source can legitimately be 'signal' with a rich session context when
+        # only the moment pass failed, and that context is still worth keeping
+        if context:
+            memory = memory_mod.update_memory(memory, context, vod_path.name,
+                                              llm if cfg.use_llm else None, cfg, log=log)
+            memory_mod.save_memory(memory_path, memory)
+            log(f"[brain] memory updated: {len(memory['gags'])} running gags remembered")
+        else:
+            # signal-only run: nothing was editorially understood, so there is
+            # nothing to remember — do NOT append empty session rows that would
+            # slowly evict the real summaries from the capped list
+            log("[brain] no editorial context this run — memory unchanged")
         meta["memory"] = {"gags": len(memory["gags"]),
                           "sessions_analyzed": memory["sessions_analyzed"]}
-        log(f"[brain] memory updated: {len(memory['gags'])} running gags remembered")
     write_edit_sheet(plan, out, vod_name=vod_path.name, meta=meta)
     log(f"[6/6] done: {len(plan)} clips → {out/'edit_sheet.md'}")
     return plan, meta

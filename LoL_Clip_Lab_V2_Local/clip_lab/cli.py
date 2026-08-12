@@ -24,7 +24,14 @@ def _cfg(args):
 
 def _memory_path(cfg):
     p = Path(cfg.memory_file)
-    return p if p.is_absolute() else ROOT / p
+    if p.is_absolute():
+        return p
+    if p.drive:
+        # Windows drive-relative oddity like "C:mem.json": joining it onto ROOT
+        # would silently DISCARD ROOT (drive-reset join semantics) and the brain
+        # would move around with the current directory — anchor to ROOT instead
+        p = Path(p.name)
+    return ROOT / p
 
 
 def cmd_analyze(args):
@@ -135,7 +142,11 @@ def cmd_selftest(args):
     else:
         from ._demo import demo_llm
         cfg.use_llm = True
-        mem_path = out / "channel_memory.json"   # scratch brain, not the real one
+        # scratch brain with its OWN name, so even `--out .` inside the tool
+        # dir can never collide with (and delete) the real channel_memory.json
+        mem_path = out / "selftest_memory.json"
+        if mem_path.resolve() == _memory_path(cfg).resolve():
+            mem_path = out / "selftest_memory_scratch.json"
         if mem_path.exists():
             mem_path.unlink()
         # session 1: brain is empty, gags get learned

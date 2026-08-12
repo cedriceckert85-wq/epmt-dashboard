@@ -39,12 +39,19 @@ aus Stream #2 in Stream #7 wieder auf, erkennt das LLM ihn und markiert den Clip
 im Edit-Sheet mit `🧠 running gag`. `python -m clip_lab memory` zeigt, was das
 Tool über deinen Kanal weiß; `--clear` löscht es.
 
-**Neu — Beispiel-Videos 🎬:** Wirf viele Clips, deren **Stil** dir gefällt, in den
-Ordner `references/` und lass `python -m clip_lab learn` laufen — das Tool lernt
-daraus deinen Ziel-Stil (Clip-Länge, Schnitt-Tempo, Humor-Art, Caption-Stil) und
-zielt ab dann bei jeder Analyse darauf. Und: einen **ganzen Ordner voller VODs**
-auf `START.bat` ziehen analysiert alle nacheinander (Batch), wobei das Gedächtnis
-über alle mitwächst.
+**Neu — Beispiel-Videos 🎬:** Ein **Unterordner pro Stil** (`references/funny/`,
+`references/montage/`, …) — Clips rein, deren Stil dir gefällt, `python -m
+clip_lab learn` laufen lassen, und das Tool lernt **pro Kategorie** ein
+Stil-Profil. Bei der Analyse entscheidet dann der Inhalt jedes Moments, in
+welchem Stil er geschnitten wird (`Cut as: montage-style`). Und: einen
+**ganzen Ordner voller VODs** auf `START.bat` ziehen analysiert alle
+nacheinander (Batch), wobei das Gedächtnis über alle mitwächst.
+
+**Neu — deine drei Kanäle 📺:** Jeder Moment wird getaggt, welchen Kanal er
+bedient — **shorts** (vertikal, <60s), **main** (Highlight-Video) oder
+**uncut** (ganze Session). Das Edit-Sheet endet mit Kanal-Plänen, und für den
+Uncut-Upload fällt eine fertige **`chapters.txt`** ab (YouTube-Kapitelmarker
+zum Reinkopieren in die Beschreibung). Kanäle umbenennen: `config.toml`.
 
 ---
 
@@ -140,10 +147,18 @@ first (see the 🧠 lines in `selftest_out/edit_sheet.md`).
 
 ---
 
-## Learning your style from reference videos (🎬 `references/`)
+## Learning your styles from reference videos (🎬 `references/<style>/`)
 
-Drop **many example clips you like** into `references/` — your best uploads or
-well-edited clips from other creators — then:
+**One subfolder per style — the folder name is the style name:**
+
+```
+references/
+  funny/      example clips for your funny style
+  montage/    example clips for your montage style
+  hype/       any category you invent
+```
+
+Drop **example clips you like** into each (5–15 per style), then:
 
 ```
 python -m clip_lab learn
@@ -151,12 +166,14 @@ python -m clip_lab learn
 
 Each clip gets fingerprinted: duration, **editing pace** (cuts per minute via
 ffmpeg scene detection on a sample window), and a **transcript sample** (CPU
-whisper, skipped if not installed). The LLM distills all fingerprints into ONE
-style guide — ideal clip length, pace/energy, humor traits, caption style —
-saved as `style_profile.json`. From then on every `analyze` injects it into the
-editorial pass, so titles, cut lengths and caption suggestions aim at **your**
-target style instead of a generic one. Honest scope: this steers the LLM's
-editorial judgement — it is not model training.
+whisper, skipped if not installed). The LLM distills **one style guide per
+folder** — ideal clip length, pace/energy, humor traits, caption style — saved
+together in `style_profile.json`. From then on every `analyze` shows the LLM
+ALL your styles and asks it to decide **per moment, from the content**, which
+style that clip should be cut in — the sheet then says `Cut as: montage-style`
+or `funny`. Clips directly in `references/` (no subfolder) become a general
+"default" style. Honest scope: this steers the LLM's editorial judgement — it
+is not model training.
 
 Change the clips → run `learn` again. Delete `style_profile.json` (or use
 `analyze --no-style`) to go back to neutral. `[style]` in `config.toml` tunes
@@ -175,6 +192,23 @@ python -m clip_lab fetch "https://youtube.com/watch?v=..." "https://..."
 
 Downloads straight into `references/` — run `learn` afterwards. Only download
 videos you have the rights or permission to use.
+
+## Your three channels (📺 shorts / main / uncut)
+
+Every moment gets tagged with the channels it serves — decided by the LLM from
+the content, alongside category and style:
+
+- **shorts** — vertical 9:16, hook first, ideally under 60s (the sheet warns
+  when a shorts-tagged clip runs long)
+- **main** — the edited highlight video; the sheet's channel plan is your
+  rough cut list with total runtime
+- **uncut** — the full-session upload; `chapters.txt` is generated on every
+  analyze: ready-to-paste YouTube chapter markers (`00:00 Intro`,
+  `02:26 First Blood, Finally`, …) for the video description
+
+The sheet ends with a **Channel plans** section listing which clips go where.
+Rename or extend the channels in `config.toml` (`channels = [...]`) — the tags
+and plans follow whatever names you define.
 
 ## Batch: a whole folder of VODs
 
@@ -318,7 +352,7 @@ Edit `config.toml` (read on Python 3.11+). Highlights:
 python -m pytest tests/unit -q
 ```
 
-160 unit + integration tests cover the pure logic (reaction detection, ranking,
+179 unit + integration tests cover the pure logic (reaction detection, ranking,
 punchline-aware cutting, the editorial contract, JSON extraction, event loading,
 config) and an end-to-end run on the bundled fixtures.
 

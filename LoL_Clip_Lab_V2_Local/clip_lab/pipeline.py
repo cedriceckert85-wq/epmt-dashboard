@@ -79,17 +79,16 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
             log(f"[brain] channel memory: {len(memory['gags'])} running gags from "
                 f"{memory['sessions_analyzed']} earlier sessions")
 
-    # style guide learned from the user's reference clips (optional; only
-    # loaded when the LLM will actually consume it — a --no-llm run should
+    # style guides learned from the user's reference clips (optional; only
+    # loaded when the LLM will actually consume them — a --no-llm run should
     # not claim a style guide was used)
-    style_profile = None
+    style_profiles = {}
     sbrief = ""
     if style_path and cfg.style_enabled and cfg.use_llm:
-        style_profile = style_mod.load_profile(style_path)
-        sbrief = style_mod.style_brief(style_profile)
+        style_profiles = style_mod.load_profiles(style_path)
+        sbrief = style_mod.styles_brief(style_profiles)
         if sbrief:
-            log(f"[style] using style guide learned from "
-                f"{style_profile.get('learned_from', '?')} reference clips")
+            log(f"[style] using style guides: {', '.join(sorted(style_profiles))}")
 
     # optional second brain (e.g. Codex) — reviews every clip too
     llm_b = None
@@ -103,7 +102,7 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
         else "[5/6] editorial: LLM unavailable — signal-only ranking")
     cands, source, context = editorial_mod.run_editorial(
         cands, doc, llm, cfg, memory_brief=brief, style_brief=sbrief,
-        llm_b=llm_b, log=log)
+        style_names=tuple(style_profiles), llm_b=llm_b, log=log)
 
     ranked = rank.rank_candidates(cands, cfg)
     plan = build_edit_plan(ranked, segments, cfg, duration)
@@ -112,8 +111,12 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
     meta = {"duration": duration, "editorial": source, "reactions": len(reacts),
             "events": len(evs), "candidates": len(cands),
             "session_context": context}
-    if sbrief and style_profile:
-        meta["style"] = {"learned_from": style_profile.get("learned_from", 0)}
+    if sbrief and style_profiles:
+        meta["style"] = {
+            "styles": sorted(style_profiles),
+            "learned_from": sum(int(p.get("learned_from", 0) or 0)
+                                for p in style_profiles.values()),
+        }
     if memory is not None:
         # update only when the LLM actually understood something this run —
         # source can legitimately be 'signal' with a rich session context when

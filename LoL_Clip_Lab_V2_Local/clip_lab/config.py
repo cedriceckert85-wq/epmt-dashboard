@@ -62,6 +62,16 @@ class Config:
     memory_max_gags: int = 40
     memory_max_sessions: int = 20
 
+    # --- target channels (each moment gets tagged with the channels it serves) ---
+    channels: list = field(default_factory=lambda: [
+        {"name": "shorts",
+         "note": "vertical 9:16 short, hook in the first 2 seconds, ideally under 60s"},
+        {"name": "main",
+         "note": "edited highlight video for the main channel"},
+        {"name": "uncut",
+         "note": "full-session upload; the best moments become chapter markers"},
+    ])
+
     # --- style learning from reference videos ---
     style_enabled: bool = True
     style_file: str = "style_profile.json"    # relative -> next to the tool

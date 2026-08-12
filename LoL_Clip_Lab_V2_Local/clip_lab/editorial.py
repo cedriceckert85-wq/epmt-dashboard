@@ -46,6 +46,8 @@ Return ONLY JSON: a list of objects, each:
   "semantic_score": <0..10>, "punchline_t": <s or null>,
   "title": "catchy 3-7 word title",
   "why": "one sentence: why it lands",
+  "style": "<best-fitting STYLE GUIDE name from the list, or null>",
+  "channels": ["<every TARGET CHANNEL this moment serves>"],
   "callback_refs": [<earlier seconds>],
   "lore_refs": ["name of a KNOWN channel gag this moment continues (only if listed in CHANNEL MEMORY)"],
   "captions": [{{"t": <s>, "text": "..."}}],
@@ -53,7 +55,7 @@ Return ONLY JSON: a list of objects, each:
   "sfx": [{{"t": <s>, "kind": "airhorn|vine_boom|bruh|ding|silence"}}]}}
 Only include a moment if it is actually good. Timestamps must be within the log.
 
-{style}{memory}SESSION CONTEXT: {context}
+{channels}{style}{memory}SESSION CONTEXT: {context}
 
 CANDIDATE WINDOWS:
 {cands}
@@ -71,13 +73,15 @@ def _clip_score(v, lo, hi):
 
 
 def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
-                  style_brief="", llm_b=None, log=lambda *a: None):
+                  style_brief="", style_names=(), llm_b=None,
+                  log=lambda *a: None):
     """Refine candidates in place and return (candidates, source, context).
     source is 'llm' if the LLM contributed, else 'signal'. memory_brief is the
     channel brain's summary of PREVIOUS streams (running gags, lore) so the LLM
-    recognizes returning gags; style_brief is the STYLE GUIDE learned from the
-    user's reference clips (goes into the moment pass, where cutting decisions
-    are made)."""
+    recognizes returning gags; style_brief is the STYLE GUIDE(s) learned from
+    the user's reference clips, style_names the learned style names a moment's
+    "style" tag is validated against. Target channels come from cfg.channels
+    and each moment gets tagged with the channels it serves."""
     if not (cfg.use_llm and llm and llm.available()):
         return cands, "signal", {}
 
@@ -87,6 +91,8 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
                         "gags/lore returning; tag continuations via lore_refs):\n"
                         + memory_brief + "\n\n")
     style_block = (style_brief + "\n\n") if style_brief else ""
+    style_names = tuple(str(s).strip().lower() for s in (style_names or ()) if s)
+    channel_names = _channel_names(cfg)
 
     # 1) session pass — the WHOLE script, chunked + merged if it is long
     context = _session_pass(llm, timeline_doc, cfg, log, memory_block)
@@ -98,6 +104,7 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
                            ensure_ascii=False)
     mprompt = MOMENT_PROMPT.format(
         discover=cfg.discover_no_event_windows,
+        channels=_channels_block(cfg),
         style=style_block,
         memory=memory_block,
         context=json.dumps(context, ensure_ascii=False)[:8000],
@@ -110,7 +117,8 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
         log("editorial: moment pass returned no usable JSON — signal-only ranking")
         return cands, "signal", context
 
-    refined = _apply_moments(cands, moments, cfg)
+    refined = _apply_moments(cands, moments, cfg,
+                             style_names=style_names, channel_names=channel_names)
     source = "llm"
 
     # 3) optional second brain (e.g. Codex): reviews the very same clips;
@@ -118,12 +126,39 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
     if llm_b is not None and llm_b.available():
         moments_b = llm_b.ask_json(mprompt)
         if isinstance(moments_b, list):
-            _blend_second_opinion(refined, moments_b)
+            _blend_second_opinion(refined, moments_b,
+                                  style_names=style_names,
+                                  channel_names=channel_names)
             source = "llm+2nd"
             log("editorial: second brain reviewed the clips too — scores blended")
         else:
             log("editorial: second brain gave no usable JSON — primary only")
     return refined, source, context
+
+
+def _channel_names(cfg):
+    out = []
+    for c in (getattr(cfg, "channels", None) or []):
+        if isinstance(c, dict) and str(c.get("name", "")).strip():
+            n = str(c["name"]).strip().lower()[:40]
+            if n not in out:
+                out.append(n)
+    return tuple(out)
+
+
+def _channels_block(cfg):
+    rows = []
+    for c in (getattr(cfg, "channels", None) or []):
+        if not (isinstance(c, dict) and str(c.get("name", "")).strip()):
+            continue
+        name = str(c["name"]).strip().lower()[:40]
+        note = str(c.get("note", "") or "").strip()[:200]
+        rows.append(f"[{name}] {note}" if note else f"[{name}]")
+    if not rows:
+        return ""
+    return ("TARGET CHANNELS — tag every moment with EVERY channel it serves, "
+            'via "channels" (a Short can also feed the main-channel video):\n'
+            + "\n".join(rows) + "\n\n")
 
 
 def _session_pass(llm, timeline_doc, cfg, log, memory_block=""):
@@ -308,14 +343,32 @@ def _moment_window(m):
     return t0, t1
 
 
-def _moment_fields(m):
-    """Sanitized editorial fields from one LLM moment dict."""
+def _moment_fields(m, style_names=(), channel_names=()):
+    """Sanitized editorial fields from one LLM moment dict. style/channels tags
+    are validated against the LEARNED style names / CONFIGURED channel names —
+    an invented tag is dropped rather than trusted."""
+    style = m.get("style")
+    style_target = None
+    if isinstance(style, str) and style.strip():
+        s = style.strip().lower()[:40]
+        if s in style_names:
+            style_target = s
+    channels = []
+    raw_channels = m.get("channels")
+    if isinstance(raw_channels, list):
+        for x in raw_channels:
+            if isinstance(x, str) and x.strip():
+                cx = x.strip().lower()[:40]
+                if cx in channel_names and cx not in channels:
+                    channels.append(cx)
     return dict(
         category=str(m.get("category", "moment")),
         semantic_score=_clip_score(m.get("semantic_score", 0), 0, 10),
         punchline_t=_num(m.get("punchline_t")),
         title=(m.get("title") or None),
         why=(m.get("why") or None),
+        style_target=style_target,
+        channels=channels[:5],
         callback_refs=[x for x in (_num(r) for r in (m.get("callback_refs") or []))
                        if x is not None],
         lore_refs=[str(x).strip()[:120] for x in (m.get("lore_refs") or [])
@@ -327,6 +380,26 @@ def _moment_fields(m):
     )
 
 
+def _covers_same_moment(c, t0, t1):
+    """True when window [t0, t1] and candidate c describe the same moment:
+    real overlap, or a zero-width window/candidate sitting strictly inside the
+    other. Mere edge-adjacency of two real windows is a DIFFERENT moment."""
+    ov = min(c.t1, t1) - max(c.t0, t0)
+    if ov > 0:
+        return True
+    if ov < 0:
+        return False
+    if c.t1 == c.t0:
+        return t0 < c.t0 < t1
+    if t1 == t0:
+        return c.t0 < t0 < c.t1
+    return False
+
+
+def _overlaps_strictly(items, t0, t1):
+    return any(_covers_same_moment(c, t0, t1) for c in items)
+
+
 def _discovered(t0, t1, fields):
     c = Candidate(t0=round(t0, 3), t1=round(t1, 3), signal_score=0.0,
                   reasons=["llm-discovered"])
@@ -335,34 +408,41 @@ def _discovered(t0, t1, fields):
     return c
 
 
-def _apply_moments(cands, moments, cfg):
+def _apply_moments(cands, moments, cfg, *, style_names=(), channel_names=()):
     """Match LLM moments back to candidates by time overlap; unmatched LLM
-    moments (with no game event) become discovered candidates."""
+    moments (with no game event) become discovered candidates. A second moment
+    hitting an already-used candidate is a duplicate take, not a new clip."""
     used = set()
     out = list(cands)
+    discovered = []
     for m in moments:
         win = _moment_window(m)
         if win is None:
             continue
         t0, t1 = win
         target = _best_overlap(cands, t0, t1, used)
-        fields = _moment_fields(m)
+        fields = _moment_fields(m, style_names, channel_names)
         if target is not None:
             used.add(id(target))
             for k, v in fields.items():
                 setattr(target, k, v)
-        else:
-            out.append(_discovered(t0, t1, fields))
-    return out
+        elif not (_overlaps_strictly(cands, t0, t1)
+                  or _overlaps_strictly(discovered, t0, t1)):
+            discovered.append(_discovered(t0, t1, fields))
+    return out + discovered
 
 
-def _blend_second_opinion(cands, moments_b):
+def _blend_second_opinion(cands, moments_b, *, style_names=(), channel_names=()):
     """Fold the second brain's read into the (already refined) candidates:
     - a clip both brains rated -> semantic scores are averaged and the second
       score is noted in the 'why' line;
-    - a clip only the second brain liked (or discovered) -> adopted whole.
-    Mutates `cands` in place (appends discovered windows)."""
+    - a candidate the primary skipped -> the second read is adopted whole;
+    - a window nobody covers yet -> a discovered candidate.
+    Discoveries are collected separately so a later B moment can never match
+    (and mangle) B's own earlier discovery, and duplicate windows are skipped
+    instead of burning a ranking slot. Mutates `cands` in place."""
     used = set()
+    discovered = []
     for m in moments_b or []:
         win = _moment_window(m)
         if win is None:
@@ -371,17 +451,25 @@ def _blend_second_opinion(cands, moments_b):
         target = _best_overlap(cands, t0, t1, used)
         sem_b = _clip_score(m.get("semantic_score", 0), 0, 10)
         if target is None:
-            cands.append(_discovered(t0, t1, _moment_fields(m)))
+            # a window that overlaps an already-handled candidate or an earlier
+            # B discovery is a duplicate second take, not a new clip
+            if not (_overlaps_strictly(cands, t0, t1)
+                    or _overlaps_strictly(discovered, t0, t1)):
+                discovered.append(_discovered(
+                    t0, t1, _moment_fields(m, style_names, channel_names)))
             continue
         used.add(id(target))
-        if target.editorial_source == "llm" and target.semantic_score > 0:
+        if target.editorial_source == "llm":
+            # the primary refined this clip — blend, never overwrite its work
+            # (even a primary score of 0 keeps title/captions; 0 averages fine)
             target.semantic_score = round((target.semantic_score + sem_b) / 2, 2)
             if target.why:
                 target.why = f"{target.why} [2nd opinion: {sem_b:g}/10]"
         else:
             # the primary brain skipped this candidate — adopt the second read
-            for k, v in _moment_fields(m).items():
+            for k, v in _moment_fields(m, style_names, channel_names).items():
                 setattr(target, k, v)
+    cands.extend(discovered)
 
 
 def _best_overlap(cands, t0, t1, used):

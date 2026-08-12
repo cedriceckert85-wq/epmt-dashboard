@@ -1,8 +1,18 @@
 # LoL Clip Lab — local config. Every value here has a sane default in code;
 # this file just makes them easy to tweak. Tuned for a Ryzen 7 5800X3D +
 # Radeon RX 9070 XT (AMD): CPU whisper, AMF/x264 encoding, no CUDA/NVENC.
-# Requires Python 3.11+ to be read (older Python ignores this file and uses the
-# built-in defaults, which are identical to what is written here).
+# Requires Python 3.11+ to be read (older Python ignores this file and uses
+# the built-in code defaults — those match this file EXCEPT llm_cmd_b, which
+# is disabled in code and enabled here).
+
+# Your channels — each moment gets tagged with every channel it serves, and
+# the edit sheet ends with a per-channel plan (+ chapters.txt for the uncut
+# upload). Rename these to your actual channels.
+channels = [
+  { name = "shorts", note = "vertical 9:16 short, hook in the first 2 seconds, ideally under 60s" },
+  { name = "main",   note = "edited highlight video for the main channel" },
+  { name = "uncut",  note = "full-session upload; the best moments become chapter markers" },
+]
 
 [whisper]
 whisper_model = "small"       # tiny | base | small | medium  (small = good speed/quality on 5800X3D)
@@ -16,6 +26,8 @@ reaction_frame_ms = 50
 reaction_min_gap_s = 2.0
 reaction_prominence = 0.55    # 0..1 — higher = only the biggest reactions
 reaction_baseline_window_s = 20.0
+reaction_cooccurrence_window_s = 8.0  # reaction near a game event boosts it
+reaction_cooccurrence_boost = 1.5
 
 [ranking]
 w_signal = 0.45               # how much the raw audio/event signal counts
@@ -31,6 +43,8 @@ funny_setup_preroll_s = 6.0   # comedy needs its setup
 punchline_decay_s = 2.5       # end a beat shortly after its punchline
 default_preroll_s = 4.0
 default_postroll_s = 3.0
+reaction_preroll_s = 2.0      # pre/post-roll for pure reaction moments
+reaction_postroll_s = 4.0
 
 [editorial]
 use_llm = true                # the creative core: humor / callbacks / punchlines
@@ -41,6 +55,7 @@ llm_cmd = ["claude", "-p"]    # any CLI that reads a prompt on stdin and prints 
 # instead of stdin, use a "{prompt}" placeholder (mind OS arg-length limits).
 llm_cmd_b = ["codex", "exec", "-"]
 llm_timeout_s = 240
+llm_max_moment_calls = 40     # max candidate windows sent to the moment pass
 discover_no_event_windows = 8 # let the LLM surface funny talk moments with no game event
 # the session pass reads the WHOLE stream script — long VODs go in chunks of
 # this many characters, with the findings so far carried into the next chunk

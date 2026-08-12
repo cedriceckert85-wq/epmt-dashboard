@@ -93,14 +93,16 @@ class LLMClient:
             out = self._runner(prompt)
             return _extract_json(out) if isinstance(out, str) else out
         cmd = list(self.cmd)
-        stdin_input = prompt
+        kw = {"input": prompt}
         if any("{prompt}" in c for c in cmd):
             cmd = [c.replace("{prompt}", prompt) for c in cmd]
-            stdin_input = None
+            # closed stdin so a CLI that unexpectedly reads it fails fast
+            # instead of hanging on the terminal until the timeout
+            kw = {"stdin": subprocess.DEVNULL}
         try:
-            p = subprocess.run(cmd, input=stdin_input, capture_output=True,
+            p = subprocess.run(cmd, capture_output=True,
                                text=True, timeout=self.timeout_s,
-                               encoding="utf-8", errors="replace")
+                               encoding="utf-8", errors="replace", **kw)
         except (OSError, subprocess.TimeoutExpired, ValueError):
             return None
         if p.returncode != 0:

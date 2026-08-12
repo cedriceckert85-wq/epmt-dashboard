@@ -88,6 +88,43 @@ def test_null_callback_refs_do_not_crash_apply():
     assert out[0].callback_refs == []
 
 
+def test_primary_zero_score_keeps_its_title():
+    # regression: A's moment with unparseable score ("N/A" -> 0) used to fall
+    # into the adopt-wholesale branch, letting B wipe A's title/captions
+    cands = [Candidate(t0=100.0, t1=100.0, signal_score=3)]
+    a = brain('[{"t0": 90, "t1": 110, "semantic_score": "N/A", '
+              '"title": "A great title", "why": "a reason"}]')
+    b = brain('[{"t0": 90, "t1": 110, "semantic_score": 8}]')
+    out, _, _ = run_editorial(cands, "log", a, cfg(), llm_b=b)
+    assert out[0].title == "A great title"          # A's work preserved
+    assert out[0].semantic_score == 4.0             # (0+8)/2 blended
+
+
+def test_b_discoveries_do_not_match_each_other():
+    # regression: B's second discovery used to get merged INTO its first one
+    # (self-"2nd opinion"), losing the second window entirely
+    cands = [Candidate(t0=100.0, t1=100.0, signal_score=3)]
+    a = brain('[{"t0": 90, "t1": 110, "semantic_score": 6}]')
+    b = brain('[{"t0": 90, "t1": 110, "semantic_score": 6}, '
+              '{"t0": 500, "t1": 510, "semantic_score": 9, "title": "B one"}, '
+              '{"t0": 510, "t1": 525, "semantic_score": 3, "title": "B two"}]')
+    out, _, _ = run_editorial(cands, "log", a, cfg(), llm_b=b)
+    titles = {c.title for c in out}
+    assert "B one" in titles and "B two" in titles  # both windows survive
+    b_one = [c for c in out if c.title == "B one"][0]
+    assert "[2nd opinion" not in (b_one.why or "")  # no self-referential note
+
+
+def test_duplicate_b_window_does_not_burn_a_slot():
+    # two B moments on the same A window: second is a duplicate take, skipped
+    cands = [Candidate(t0=100.0, t1=100.0, signal_score=3)]
+    a = brain('[{"t0": 90, "t1": 110, "semantic_score": 6}]')
+    b = brain('[{"t0": 90, "t1": 110, "semantic_score": 8}, '
+              '{"t0": 91, "t1": 109, "semantic_score": 2, "title": "dupe"}]')
+    out, _, _ = run_editorial(cands, "log", a, cfg(), llm_b=b)
+    assert len(out) == 1                             # no near-identical extra
+
+
 def test_llm_client_prompt_as_argument():
     # "{prompt}" placeholder passes the prompt as an argument instead of stdin
     c = LLMClient(["echo", "{prompt}"], timeout_s=10)

@@ -92,6 +92,8 @@ def build_edit_plan(ranked, segments, cfg, duration):
             sfx=_clamp_overlays(c.sfx_suggestions, t0, t1),
             callback_inserts=inserts,
             lore_refs=list(c.lore_refs or []),
+            style_target=c.style_target,
+            channels=list(c.channels or []),
             transcript_excerpt=transcript_excerpt(segments, t0, t1)))
 
     return _merge_overlaps(plan)

@@ -101,7 +101,7 @@ def cmd_batch(args):
 def cmd_learn(args):
     """Learn the target style from the reference-videos folder."""
     from .llm_client import LLMClient
-    from .style import learn_styles, save_profile, style_brief
+    from .style import learn_styles, save_profiles, style_brief
     cfg = _cfg(args)
     folder = Path(args.folder) if args.folder else _anchor_to_root(cfg.references_dir)
     if folder.exists() and not folder.is_dir():
@@ -110,23 +110,28 @@ def cmd_learn(args):
         return 2
     if not folder.is_dir():
         folder.mkdir(parents=True, exist_ok=True)
-        print(f"Created {folder}.\nDrop example clips you LIKE in there "
-              "(your best uploads or other creators' edits), then run "
-              "`learn` again.")
+        (folder / "funny").mkdir(exist_ok=True)
+        (folder / "montage").mkdir(exist_ok=True)
+        print(f"Created {folder} (with funny/ and montage/ example subfolders).\n"
+              "One SUBFOLDER per style — drop example clips you LIKE into them\n"
+              "(rename/add folders as you wish: the folder name is the style name),\n"
+              "then run `learn` again.")
         return 2
     llm = LLMClient(cfg.llm_cmd, cfg.llm_timeout_s)
-    profile, fps = learn_styles(folder, cfg, llm, log=print)
-    if profile is None:
-        print(f"No videos found in {folder} (looked for "
+    profiles, fps = learn_styles(folder, cfg, llm, log=print)
+    if not profiles:
+        print(f"No videos found in {folder} or its subfolders (looked for "
               "mp4/mkv/webm/mov/avi/ts/m4v).", file=sys.stderr)
         return 2
     path = _style_path(cfg)
-    save_profile(path, profile)
-    print(f"\nStyle profile saved: {path}")
-    print(style_brief(profile))
-    print("\nEvery `analyze` from now on aims at this style. "
+    save_profiles(path, profiles)
+    print(f"\n{len(profiles)} style(s) learned -> {path}")
+    for name in sorted(profiles):
+        print(f"\n[{name}]  ({len(fps.get(name, []))} clips)")
+        print(style_brief(profiles[name]))
+    print("\nEvery `analyze` now tags each moment with the best-fitting style. "
           "Re-run `learn` after changing the reference clips; "
-          "delete the file to forget the style.")
+          "delete the file to forget the styles.")
     return 0
 
 
@@ -183,15 +188,23 @@ def cmd_fetch(args):
               "  pip install yt-dlp        (any OS)\n"
               "  winget install yt-dlp     (Windows)", file=sys.stderr)
         return 2
-    dest = Path(args.to) if args.to else _anchor_to_root(cfg.references_dir)
+    if args.to:
+        dest = Path(args.to)
+    else:
+        dest = _anchor_to_root(cfg.references_dir)
+        if args.style:
+            dest = dest / str(args.style).strip().lower()
     if dest.exists() and not dest.is_dir():
         print(f"{dest} is a file, not a folder.", file=sys.stderr)
         return 2
     dest.mkdir(parents=True, exist_ok=True)
+    # "%" is template-special in yt-dlp output paths — escape the folder part
+    tmpl = str(dest).replace("%", "%%") + "/%(title)s.%(ext)s"
     ok = 0
     for url in args.urls:
         print(f"fetching {url} …")
-        p = subprocess.run(["yt-dlp", "-o", str(dest / "%(title)s.%(ext)s"), url])
+        # "--" so a pasted token starting with "-" can never become an option
+        p = subprocess.run(["yt-dlp", "-o", tmpl, "--", url])
         if p.returncode == 0:
             ok += 1
         else:
@@ -200,7 +213,7 @@ def cmd_fetch(args):
     if ok and not args.to:
         print("Run `learn` next so the style profile picks them up.")
     print("Note: only download videos you have the rights/permission to use.")
-    return 0 if ok else 1
+    return 0 if ok == len(args.urls) else 1
 
 
 def cmd_memory(args):
@@ -248,6 +261,10 @@ def cmd_selftest(args):
     else:
         from ._demo import demo_llm
         cfg.use_llm = True
+        # determinism: NO second brain in the selftest — config.toml ships an
+        # active codex line, and with codex on PATH the pipeline would spawn
+        # the REAL CLI here and blend its answers into the canned demo
+        cfg.llm_cmd_b = []
         # scratch brain with its OWN name, so even `--out .` inside the tool
         # dir can never collide with (and delete) the real channel_memory.json
         mem_path = out / "selftest_memory.json"
@@ -309,7 +326,8 @@ def build_parser():
 
     fe = sub.add_parser("fetch", help="download videos by URL into references/ (needs yt-dlp)")
     fe.add_argument("urls", nargs="+")
-    fe.add_argument("--to", help="target folder (default: references/)")
+    fe.add_argument("--style", help="reference style subfolder, e.g. funny or montage")
+    fe.add_argument("--to", help="explicit target folder (overrides --style)")
     fe.set_defaults(func=cmd_fetch)
 
     c = sub.add_parser("cut", help="cut clips from an existing edit_plan.json")

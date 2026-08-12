@@ -23,10 +23,11 @@ from .util import read_json, which, write_json
 VIDEO_EXTS = {".mp4", ".mkv", ".webm", ".mov", ".avi", ".ts", ".m4v"}
 
 STYLE_PROMPT = """You are an expert short-form video editor. Below are FINGERPRINTS
-of reference clips a creator likes — this is the TARGET STYLE for their channel:
-per clip the duration, the editing pace (cuts per minute) and a transcript sample.
+of reference clips a creator likes for their '{name}' style — this is a TARGET
+STYLE for their channel: per clip the duration, the editing pace (cuts per
+minute) and a transcript sample.
 
-Distill ONE style guide an editor could follow when cutting new clips.
+Distill ONE style guide an editor could follow when cutting new '{name}' clips.
 Return ONLY JSON:
 {{"target_clip_s": <ideal clip length in seconds>,
   "pace": "one line about editing pace/energy",
@@ -142,36 +143,58 @@ def fingerprint(path, cfg, *, transcriber=None, run=subprocess.run):
     return fp
 
 
+def _style_groups(folder):
+    """Reference clips grouped by style: each SUBFOLDER of the references
+    folder is one named style (references/funny/, references/montage/, ...);
+    videos directly in the root are the 'default' style."""
+    folder = Path(folder)
+    groups = {}
+    root_vids = list_videos(folder)
+    if root_vids:
+        groups["default"] = root_vids
+    if folder.is_dir():
+        for sub in sorted(p for p in folder.iterdir() if p.is_dir()):
+            name = sub.name.strip().lower()[:40]
+            vids = list_videos(sub)
+            if name and vids:
+                groups[name] = vids
+    return groups
+
+
 def learn_styles(folder, cfg, llm, *, log=lambda *a: None, run=subprocess.run):
-    """Fingerprint every video in `folder` and distill the style profile.
-    Returns (profile_or_None, fingerprints)."""
-    vids = list_videos(folder)
-    if not vids:
-        return None, []
+    """Fingerprint every reference clip, grouped by style subfolder, and
+    distill one profile per style. Returns (profiles, fingerprints) — both
+    dicts keyed by style name; empty dicts when there are no videos."""
+    groups = _style_groups(folder)
+    if not groups:
+        return {}, {}
     transcriber = _make_transcriber(cfg)
     if transcriber is None:
         log("[style] faster-whisper not available — fingerprints without transcript samples")
-    fps = []
-    for v in vids:
-        log(f"[style] fingerprinting {v.name} …")
-        fps.append(fingerprint(v, cfg, transcriber=transcriber, run=run))
-    profile = _consolidate(fps, llm, cfg, log)
-    return profile, fps
+    profiles, all_fps = {}, {}
+    for name, vids in groups.items():
+        fps = []
+        for v in vids:
+            log(f"[style] [{name}] fingerprinting {v.name} …")
+            fps.append(fingerprint(v, cfg, transcriber=transcriber, run=run))
+        profiles[name] = _consolidate(name, fps, llm, cfg, log)
+        all_fps[name] = fps
+    return profiles, all_fps
 
 
-def _consolidate(fps, llm, cfg, log):
+def _consolidate(name, fps, llm, cfg, log):
     mechanical = _mechanical_profile(fps)
     if not (llm and getattr(cfg, "use_llm", True) and llm.available()):
         return mechanical
     try:
         res = llm.ask_json(STYLE_PROMPT.format(
-            refs=json.dumps(fps, ensure_ascii=False)[:20000]))
+            name=name, refs=json.dumps(fps, ensure_ascii=False)[:20000]))
         if not isinstance(res, dict):
-            log("[style] LLM returned no usable JSON — mechanical profile")
+            log(f"[style] [{name}] LLM returned no usable JSON — mechanical profile")
             return mechanical
         return _sanitize_profile(res, mechanical)
     except Exception as e:  # noqa: BLE001 — learning must never lose the run
-        log(f"[style] LLM consolidation failed ({type(e).__name__}) — mechanical profile")
+        log(f"[style] [{name}] LLM consolidation failed ({type(e).__name__}) — mechanical profile")
         return mechanical
 
 
@@ -231,9 +254,14 @@ def save_profile(path, profile):
     write_json(path, profile)
 
 
+def save_profiles(path, profiles):
+    """Persist all learned styles (v2 file format)."""
+    write_json(path, {"version": 2, "styles": profiles})
+
+
 def load_profile(path):
-    """Load a saved profile; missing/corrupt -> None (analyze just runs plain).
-    RecursionError guards against pathologically nested JSON files."""
+    """Load a saved single profile; missing/corrupt -> None (analyze just runs
+    plain). RecursionError guards against pathologically nested JSON files."""
     p = Path(path)
     if not p.exists():
         return None
@@ -244,6 +272,31 @@ def load_profile(path):
     if not isinstance(raw, dict):
         return None
     return _sanitize_profile(raw, {"learned_from": _int_learned(raw)})
+
+
+def load_profiles(path):
+    """Load ALL learned styles as {name: profile}. Reads the v2 multi-style
+    format; an old v1 single-profile file becomes {'default': profile}.
+    Missing/corrupt -> {} (analyze just runs without a style guide)."""
+    p = Path(path)
+    if not p.exists():
+        return {}
+    try:
+        raw = read_json(p)
+    except (OSError, ValueError, RecursionError):
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    styles = raw.get("styles")
+    if isinstance(styles, dict):
+        out = {}
+        for name, prof in styles.items():
+            key = str(name).strip().lower()[:40]
+            if key and isinstance(prof, dict):
+                out[key] = _sanitize_profile(prof, {"learned_from": _int_learned(prof)})
+        return out
+    prof = load_profile(path)   # v1 backward compat
+    return {"default": prof} if prof else {}
 
 
 def _int_learned(raw):
@@ -257,6 +310,12 @@ def style_brief(profile, max_chars=1500):
         return ""
     L = [f"STYLE GUIDE (learned from {profile.get('learned_from', '?')} reference "
          "clips — aim the suggestions at this):"]
+    L.extend(_profile_lines(profile))
+    return "\n".join(L)[:max_chars]
+
+
+def _profile_lines(profile):
+    L = []
     if profile.get("target_clip_s"):
         L.append(f"- ideal clip length ≈ {profile['target_clip_s']}s")
     if profile.get("pace"):
@@ -268,4 +327,22 @@ def style_brief(profile, max_chars=1500):
         L.append(f"- captions: {profile['caption_style']}")
     if profile.get("notes"):
         L.append(f"- notes: {profile['notes']}")
+    return L
+
+
+def styles_brief(profiles, max_chars=2500):
+    """Prompt block covering ALL learned styles. With just a 'default' style
+    it reads like the classic single guide; with named styles it instructs the
+    LLM to pick the best-fitting style PER MOMENT and tag it."""
+    if not profiles:
+        return ""
+    if set(profiles) == {"default"}:
+        return style_brief(profiles["default"], max_chars)
+    L = ["STYLE GUIDES (learned from your reference folders). For EVERY moment "
+         "decide from the content which style it should be cut in, and tag it "
+         'via "style": "<name>":']
+    for name in sorted(profiles):
+        prof = profiles[name] or {}
+        L.append(f"[{name}] (from {prof.get('learned_from', '?')} clips)")
+        L.extend(_profile_lines(prof) or ["- (no distinctive stats)"])
     return "\n".join(L)[:max_chars]

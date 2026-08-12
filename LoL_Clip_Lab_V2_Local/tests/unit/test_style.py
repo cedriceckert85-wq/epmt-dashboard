@@ -129,15 +129,15 @@ def test_learn_styles_llm_path(tmp_path, monkeypatch):
 
     llm = LLMClient(["x"], runner=lambda p: json.dumps(
         {"target_clip_s": 22, "pace": "quick", "humor_style": ["dry"]}))
-    profile, fps = learn_styles(tmp_path, cfg(), llm, run=run)
-    assert len(fps) == 2
-    assert profile["target_clip_s"] == 22.0
-    assert profile["learned_from"] == 2
+    profiles, fps = learn_styles(tmp_path, cfg(), llm, run=run)
+    assert len(fps["default"]) == 2
+    assert profiles["default"]["target_clip_s"] == 22.0
+    assert profiles["default"]["learned_from"] == 2
 
 
 def test_learn_styles_empty_folder(tmp_path):
-    profile, fps = learn_styles(tmp_path, cfg(), None)
-    assert profile is None and fps == []
+    profiles, fps = learn_styles(tmp_path, cfg(), None)
+    assert profiles == {} and fps == {}
 
 
 def test_learn_styles_bad_llm_falls_back(tmp_path, monkeypatch):
@@ -151,8 +151,8 @@ def test_learn_styles_bad_llm_falls_back(tmp_path, monkeypatch):
         return SimpleNamespace(stdout="", stderr="", returncode=0)
 
     llm = LLMClient(["x"], runner=lambda p: "no json here")
-    profile, _ = learn_styles(tmp_path, cfg(), llm, run=run)
-    assert profile["target_clip_s"] == 40.0        # mechanical fallback
+    profiles, _ = learn_styles(tmp_path, cfg(), llm, run=run)
+    assert profiles["default"]["target_clip_s"] == 40.0    # mechanical fallback
 
 
 # ---------- save / load / brief ----------
@@ -231,7 +231,8 @@ def test_pipeline_uses_style_profile(tmp_path):
                          events_path=ROOT / "samples" / "fixture_events.json",
                          llm=LLMClient(["x"], runner=runner),
                          style_path=style_path, log=lambda *a: None)
-    assert meta["style"] == {"learned_from": 2}
+    # a v1 single-profile file loads as the 'default' style
+    assert meta["style"] == {"styles": ["default"], "learned_from": 2}
     moment = [p for p in prompts if "CANDIDATE WINDOWS" in p]
     assert moment and "STYLE GUIDE" in moment[0]
 

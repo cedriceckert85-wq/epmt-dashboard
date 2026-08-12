@@ -377,8 +377,10 @@ def _moment_fields(m, style_names=(), channel_names=()):
         category=(category[:20] or "moment"),
         semantic_score=_clip_score(m.get("semantic_score", 0), 0, 10),
         punchline_t=_num(m.get("punchline_t")),
-        title=(m.get("title") or None),
-        why=(m.get("why") or None),
+        # titles/reasons land in CSV rows, markdown headings and chapters.txt:
+        # only strings, newlines collapsed, bounded length
+        title=_clean_text(m.get("title"), 120),
+        why=_clean_text(m.get("why"), 300),
         style_target=style_target,
         channels=channels[:5],
         callback_refs=[x for x in (_num(r) for r in (m.get("callback_refs") or []))
@@ -415,6 +417,13 @@ def _overlaps_strictly(items, t0, t1):
     return any(_covers_same_moment(c, t0, t1) for c in items)
 
 
+def _clean_text(v, cap):
+    """Free LLM text -> single bounded line (or None)."""
+    if not isinstance(v, str) or not v.strip():
+        return None
+    return " ".join(v.split())[:cap]
+
+
 def _discovered(t0, t1, fields):
     c = Candidate(t0=round(t0, 3), t1=round(t1, 3), signal_score=0.0,
                   reasons=["llm-discovered"])
@@ -441,6 +450,10 @@ def _apply_moments(cands, moments, cfg, *, style_names=(), channel_names=()):
             used.add(id(target))
             for k, v in fields.items():
                 setattr(target, k, v)
+            # adopt the LLM's proposed cut window too — the brain chose where
+            # the setup starts and the beat ends; keeping only the event
+            # instant would truncate exactly that editorial intent
+            target.t0, target.t1 = round(t0, 3), round(t1, 3)
         elif not (_overlaps_strictly(cands, t0, t1)
                   or _overlaps_strictly(discovered, t0, t1)):
             discovered.append(_discovered(t0, t1, fields))
@@ -484,6 +497,7 @@ def _blend_second_opinion(cands, moments_b, *, style_names=(), channel_names=())
             # the primary brain skipped this candidate — adopt the second read
             for k, v in _moment_fields(m, style_names, channel_names).items():
                 setattr(target, k, v)
+            target.t0, target.t1 = round(t0, 3), round(t1, 3)
     cands.extend(discovered)
 
 

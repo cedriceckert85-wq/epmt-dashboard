@@ -93,7 +93,12 @@ class Config:
         try:
             import tomllib
             data = tomllib.loads(p.read_text(encoding="utf-8"))
-        except Exception:
+        except Exception as e:
+            # a one-character TOML typo must not SILENTLY discard the user's
+            # whole configuration
+            import sys
+            print(f"WARNING: {p} could not be parsed ({type(e).__name__}: {e}) "
+                  "— using built-in defaults", file=sys.stderr)
             return cfg
         flat = {}
         for section in data.values():

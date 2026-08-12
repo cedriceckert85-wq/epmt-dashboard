@@ -48,6 +48,10 @@ def cmd_analyze(args):
     if not args.transcript and not Path(args.vod).exists():
         print(f"VOD not found: {args.vod}", file=sys.stderr)
         return 2
+    for label, p in (("transcript", args.transcript), ("events", args.events)):
+        if p and not Path(p).exists():
+            print(f"{label} file not found: {p}", file=sys.stderr)
+            return 2
     mem_path = None if args.no_memory else _memory_path(cfg)
     sty_path = None if getattr(args, "no_style", False) else _style_path(cfg)
     plan, meta = analyze(args.vod, cfg, out, transcript_path=args.transcript,
@@ -73,6 +77,9 @@ def cmd_batch(args):
     from .style import list_videos
     cfg = _cfg(args)
     folder = Path(args.folder)
+    if not folder.exists():
+        print(f"Folder does not exist: {folder}", file=sys.stderr)
+        return 2
     vids = list_videos(folder)
     if not vids:
         print(f"No videos found in {folder} (looked for "
@@ -162,11 +169,23 @@ def cmd_cut(args):
     cfg = _cfg(args)
     from .util import read_json
     from .render import cut_clip, pick_encoder
-    plan = read_json(args.plan)["clips"]
+    if not Path(args.vod).exists():
+        print(f"VOD not found: {args.vod}", file=sys.stderr)
+        return 2
+    if not Path(args.plan).exists():
+        print(f"plan file not found: {args.plan}", file=sys.stderr)
+        return 2
+    try:
+        plan = read_json(args.plan)["clips"]
+    except (ValueError, KeyError, TypeError):
+        print(f"{args.plan} is not a valid edit plan (expected JSON with a "
+              "'clips' list, as written by analyze)", file=sys.stderr)
+        return 2
     _, enc = pick_encoder(cfg)
     out = Path(args.out or "cuts")
     out.mkdir(parents=True, exist_ok=True)
     print(f"Cutting {len(plan)} clips with {enc} …")
+    failed = 0
     for p in plan:
         name = f"{p['rank']:02d}_{_safe_slug(p.get('category'))}.mp4"
         try:
@@ -175,7 +194,10 @@ def cmd_cut(args):
             print(f"  ok  {name}")
         except Exception as e:
             print(f"  FAIL {name}: {e}")
-    return 0
+            failed += 1
+    if failed:
+        print(f"{failed}/{len(plan)} clips failed.", file=sys.stderr)
+    return 1 if failed else 0
 
 
 def cmd_doctor(args):
@@ -327,15 +349,17 @@ def build_parser():
 
     b = sub.add_parser("batch", help="analyze every video in a folder (brain grows across all)")
     b.add_argument("folder")
-    b.add_argument("--no-llm", action="store_true")
-    b.add_argument("--no-memory", action="store_true")
-    b.add_argument("--no-style", action="store_true")
-    b.add_argument("--whisper-model")
+    b.add_argument("--no-llm", action="store_true", help="signal-only, no editorial LLM")
+    b.add_argument("--no-memory", action="store_true", help="skip the channel memory")
+    b.add_argument("--no-style", action="store_true", help="ignore the learned style profile")
+    b.add_argument("--whisper-model", help="tiny|base|small|medium")
     b.set_defaults(func=cmd_batch)
 
     l = sub.add_parser("learn", help="learn your target style from the references folder")
     l.add_argument("folder", nargs="?",
                    help="folder with example clips (default: references/ next to the tool)")
+    l.add_argument("--no-llm", action="store_true",
+                   help="mechanical profile only (median length/pace), skip the LLM")
     l.set_defaults(func=cmd_learn)
 
     fe = sub.add_parser("fetch", help="download videos by URL into references/ (needs yt-dlp)")
@@ -348,7 +372,7 @@ def build_parser():
     c.add_argument("vod")
     c.add_argument("plan")
     c.add_argument("--out", help="output folder (default: cuts)")
-    c.add_argument("--encoder")
+    c.add_argument("--encoder", help="auto|amf|x264")
     c.set_defaults(func=cmd_cut)
 
     d = sub.add_parser("doctor", help="check local tooling")
@@ -359,7 +383,7 @@ def build_parser():
     m.set_defaults(func=cmd_memory)
 
     s = sub.add_parser("selftest", help="run the editorial core on the bundled sample")
-    s.add_argument("--out")
+    s.add_argument("--out", help="output folder (default: selftest_out)")
     s.add_argument("--signal-only", action="store_true",
                    help="use the deterministic fallback instead of the demo editorial brain")
     s.set_defaults(func=cmd_selftest)
@@ -368,4 +392,11 @@ def build_parser():
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
-    return args.func(args)
+    from .ingest import IngestError
+    from .transcribe import TranscribeError
+    try:
+        return args.func(args)
+    except (IngestError, TranscribeError) as e:
+        # expected operational failures get a message, never a traceback
+        print(f"\nERROR: {e}", file=sys.stderr)
+        return 1

@@ -10,7 +10,12 @@ def transcript_excerpt(segments, t0, t1, max_chars=600):
             continue
         parts.append(s.text.strip())
     text = " ".join(p for p in parts if p)
-    return (text[:max_chars] + "…") if len(text) > max_chars else text
+    if len(text) <= max_chars:
+        return text
+    # keep head AND tail: the punchline lives at the END of a clip, and a
+    # head-only cut would drop exactly the line the clip exists for
+    half = max_chars // 2
+    return text[:half] + " … " + text[-half:]
 
 
 def build_timeline_doc(segments, reactions, events, *, chunk_s=None):

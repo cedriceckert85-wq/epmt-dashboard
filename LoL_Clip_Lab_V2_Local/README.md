@@ -243,6 +243,10 @@ Check what's available any time:
 
 ## Usage
 
+Run everything **from the tool folder** (the package is not installed
+system-wide), with the venv's python — on Windows `.venv\Scripts\python`,
+on Linux/Mac `.venv/bin/python` (shown below as `python` for brevity):
+
 ```
 # analyze a downloaded VOD -> edit sheet
 python -m clip_lab analyze "C:\vods\game1.mkv"
@@ -349,10 +353,11 @@ Edit `config.toml` (read on Python 3.11+). Highlights:
 ## Tests
 
 ```
+pip install pytest        # once (the venv ships without it)
 python -m pytest tests/unit -q
 ```
 
-188 unit + integration tests cover the pure logic (reaction detection, ranking,
+205 unit + integration tests cover the pure logic (reaction detection, ranking,
 punchline-aware cutting, the editorial contract, JSON extraction, event loading,
 config) and an end-to-end run on the bundled fixtures.
 

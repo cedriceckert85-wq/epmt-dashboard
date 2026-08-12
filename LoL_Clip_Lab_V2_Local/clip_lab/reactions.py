@@ -31,20 +31,26 @@ def detect_reactions(samples, sr, *, frame_ms=50, min_gap_s=2.0,
     # log energy is more perceptual and stabilizes the threshold
     loge = np.log(rms + 1e-6)
     win = max(3, int(baseline_window_s / hop_s))
-    # rolling median + MAD via uniform filters (cheap, dependency-free)
+    # rolling median + MAD via a sliding window (dependency-free; measured
+    # ~linear, a 3h VOD takes ~16s — fast enough without downsampling)
     def _moving(a, w, fn):
         pad = w // 2
         ap = np.pad(a, pad, mode="edge")
         return np.array([fn(ap[i:i + w]) for i in range(len(a))])
 
-    # downsample the baseline computation for speed on long VODs
     med = _moving(loge, win, np.median)
-    mad = _moving(np.abs(loge - med), win, np.median) + 1e-6
+    # MAD floor: on near-constant audio (hum, muted mic) the MAD collapses
+    # toward 0 and the z-score would explode, turning encoder ripple into
+    # fake max-intensity 'reactions'
+    mad = np.maximum(_moving(np.abs(loge - med), win, np.median), 1e-2)
     z = (loge - med) / (1.4826 * mad)          # robust z-score
     # map prominence 0..1 -> z threshold ~ [1.0 .. 4.0]
     z_thresh = 1.0 + 3.0 * float(prominence)
 
     above = z >= z_thresh
+    # absolute energy floor: a 'reaction' quieter than -50 dBFS is not a
+    # human reaction, whatever the local statistics say
+    above &= rms >= 10 ** (-50 / 20)
     events = []
     i = 0
     min_gap_frames = int(min_gap_s / hop_s)

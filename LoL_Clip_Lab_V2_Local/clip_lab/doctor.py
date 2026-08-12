@@ -24,7 +24,7 @@ def run_doctor(cfg):
         "reads the VOD audio + cuts clips", fatal=True)
     add("ffprobe", which("ffprobe") is not None, "reads VOD duration")
     add("faster-whisper", transcribe.available(),
-        "transcription (or pass --transcript to skip)")
+        "transcription — model downloads on first analyze (needs internet once)")
 
     llm = LLMClient(cfg.llm_cmd, cfg.llm_timeout_s)
     add("LLM CLI (" + cfg.llm_cmd[0] + ")", llm.available(),

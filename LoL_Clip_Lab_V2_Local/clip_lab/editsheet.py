@@ -82,9 +82,13 @@ def _channel_plans(plan):
     for name in names:
         clips = [p for p in plan if name in p.channels]
         total = sum(p.duration for p in clips)
-        L.append(f"### {name}  ·  {len(clips)} clips  ·  {total:.0f}s total")
+        unit = "clip" if len(clips) == 1 else "clips"
+        L.append(f"### {name}  ·  {len(clips)} {unit}  ·  {total:.0f}s total")
         for p in clips:
-            warn = "  ⚠️ over 60s" if "short" in name and p.duration > 60 else ""
+            # over-60s note on any short-form-named channel, incl. common
+            # renames (the user's channels are config-driven)
+            shortish = any(k in name for k in ("short", "kurz", "tiktok", "reel"))
+            warn = "  ⚠️ over 60s" if shortish and p.duration > 60 else ""
             L.append(f"- {p.rank}. {p.title}  ({p.duration:.1f}s{warn})")
         L.append("")
     L.append("Uncut upload: paste `chapters.txt` into the video description — "

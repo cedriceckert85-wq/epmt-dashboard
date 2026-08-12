@@ -32,11 +32,21 @@ def transcribe(wav_path, cfg, *, log=lambda *a: None):
     lang = None if cfg.whisper_language == "auto" else cfg.whisper_language
     log(f"transcribe: loading whisper '{cfg.whisper_model}' on {cfg.whisper_device} "
         f"({cfg.whisper_compute_type}) …")
-    model = WhisperModel(cfg.whisper_model, device=cfg.whisper_device,
-                         compute_type=cfg.whisper_compute_type)
-    segments, info = model.transcribe(
-        str(wav_path), language=lang, vad_filter=cfg.whisper_vad,
-        word_timestamps=True)
+    try:
+        # first run DOWNLOADS the model from Hugging Face — offline/blocked
+        # networks must yield a clear message, not an httpx traceback
+        model = WhisperModel(cfg.whisper_model, device=cfg.whisper_device,
+                             compute_type=cfg.whisper_compute_type)
+        segments, info = model.transcribe(
+            str(wav_path), language=lang, vad_filter=cfg.whisper_vad,
+            word_timestamps=True)
+    except Exception as e:
+        raise TranscribeError(
+            f"whisper model '{cfg.whisper_model}' could not be loaded "
+            f"({type(e).__name__}). The FIRST run downloads the model and "
+            "needs internet once - after that it is cached locally. "
+            "Alternatively pass --transcript your_transcript.json to skip "
+            f"whisper entirely. Original error: {e}") from e
 
     out = []
     for s in segments:

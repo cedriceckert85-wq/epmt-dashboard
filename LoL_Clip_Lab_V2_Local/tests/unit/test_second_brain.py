@@ -50,9 +50,9 @@ def test_second_brain_adopts_candidate_primary_skipped():
     a = brain('[{"t0": 90, "t1": 110, "semantic_score": 6}]')     # skips 500
     b = brain('[{"t0": 490, "t1": 510, "semantic_score": 7, "title": "late"}]')
     out, _, _ = run_editorial(cands, "log", a, cfg(), llm_b=b)
-    late = [c for c in out if c.t0 == 500.0][0]
+    late = [c for c in out if c.title == "late"][0]
     assert late.semantic_score == 7
-    assert late.title == "late"
+    assert late.t0 == 490.0 and late.t1 == 510.0   # B's cut window adopted
 
 
 def test_bad_second_brain_keeps_primary_result():

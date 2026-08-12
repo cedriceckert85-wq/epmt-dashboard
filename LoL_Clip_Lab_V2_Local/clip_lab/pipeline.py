@@ -59,6 +59,9 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
 
     # 3) optional game events
     evs = events_mod.load_events(events_path) if events_path else []
+    if events_path and not evs:
+        log(f"[warn] no events parsed from {events_path} — check the format "
+            "(JSON list/dict or CSV 't,kind[,weight]')")
     log(f"[4/6] context: {len(segments)} speech segments, {len(reacts)} reactions, "
         f"{len(evs)} game events")
 

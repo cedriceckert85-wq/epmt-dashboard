@@ -92,13 +92,16 @@ def detect_cut_pace(path, duration, *, threshold=0.35, probe_s=120,
 
 
 def _make_transcriber(cfg):
-    """One shared whisper model for all reference clips (or None)."""
+    """One shared whisper model for all reference clips (or None). The model
+    CONSTRUCTOR downloads from Hugging Face on first use, so it must sit
+    inside the guard too — offline learning still works, just without
+    transcript samples (as the module docstring promises)."""
     try:
         from faster_whisper import WhisperModel
+        model = WhisperModel(cfg.whisper_model, device=cfg.whisper_device,
+                             compute_type=cfg.whisper_compute_type)
     except Exception:
         return None
-    model = WhisperModel(cfg.whisper_model, device=cfg.whisper_device,
-                         compute_type=cfg.whisper_compute_type)
 
     def _transcribe_wav(wav_path):
         segments, _ = model.transcribe(str(wav_path), vad_filter=True)
@@ -205,23 +208,29 @@ def _consolidate(name, fps, llm, cfg, log):
         return mechanical
 
 
-def _finite_pos(values):
+def _finite(values, *, minimum):
     out = []
     for v in values:
         f = _num_or(v, None)
-        if f is not None and f > 0:
+        if f is not None and f >= minimum:
             out.append(f)
     return sorted(out)
 
 
 def _mechanical_profile(fps):
     prof = {"learned_from": len(fps)}
-    durs = _finite_pos(f.get("duration_s") for f in fps)
-    cpms = _finite_pos(f.get("cuts_per_min") for f in fps)
+    durs = _finite((f.get("duration_s") for f in fps), minimum=1e-9)
+    # 0 cuts/min is a REAL measurement (long uncut takes) — the defining
+    # trait of a montage-of-one style must not be silently discarded
+    cpms = _finite((f.get("cuts_per_min") for f in fps), minimum=0.0)
     if durs:
         prof["target_clip_s"] = round(min(90.0, max(5.0, durs[len(durs) // 2])), 1)
     if cpms:
-        prof["pace"] = f"~{cpms[len(cpms) // 2]:.1f} cuts/min in the reference clips"
+        median = cpms[len(cpms) // 2]
+        if median == 0:
+            prof["pace"] = "long uncut takes (~0 cuts/min in the reference clips)"
+        else:
+            prof["pace"] = f"~{median:.1f} cuts/min in the reference clips"
     return prof
 
 

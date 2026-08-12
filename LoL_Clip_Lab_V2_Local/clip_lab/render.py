@@ -5,6 +5,7 @@ Cutting is the secondary output — the edit sheet is the primary deliverable �
 so this is best-effort and never required for `analyze`.
 """
 import subprocess
+from pathlib import Path
 
 from .util import which
 
@@ -42,10 +43,38 @@ def cut_clip(vod_path, out_path, t0, t1, cfg, *, vertical=False):
     if vertical:
         # simple centered 9:16 crop (subject-follow is out of scope for the test tool)
         filt = ["-vf", "crop=ih*9/16:ih,scale=1080:1920"]
-    cmd = (["ffmpeg", "-y", "-ss", f"{float(t0):.3f}", "-i", str(vod_path),
-            "-t", f"{dur:.3f}"] + filt + vargs
+    cmd = (["ffmpeg", "-hide_banner", "-y", "-ss", f"{float(t0):.3f}",
+            "-i", str(vod_path), "-t", f"{dur:.3f}"] + filt + vargs
            + ["-c:a", "aac", "-b:a", "160k", str(out_path)])
     p = subprocess.run(cmd, capture_output=True, text=True)
     if p.returncode != 0:
         raise RuntimeError(f"ffmpeg cut failed: {p.stderr.strip()[-400:]}")
+    # ffmpeg exits 0 even when -ss lies past the end of the video and NOTHING
+    # was encoded — a 262-byte husk with no streams must not be reported 'ok'
+    actual = _output_duration(out_path)
+    if actual is None or actual < 0.05:
+        try:
+            Path(str(out_path)).unlink()
+        except OSError:
+            pass
+        raise RuntimeError(
+            f"clip range {float(t0):.1f}s-{float(t1):.1f}s is outside the "
+            "video — nothing was encoded")
+    if actual + 1.5 < dur:
+        # range ran past the end of the VOD: real, but shorter than asked
+        print(f"  note: clip truncated at end of video ({actual:.1f}s of "
+              f"{dur:.1f}s requested)")
     return out_path
+
+
+def _output_duration(path):
+    if not which("ffprobe"):
+        return 1.0  # cannot verify — assume fine rather than fail the cut
+    try:
+        p = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
+            capture_output=True, text=True, timeout=60)
+        return float((p.stdout or "").strip())
+    except (OSError, subprocess.TimeoutExpired, ValueError):
+        return None

@@ -215,6 +215,20 @@ def test_python_placeholder_substituted(tmp_path):
     assert out.status == "pass"
 
 
+def test_spaced_interpreter_path_survives_parsing():
+    # emulate a Windows interpreter at a spaced path with the runner's own
+    # substitution + parse: {python} is quoted, then shlex(posix=False)+strip
+    # must recover the full spaced path as a single argv[0].
+    import shlex
+    fake = r"C:\Program Files\Python311\python.exe"
+    command = '{python} -c "print(1)"'.replace("{python}", '"' + fake + '"')
+    argv = shlex.split(command, posix=False)
+    argv = [a[1:-1] if len(a) >= 2 and a[0] == a[-1] and a[0] in ("'", '"') else a
+            for a in argv]
+    assert argv[0] == fake                # not split at the space
+    assert argv[1:] == ["-c", "print(1)"]
+
+
 def test_non_utf8_output_does_not_crash(tmp_path):
     # a test emitting a raw non-UTF-8 byte must not raise UnicodeDecodeError
     s = spec(f'"{PY}" -c "import os,sys;os.write(1, b\'\\xff\\xfe\');sys.exit(0)"')

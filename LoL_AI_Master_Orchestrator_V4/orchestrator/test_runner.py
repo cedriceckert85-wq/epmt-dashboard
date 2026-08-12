@@ -119,7 +119,11 @@ def run_registry_test(name, spec, *, root, run_id, capabilities, deferrable,
             name=name, status="unverified", deferred=name in deferrable,
             reason=f"unmet host requirements: {', '.join(unmet)}")
 
-    command = spec["command"].replace("{run_id}", run_id).replace("{python}", sys.executable)
+    # quote the interpreter path so a spaced sys.executable (Windows all-users
+    # install to "C:\Program Files\..." or a spaced username) survives shlex;
+    # the surrounding quotes are stripped again below (posix) / on nt.
+    command = (spec["command"].replace("{run_id}", run_id)
+               .replace("{python}", '"' + sys.executable + '"'))
     evidence = str(spec["evidence"]).replace("{run_id}", run_id)
     evidence_abs = root / evidence
     evidence_abs.parent.mkdir(parents=True, exist_ok=True)

@@ -129,6 +129,7 @@
 - `tests/unit/test_acceptance.py`
 - `tests/unit/test_e2e_dry_run.py`
 - `tests/unit/test_gates.py`
+- `tests/unit/test_gitops.py`
 - `tests/unit/test_process_runner.py`
 - `tests/unit/test_registry_and_config.py`
 - `tests/unit/test_resultio.py`

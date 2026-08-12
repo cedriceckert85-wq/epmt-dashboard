@@ -25,7 +25,12 @@ class GitRepo:
             self._no_hooks_dir.mkdir(parents=True, exist_ok=True)
         except OSError:
             pass
-        return ["git", "-c", f"core.hooksPath={self._no_hooks_dir}"]
+        # hooks disabled (planted-hook protection) AND signing disabled: the
+        # orchestrator's control-plane commits must never invoke a GPG/SSH
+        # signer, which fails headless (no TTY/pinentry) and would abort every
+        # commit when the user has commit.gpgsign=true globally.
+        return ["git", "-c", f"core.hooksPath={self._no_hooks_dir}",
+                "-c", "commit.gpgsign=false", "-c", "tag.gpgsign=false"]
 
     def _run(self, *args, check=True, capture=True):
         p = subprocess.run([*self._base(), *args], cwd=self.root,
@@ -42,7 +47,12 @@ class GitRepo:
 
     def init(self, main_branch="main"):
         if not self.is_repo():
-            self._run("init", "-b", main_branch)
+            # `git init -b <branch>` needs git >= 2.28; fall back to plain init
+            # + repointing the unborn HEAD so older LTS git (RHEL/Rocky 8,
+            # Ubuntu 20.04, git 2.20-2.27) still starts on `main`.
+            if self._run("init", "-b", main_branch, check=False).returncode != 0:
+                self._run("init")
+                self._run("symbolic-ref", "HEAD", f"refs/heads/{main_branch}", check=False)
         # commits need an identity; set a repo-local one if none configured
         for key, val in (("user.name", "LoL Orchestrator"),
                          ("user.email", "orchestrator@localhost")):

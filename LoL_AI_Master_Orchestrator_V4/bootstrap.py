@@ -92,12 +92,17 @@ def ensure_venv():
 
 def ensure_git_repo():
     def git(*args, check=True):
-        return subprocess.run(["git", *args], cwd=ROOT, capture_output=True,
-                              text=True, check=check)
+        # never let a globally-configured GPG/SSH signer (which fails headless)
+        # break our baseline commit; hooks stay default here (own package).
+        return subprocess.run(
+            ["git", "-c", "commit.gpgsign=false", "-c", "tag.gpgsign=false", *args],
+            cwd=ROOT, capture_output=True, text=True, check=check)
     inside = git("rev-parse", "--is-inside-work-tree", check=False)
     if inside.returncode != 0 or inside.stdout.strip() != "true":
         info("Initialisiere git-Repository …")
-        git("init", "-b", "main")
+        if git("init", "-b", "main", check=False).returncode != 0:
+            git("init")                       # git < 2.28 has no -b flag
+            git("symbolic-ref", "HEAD", "refs/heads/main", check=False)
     else:
         top = git("rev-parse", "--show-toplevel", check=False).stdout.strip()
         if top and Path(top).resolve() != ROOT.resolve():

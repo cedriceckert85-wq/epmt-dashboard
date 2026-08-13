@@ -1,0 +1,12 @@
+[package]
+name = "counsel-gui"
+version = "0.1.0"
+edition = "2021"
+description = "GUI fuer den Counsel: Claude & Codex diskutieren, du liest mit"
+
+[dependencies]
+eframe = "0.31"
+
+[profile.release]
+strip = true
+lto = true

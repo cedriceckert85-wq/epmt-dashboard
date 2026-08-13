@@ -7,6 +7,13 @@ Claude Code CLI und die Codex CLI als getrennte Prozesse durch alle
 21 Bauphasen des LoL-AI-Cutters — mit echten Tests, Cross-Vendor-Review,
 Secret-Scans, Git-Checkpoints und fail-closed Gates.
 
+**Neu (V4.2): Der Kreativ-Kern ist beigelegt.** `vendor/clip_lab_core/`
+enthält die fertig gebaute, verifizierte lokale Edition der Editorial-
+Pipeline (Whisper/Reaktionen, LLM-Editorial mit Kanal-Gedächtnis, Multi-
+Style-Referenzen, Kanal-Routing, Doppel-Gehirn, punchline-bewusster Schnitt —
+222 Tests). Die Bauphasen 09–13 STARTEN von diesem Kern statt ihn neu zu
+erfinden; siehe `docs/VENDORED_CORE.md`.
+
 ---
 
 ## Voraussetzungen (einmalig, ~10 Minuten)

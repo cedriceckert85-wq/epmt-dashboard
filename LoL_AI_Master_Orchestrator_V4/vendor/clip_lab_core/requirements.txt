@@ -1,0 +1,8 @@
+# LoL Clip Lab — local test edition.
+#
+# numpy is the only hard dependency (reaction detection + wav reading).
+# faster-whisper does the transcription; it is imported lazily, so if you'd
+# rather supply your own transcript (clip_lab analyze --transcript ...) you can
+# comment it out. On the AMD box it runs on CPU (int8) — no CUDA needed.
+numpy>=1.24
+faster-whisper>=1.0.0

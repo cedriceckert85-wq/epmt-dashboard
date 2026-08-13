@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+selftest_out/
+*_clips/
+work/
+channel_memory.json
+selftest_memory*.json
+style_profile.json
+references/*
+!references/README.txt

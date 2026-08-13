@@ -1,5 +1,17 @@
 # BUILD PHASE 13 — Automatic Cut Rules
 
+## ⚠ VENDORED FIELD-TESTED CORE — adopt, do not re-derive
+
+`vendor/clip_lab_core/` ships the PROVEN implementation of this phase's
+architecture (LoL Clip Lab V2: 222 passing tests, adversarially audited, run
+against real ffmpeg and a real `claude -p` loop). Read `docs/VENDORED_CORE.md`
+FIRST. Start your implementation from that package and extend it; keep its
+tests green against your adaptation. Re-implementing its mechanics from
+scratch (whole-script chunked session pass, channel memory, multi-style
+references with format-vs-cut classification, channel routing + chapters,
+dual-brain blend, punchline-aware EDL, all sanitization/hardening) is a
+review blocker — those mechanics encode hundreds of verified fixes.
+
 Read persistent instructions (CLAUDE.md/AGENTS.md), MASTER_ORCHESTRATOR.md and the orchestrator-generated current task.
 
 ## Preconditions

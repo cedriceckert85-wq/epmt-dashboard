@@ -6,6 +6,16 @@ Der Orchestrator wird in diesem Paket **fertig mitgeliefert** und validiert
 sich in Phase 00 selbst (Doctor + komplette Unit-Testsuite).
 
 ## Wahrheitsquellen
+
+### Erprobter Kern (vendor/clip_lab_core/)
+
+Die Kreativ-Pipeline der Phasen 09–13 existiert bereits als kampferprobte
+lokale Edition (LoL Clip Lab V2, 222 Tests, adversarial auditiert, gegen
+echtes ffmpeg und echtes `claude -p` verifiziert) unter
+`vendor/clip_lab_core/`. Regel für Builder: **übernehmen und erweitern,
+nicht neu erfinden** — Details in `docs/VENDORED_CORE.md`. Reviewer werten
+Neu-Implementierungen der dort gelisteten Mechaniken als Blocker.
+
 Kanonisch:
 - state/project_state.json
 - state/journal.jsonl

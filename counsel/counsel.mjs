@@ -18,6 +18,9 @@
  *   --role-def <n=txt>  Eigene Rolle definieren, z. B. --role-def "security=Du bist
  *                       Security-Engineer und bewertest Angriffsflaechen." (mehrfach)
  *   --moderator <wer>   Wer fasst zusammen: claude | codex (Default: claude)
+ *   --final <text>      Eigene Aufgabe fuer den Moderator statt des
+ *                       Standard-Entscheidungsprotokolls (z. B. "Schreibe die
+ *                       final abgestimmten Prompts vollstaendig aus.")
  *   --first <wer>       Welche Engine je Rolle zuerst spricht: claude | codex (Default: claude)
  *   --context <datei>   Datei als Kontext mitgeben (mehrfach moeglich)
  *   --lang <de|en>      Sprache der Diskussion (Default: de)
@@ -48,6 +51,7 @@ function parseArgs(argv) {
     roles: ["architekt"],
     members: [],
     roleDefs: {},
+    final: null,
     moderator: "claude",
     first: "claude",
     context: [],
@@ -75,6 +79,7 @@ function parseArgs(argv) {
         break;
       }
       case "--moderator": opts.moderator = args.shift(); break;
+      case "--final": opts.final = args.shift(); break;
       case "--first": opts.first = args.shift(); break;
       case "--context": opts.context.push(args.shift()); break;
       case "--lang": opts.lang = args.shift(); break;
@@ -339,12 +344,15 @@ function main() {
   }
 
   console.error(`--- Moderator (${opts.moderator}) erstellt das Entscheidungsprotokoll ...`);
+  const neutralIntro = opts.lang === "en"
+    ? `You are "${opts.moderator}", the counsel's neutral moderator. Produce the counsel's final deliverable based on the full discussion.`
+    : `Du bist "${opts.moderator}", der neutrale Moderator des Counsels. Erstelle auf Basis der gesamten Diskussion das finale Arbeitsergebnis des Counsels.`;
   const modPrompt = buildPrompt({
-    intro: t.moderator(opts.moderator),
+    intro: opts.final ? neutralIntro : t.moderator(opts.moderator),
     t, opts, transcript,
-    instruction: opts.lang === "en"
+    instruction: opts.final || (opts.lang === "en"
       ? "Write the decision record now, following the structure above."
-      : "Erstelle jetzt das Entscheidungsprotokoll gemaess der oben vorgegebenen Struktur.",
+      : "Erstelle jetzt das Entscheidungsprotokoll gemaess der oben vorgegebenen Struktur."),
     contextBlock,
   });
   const decision = runAgent(opts.moderator, modPrompt, opts);
@@ -363,7 +371,7 @@ function main() {
     `- Runden: ${opts.rounds} | Moderator: ${opts.moderator}`,
     opts.context.length ? `- Kontext: ${opts.context.join(", ")}` : null,
     ``,
-    `# Entscheidungsprotokoll`,
+    opts.final ? `# Ergebnis` : `# Entscheidungsprotokoll`,
     ``,
     decision,
     ``,

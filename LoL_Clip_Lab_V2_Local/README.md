@@ -165,6 +165,13 @@ Channel folders can hold SEVERAL style subfolders — the learned style is then
 named `channel_flavor` (`insta_funny`), and a clip tagged with such a style is
 automatically routed to that channel too.
 
+**Whole-video references become FORMAT profiles, not cut styles:** examples in
+`yt/` (10-minute videos) or `uncut/` (full sessions) are recognized by their
+length and learned as the channel's target FORMAT — target runtime shown in
+the channel plan — instead of pretending to be a per-moment cutting style. A
+learned cut style may also exceed the generic `clip_max_s` (its own target
+length + 25% wins), so a 60s montage style is never silently truncated to 45s.
+
 Drop **example clips you like** into each (5–15 per style), then:
 
 ```
@@ -213,9 +220,13 @@ the content, alongside category and style:
   analyze: ready-to-paste YouTube chapter markers (`00:00 Intro`,
   `02:26 First Blood, Finally`, …) for the video description
 
-The sheet ends with a **Channel plans** section listing which clips go where.
-Rename or extend the channels in `config.toml` (`channels = [...]`) — the tags
-and plans follow whatever names you define.
+The sheet ends with a **Channel plans** section: clip channels get a
+**chronological** cut list with timecodes (a highlight video is assembled in
+story order — ranks are shown per clip), `kind = "full"` channels (uncut) get
+the chapters.txt pointer instead, `max_s` drives the length warning, and
+`vertical = true` channels get 9:16 cuts with `--cut`. Rename or extend the
+channels in `config.toml` (`channels = [...]`) — tags and plans follow your
+names.
 
 ## Batch: a whole folder of VODs
 
@@ -264,7 +275,8 @@ python -m clip_lab analyze game1.mkv --transcript game1_transcript.json
 # add optional game events (kills/objectives you logged)
 python -m clip_lab analyze game1.mkv --events game1_events.json
 
-# your VOD has a separate mic track? point at it (e.g. second audio stream)
+# your VOD has a separate mic track? point at it (e.g. second audio stream) —
+# or set audio_stream = "a:1" in config.toml once, which also applies to batch
 python -m clip_lab analyze game1.mkv --audio-stream a:1
 
 # a WHOLE FOLDER of VODs in one go (the channel memory grows across all)
@@ -364,7 +376,7 @@ pip install pytest        # once (the venv ships without it)
 python -m pytest tests/unit -q
 ```
 
-209 unit + integration tests cover the pure logic (reaction detection, ranking,
+222 unit + integration tests cover the pure logic (reaction detection, ranking,
 punchline-aware cutting, the editorial contract, JSON extraction, event loading,
 config) and an end-to-end run on the bundled fixtures.
 

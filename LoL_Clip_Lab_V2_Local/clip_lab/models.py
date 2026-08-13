@@ -62,6 +62,7 @@ class Candidate:
     lore_refs: list = field(default_factory=list)        # list[str] known channel gags this continues
     style_target: Optional[str] = None                   # learned reference style to cut this in
     channels: list = field(default_factory=list)          # target channels this moment serves
+    window_from_llm: bool = False                          # t0/t1 are the brain's cut window (setup included)
     caption_suggestions: list = field(default_factory=list)  # [{t, text}]
     zoom_suggestions: list = field(default_factory=list)     # [{t, duration}]
     sfx_suggestions: list = field(default_factory=list)      # [{t, kind}]

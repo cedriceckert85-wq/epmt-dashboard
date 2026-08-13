@@ -11,12 +11,14 @@ def _normalize(cands, attr):
     return {id(c): getattr(c, attr) / hi for c in cands}
 
 
-def rank_candidates(cands, cfg):
+def rank_candidates(cands, cfg, top_k=None):
     """Assign final_score = w_signal*norm(signal) + w_semantic*norm(semantic)
     and return the selected top set (global top_k, with a per-10-minute cap so
-    one busy stretch cannot crowd everything else out). Stable, deterministic."""
+    one busy stretch cannot crowd everything else out). Stable, deterministic.
+    top_k overrides cfg.top_k (the pipeline scales it with session length)."""
     if not cands:
         return []
+    limit = top_k if top_k is not None else cfg.top_k
     nsig = _normalize(cands, "signal_score")
     nsem = _normalize(cands, "semantic_score")
     for c in cands:
@@ -33,6 +35,6 @@ def rank_candidates(cands, cfg):
             continue
         per_bucket[bucket] = per_bucket.get(bucket, 0) + 1
         kept.append(c)
-        if len(kept) >= cfg.top_k:
+        if len(kept) >= limit:
             break
     return sorted(kept, key=lambda c: (-c.final_score, c.t0))

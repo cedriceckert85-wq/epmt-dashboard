@@ -28,6 +28,11 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
     work = out / "work"
     work.mkdir(parents=True, exist_ok=True)
 
+    # the CLI flag wins; otherwise the config's audio_stream (mic track of a
+    # two-track OBS recording) applies — also to every BATCH run
+    if audio_stream is None:
+        audio_stream = getattr(cfg, "audio_stream", "") or None
+
     # 1) transcript (from file, or transcribe the VOD)
     audio_wav = None  # set only when WE extract audio this run
     if transcript_path:
@@ -35,7 +40,8 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
         segments = transcribe.load_transcript(transcript_path)
         duration = _duration_from(segments)
     else:
-        log("[1/6] audio: extracting mono track with ffmpeg …")
+        log("[1/6] audio: extracting mono track with ffmpeg …"
+            + (f" (stream {audio_stream})" if audio_stream else ""))
         audio_wav = Path(ingest.extract_audio(vod_path, work / "audio.wav",
                                               audio_stream=audio_stream))
         duration = ingest.probe_duration(vod_path)
@@ -54,6 +60,13 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
             samples, sr, frame_ms=cfg.reaction_frame_ms,
             min_gap_s=cfg.reaction_min_gap_s, prominence=cfg.reaction_prominence,
             baseline_window_s=cfg.reaction_baseline_window_s)
+        if not getattr(cfg, "keep_work_audio", False):
+            # the wav is pure intermediate (~115 MB/hour) — a 20-VOD batch
+            # would otherwise strew gigabytes of scratch audio around
+            try:
+                audio_wav.unlink()
+            except OSError:
+                pass
     else:
         log("[3/6] reactions: no audio (transcript-only mode) — skipping")
 
@@ -103,17 +116,37 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
     log("[5/6] editorial: asking the LLM for humor/callbacks/punchlines …"
         if (cfg.use_llm and llm.available())
         else "[5/6] editorial: LLM unavailable — signal-only ranking")
+    cut_profiles = style_mod.cut_styles(style_profiles)
     cands, source, context = editorial_mod.run_editorial(
         cands, doc, llm, cfg, memory_brief=brief, style_brief=sbrief,
-        style_names=tuple(style_profiles), llm_b=llm_b, log=log)
+        style_names=tuple(cut_profiles), llm_b=llm_b, log=log)
 
-    ranked = rank.rank_candidates(cands, cfg)
-    plan = build_edit_plan(ranked, segments, cfg, duration)
+    # long sessions deserve more clips: scale the global cap with duration
+    # (a 4h stream capped at 12 clips cannot feed a 10-minute yt video)
+    eff_top_k = max(cfg.top_k, min(40, int((duration or 0) // 600) * 3))
+    ranked = rank.rank_candidates(cands, cfg, top_k=eff_top_k)
+    style_targets = {n: p["target_clip_s"] for n, p in cut_profiles.items()
+                     if p.get("target_clip_s")}
+    plan = build_edit_plan(ranked, segments, cfg, duration,
+                           style_targets=style_targets)
 
     # 5) write the edit sheet (+ update the brain with today's findings)
     meta = {"duration": duration, "editorial": source, "reactions": len(reacts),
             "events": len(evs), "candidates": len(cands),
             "session_context": context}
+    # channel specs (kind/max_s) + learned FORMAT targets drive the plan
+    # sections: chronological cut lists, length warnings, target runtimes
+    meta["channel_specs"] = {
+        str(c.get("name", "")).strip().lower(): {
+            "kind": c.get("kind", "clips"),
+            "max_s": c.get("max_s"),
+        }
+        for c in (cfg.channels if isinstance(cfg.channels, list) else [])
+        if isinstance(c, dict) and str(c.get("name", "")).strip()
+    }
+    for name, prof in style_mod.format_profiles(style_profiles).items():
+        if name in meta["channel_specs"] and prof.get("target_video_s"):
+            meta["channel_specs"][name]["target_video_s"] = prof["target_video_s"]
     if sbrief and style_profiles:
         meta["style"] = {
             "styles": sorted(style_profiles),
@@ -125,6 +158,10 @@ def analyze(vod_path, cfg, out_dir, *, transcript_path=None, events_path=None,
         # source can legitimately be 'signal' with a rich session context when
         # only the moment pass failed, and that context is still worth keeping
         if context:
+            # gags the moment pass RECOGNIZED (lore_refs) count as reappearances
+            context = dict(context)
+            context["reappeared_gags"] = sorted(
+                {ref for c in cands for ref in (c.lore_refs or [])})
             memory = memory_mod.update_memory(memory, context, vod_path.name,
                                               llm if cfg.use_llm else None, cfg, log=log)
             memory_mod.save_memory(memory_path, memory)

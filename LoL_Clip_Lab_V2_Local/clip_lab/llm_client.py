@@ -93,6 +93,14 @@ class LLMClient:
             out = self._runner(prompt)
             return _extract_json(out) if isinstance(out, str) else out
         cmd = list(self.cmd)
+        # resolve the executable to its full path: on Windows, npm shims like
+        # claude.cmd are found by shutil.which (PATHEXT) but NOT by
+        # CreateProcess — without this, doctor says [ok] while every call
+        # silently fails and the run degrades to signal-only
+        from shutil import which as _which
+        resolved = _which(cmd[0])
+        if resolved:
+            cmd[0] = resolved
         kw = {"input": prompt}
         if any("{prompt}" in c for c in cmd):
             cmd = [c.replace("{prompt}", prompt) for c in cmd]

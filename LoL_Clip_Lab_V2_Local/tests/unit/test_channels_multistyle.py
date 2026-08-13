@@ -156,12 +156,44 @@ def test_sheet_shows_style_channels_and_plans(tmp_path):
     assert "⚠️ over 60s" not in md.split("### shorts")[1].split("###")[0]
 
 
-def test_shorts_over_60s_warned(tmp_path):
+def test_over_max_warned_via_channel_spec(tmp_path):
+    # the warning threshold comes from the channel's configured max_s now,
+    # not from keyword-matching the channel name
     from clip_lab.editsheet import write_edit_sheet
     plan = [_item(1, 100, 190, "Way Too Long", ["shorts"])]
-    write_edit_sheet(plan, tmp_path, vod_name="v.mkv", meta={"duration": 1000})
+    write_edit_sheet(plan, tmp_path, vod_name="v.mkv",
+                     meta={"duration": 1000,
+                           "channel_specs": {"shorts": {"max_s": 60}}})
     md = (tmp_path / "edit_sheet.md").read_text(encoding="utf-8")
     assert "⚠️ over 60s" in md
+
+
+def test_channel_plan_is_chronological_with_timecodes(tmp_path):
+    # a highlight video is assembled in STORY order — the yt cut list must be
+    # chronological with timecodes, not rank-ordered
+    from clip_lab.editsheet import write_edit_sheet
+    plan = [_item(1, 1332.0, 1350.0, "Penta", ["yt"]),
+            _item(2, 150.0, 165.0, "First Blood", ["yt"])]
+    write_edit_sheet(plan, tmp_path, vod_name="v.mkv",
+                     meta={"duration": 2000, "channel_specs": {"yt": {}}})
+    md = (tmp_path / "edit_sheet.md").read_text(encoding="utf-8")
+    yt = md.split("### yt")[1]
+    assert yt.index("First Blood") < yt.index("Penta")     # chronological
+    assert "`2:30.00`" in yt                                # timecode shown
+
+
+def test_full_channel_gets_chapters_pointer_not_cut_list(tmp_path):
+    from clip_lab.editsheet import write_edit_sheet
+    plan = [_item(1, 100.0, 130.0, "Big Play", ["uncut"])]
+    write_edit_sheet(plan, tmp_path, vod_name="v.mkv",
+                     meta={"duration": 2000,
+                           "channel_specs": {"uncut": {"kind": "full",
+                                                       "target_video_s": 10800}}})
+    md = (tmp_path / "edit_sheet.md").read_text(encoding="utf-8")
+    uncut = md.split("### uncut")[1]
+    assert "full-session upload" in uncut
+    assert "chapters.txt" in uncut
+    assert "180 min" in uncut                               # format target shown
 
 
 def test_chapters_txt_ascending_from_zero(tmp_path):
@@ -340,13 +372,24 @@ def test_chapter_at_zero_keeps_its_title(tmp_path):
     assert lines[1] == "08:20 Later"
 
 
-def test_chapter_second_collision_bumps_not_drops(tmp_path):
+def test_chapter_min_spacing_10s(tmp_path):
+    # YouTube ignores chapter lists with <10s spacing: closer starts fold
+    # into the previous chapter; >=10s apart both survive
     from clip_lab.editsheet import write_edit_sheet
     plan = [_item(1, 100.2, 110.0, "First", []),
-            _item(2, 100.9, 111.0, "Second", [])]
+            _item(2, 105.0, 115.0, "TooClose", []),
+            _item(3, 111.0, 125.0, "FarEnough", [])]
     write_edit_sheet(plan, tmp_path, vod_name="v", meta={"duration": 1000})
     txt = (tmp_path / "chapters.txt").read_text(encoding="utf-8")
-    assert "First" in txt and "Second" in txt       # both titles survive
+    assert "First" in txt and "FarEnough" in txt
+    assert "TooClose" not in txt                    # folded into 'First'
+    lines = txt.strip().splitlines()
+    times = []
+    for ln in lines:
+        ts = ln.split(" ", 1)[0].split(":")
+        secs = int(ts[-1]) + 60 * int(ts[-2]) + (3600 * int(ts[-3]) if len(ts) == 3 else 0)
+        times.append(secs)
+    assert all(b - a >= 10 for a, b in zip(times, times[1:]))
 
 
 def test_fetch_style_is_slugged(tmp_path, monkeypatch):

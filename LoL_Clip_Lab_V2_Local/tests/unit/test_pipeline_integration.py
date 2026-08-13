@@ -107,7 +107,9 @@ def test_memory_remembers_gags_across_sessions(tmp_path):
         prompts_session2.append(prompt)
         return demo_runner(prompt)
 
-    plan2, meta2 = analyze(str(SAMPLES / "sample_vod.mkv"), cfg, tmp_path / "run2",
+    # session 2 is a DIFFERENT vod — a same-name rerun deliberately does not
+    # bump counters (re-analysis must not inflate the brain)
+    plan2, meta2 = analyze(str(SAMPLES / "sample_vod2.mkv"), cfg, tmp_path / "run2",
                            transcript_path=SAMPLES / "fixture_transcript.json",
                            events_path=SAMPLES / "fixture_events.json",
                            llm=LLMClient(["spy"], runner=spy_runner),
@@ -141,6 +143,23 @@ def test_lore_refs_reach_the_edit_sheet(tmp_path):
     assert "Channel memory:" in sheet                          # header stats
     penta = [p for p in plan if "PENTAKILL" in (p.title or "")]
     assert penta and penta[0].lore_refs == ["I'll hit a Q eventually"]
+
+
+def test_rerun_same_vod_does_not_inflate_memory(tmp_path):
+    # tweak-config-and-rerun is THE normal loop: analyzing the SAME vod again
+    # must not bump gag counters or sessions_analyzed
+    from clip_lab.memory import load_memory
+    mem_path = tmp_path / "brain.json"
+    cfg = Config()
+    cfg.use_llm = True
+    for run in ("a", "b"):
+        analyze(str(SAMPLES / "sample_vod.mkv"), cfg, tmp_path / run,
+                transcript_path=SAMPLES / "fixture_transcript.json",
+                events_path=SAMPLES / "fixture_events.json",
+                llm=demo_llm(), memory_path=mem_path, log=lambda *a: None)
+    mem = load_memory(mem_path)
+    assert mem["sessions_analyzed"] == 1                   # not inflated
+    assert all(g["times_seen"] == 1 for g in mem["gags"])
 
 
 def test_no_memory_path_means_no_brain(tmp_path):

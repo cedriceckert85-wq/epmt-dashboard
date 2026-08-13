@@ -207,8 +207,34 @@ def learn_styles(folder, cfg, llm, *, log=lambda *a: None, run=subprocess.run):
     return profiles, all_fps
 
 
+FORMAT_THRESHOLD_S = 120  # refs longer than this are VIDEOS, not clips
+
+
+def _classify_kind(fps):
+    """'cut' = the references are short CLIPS (a per-moment cutting style);
+    'format' = the references are whole VIDEOS (a channel format: target
+    runtime, structure). A 10-minute yt upload or a 3-hour uncut session must
+    never become an 'ideal clip length ~90s' cutting style."""
+    durs = _finite((f.get("duration_s") for f in fps), minimum=1e-9)
+    if not durs:
+        return "cut"
+    return "cut" if durs[len(durs) // 2] <= FORMAT_THRESHOLD_S else "format"
+
+
 def _consolidate(name, fps, llm, cfg, log):
+    kind = _classify_kind(fps)
+    if kind == "format":
+        # a channel FORMAT profile: what nothing should be cut to — but what
+        # the channel plan should aim for
+        durs = _finite((f.get("duration_s") for f in fps), minimum=1e-9)
+        prof = {"learned_from": len(fps), "kind": "format"}
+        if durs:
+            prof["target_video_s"] = round(durs[len(durs) // 2], 1)
+        log(f"[style] [{name}] references are whole videos -> learned as a "
+            "channel FORMAT (target runtime), not a per-moment cut style")
+        return prof
     mechanical = _mechanical_profile(fps)
+    mechanical["kind"] = "cut"
     if not (llm and getattr(cfg, "use_llm", True) and llm.available()):
         return mechanical
     try:
@@ -217,7 +243,9 @@ def _consolidate(name, fps, llm, cfg, log):
         if not isinstance(res, dict):
             log(f"[style] [{name}] LLM returned no usable JSON — mechanical profile")
             return mechanical
-        return _sanitize_profile(res, mechanical)
+        out = _sanitize_profile(res, mechanical)
+        out["kind"] = "cut"
+        return out
     except Exception as e:  # noqa: BLE001 — learning must never lose the run
         log(f"[style] [{name}] LLM consolidation failed ({type(e).__name__}) — mechanical profile")
         return mechanical
@@ -259,8 +287,26 @@ def _num_or(v, default):
     return f
 
 
+def cut_styles(profiles):
+    """Only the styles that are per-moment CUT styles (taggable by the LLM)."""
+    return {n: p for n, p in (profiles or {}).items()
+            if isinstance(p, dict) and p.get("kind", "cut") == "cut"}
+
+
+def format_profiles(profiles):
+    """Only the channel FORMAT profiles (whole-video references: yt, uncut)."""
+    return {n: p for n, p in (profiles or {}).items()
+            if isinstance(p, dict) and p.get("kind") == "format"}
+
+
 def _sanitize_profile(res, fallback):
     out = {"learned_from": fallback.get("learned_from", 0)}
+    kind = res.get("kind")
+    if kind in ("cut", "format"):
+        out["kind"] = kind
+    tv = _num_or(res.get("target_video_s"), None)
+    if tv is not None and tv > 0:
+        out["target_video_s"] = round(min(6 * 3600.0, tv), 1)
     # the fallback value goes through the exact same clamp as the LLM value —
     # a NaN/Infinity that sneaked into a stored profile must not round-trip
     t = _num_or(res.get("target_clip_s"), None)
@@ -347,6 +393,9 @@ def style_brief(profile, max_chars=1500):
 
 def _profile_lines(profile):
     L = []
+    if profile.get("target_video_s"):
+        L.append(f"- target video runtime ≈ {profile['target_video_s'] / 60:.0f} min "
+                 "(channel format, informs the channel plan)")
     if profile.get("target_clip_s"):
         L.append(f"- ideal clip length ≈ {profile['target_clip_s']}s")
     if profile.get("pace"):
@@ -367,7 +416,11 @@ def styles_brief(profiles, max_chars=2500):
     LLM to pick the best-fitting style PER MOMENT and tag it.
 
     The budget is split per style so EVERY style name always appears — a hard
-    tail-truncation would silently make the last styles untaggable."""
+    tail-truncation would silently make the last styles untaggable. Only CUT
+    styles are offered for tagging; channel FORMAT profiles (whole-video
+    references like yt/uncut) are excluded — they inform the channel plan,
+    not per-moment cutting."""
+    profiles = cut_styles(profiles)
     if not profiles:
         return ""
     if set(profiles) == {"default"}:

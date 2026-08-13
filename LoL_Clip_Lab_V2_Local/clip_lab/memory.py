@@ -167,6 +167,16 @@ def update_memory(mem, session_context, vod_name, llm, cfg, *,
     a deterministic mechanical merge on exact names. Never raises."""
     today = today or date.today().isoformat()
     session_context = session_context or {}
+
+    # RE-ANALYSIS of the same VOD (tweak config, rerun — the normal loop with
+    # a new tool) must not inflate the brain: counters would otherwise grow on
+    # every rerun and gags would look more established than they are
+    if any(isinstance(s, dict) and s.get("vod") == str(vod_name)
+           for s in mem.get("sessions", [])):
+        log(f"memory: {vod_name} was analyzed before — refreshing its summary "
+            "without bumping any counters")
+        return _refresh_session_row(mem, session_context, vod_name, today)
+
     mechanical = _mechanical_merge(mem, session_context, vod_name, cfg, today)
     if not (llm and getattr(cfg, "use_llm", True) and llm.available()):
         return mechanical
@@ -176,7 +186,7 @@ def update_memory(mem, session_context, vod_name, llm, cfg, *,
     # never lose a run to a weird reply (Infinity, null-for-list, ...).
     try:
         payload = {k: session_context.get(k) for k in
-                   ("running_gags", "callbacks", "arcs", "notes")
+                   ("running_gags", "reappeared_gags", "callbacks", "arcs", "notes")
                    if session_context.get(k)}
         res = llm.ask_json(MEMORY_PROMPT.format(
             max_gags=cfg.memory_max_gags, max_sessions=cfg.memory_max_sessions,
@@ -212,19 +222,41 @@ def _sanitize(res, fallback, cfg):
     return out
 
 
+def _refresh_session_row(mem, ctx, vod, today):
+    """Re-analysis of a known VOD: only its session summary is refreshed."""
+    out = json.loads(json.dumps(mem))
+    arcs = (ctx or {}).get("arcs") or []
+    notes = (ctx or {}).get("notes") or ""
+    summary = str(arcs[0])[:300] if arcs else str(notes)[:300]
+    for s in _as_list(out.get("sessions")):
+        if isinstance(s, dict) and s.get("vod") == str(vod):
+            s["date"] = today
+            if summary:
+                s["summary"] = summary
+    return out
+
+
 def _mechanical_merge(mem, ctx, vod, cfg, today):
     """Deterministic fallback: exact-name (casefold) gag matching, counter
-    bumps, session summary from the first arc / the notes."""
+    bumps, session summary from the first arc / the notes. Gags the moment
+    pass RECOGNIZED via lore_refs (ctx['reappeared_gags']) count as
+    reappearances too — recognition on the sheet and the counter stay in sync."""
     out = json.loads(json.dumps(mem))  # deep copy
     out["sessions_analyzed"] = _int_or(out.get("sessions_analyzed"), 0) + 1
     out["gags"] = [g for g in _as_list(out.get("gags")) if isinstance(g, dict)]
     out["sessions"] = _as_list(out.get("sessions"))
     known = {str(g.get("name", "")).casefold(): g for g in out["gags"]}
-    for gag in (ctx or {}).get("running_gags") or []:
+    seen_this_session = set()
+    mentions = list((ctx or {}).get("running_gags") or [])
+    mentions += list((ctx or {}).get("reappeared_gags") or [])
+    for gag in mentions:
         if not isinstance(gag, str) or not gag.strip():
             continue
         name = gag.strip()[:120]
         key = name.casefold()
+        if key in seen_this_session:
+            continue  # one bump per gag per session, however often mentioned
+        seen_this_session.add(key)
         if key in known:
             known[key]["times_seen"] = _int_or(known[key].get("times_seen"), 1) + 1
             known[key]["last_seen"] = str(vod)

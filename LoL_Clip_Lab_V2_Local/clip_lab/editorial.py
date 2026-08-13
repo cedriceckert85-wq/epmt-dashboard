@@ -32,7 +32,7 @@ Return ONLY JSON:
   "arcs": ["short description of an emotional/narrative arc"],
   "notes": "anything an editor should know"}}
 
-{memory}{prior}SESSION LOG{part}:
+{language}{hosts}{memory}{prior}SESSION LOG{part}:
 {log}
 """
 
@@ -55,7 +55,7 @@ Return ONLY JSON: a list of objects, each:
   "sfx": [{{"t": <s>, "kind": "airhorn|vine_boom|bruh|ding|silence"}}]}}
 Only include a moment if it is actually good. Timestamps must be within the log.
 
-{channels}{style}{memory}SESSION CONTEXT: {context}
+{language}{hosts}{channels}{style}{memory}SESSION CONTEXT: {context}
 
 CANDIDATE WINDOWS:
 {cands}
@@ -97,8 +97,28 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
         log("editorial: no valid channels configured — channel tagging is off "
             "(check the channels = [...] entries in config.toml)")
 
+    # output language: German streamers must get German titles/captions —
+    # those strings are pasted 1:1 into reels and video descriptions
+    out_lang = str(getattr(cfg, "output_language", "auto") or "auto").strip()
+    if out_lang.lower() == "auto":
+        language_block = ("Write ALL titles, captions, gag names and free text "
+                          "in the LANGUAGE THE STREAMERS SPEAK in the log "
+                          "(mirror their language exactly).\n\n")
+    else:
+        language_block = ("Write ALL titles, captions, gag names and free text "
+                          f"in {out_lang}.\n\n")
+    hosts = [str(h).strip() for h in (getattr(cfg, "hosts", None) or [])
+             if str(h).strip()]
+    hosts_block = ""
+    if hosts:
+        hosts_block = ("HOSTS: this is a multi-person stream featuring "
+                       + ", ".join(hosts[:6])
+                       + " — attribute gags/quotes to the right person when "
+                         "names are used in the log.\n\n")
+
     # 1) session pass — the WHOLE script, chunked + merged if it is long
-    context = _session_pass(llm, timeline_doc, cfg, log, memory_block)
+    context = _session_pass(llm, timeline_doc, cfg, log, memory_block,
+                            language_block, hosts_block)
 
     # 2) moment pass (batched). The SAME prompt is reused for the optional
     # second brain, so both judge identical evidence.
@@ -107,6 +127,8 @@ def run_editorial(cands, timeline_doc, llm, cfg, *, memory_brief="",
                            ensure_ascii=False)
     mprompt = MOMENT_PROMPT.format(
         discover=cfg.discover_no_event_windows,
+        language=language_block,
+        hosts=hosts_block,
         channels=_channels_block(cfg),
         style=style_block,
         memory=memory_block,
@@ -170,7 +192,8 @@ def _channels_block(cfg):
             + "\n".join(rows) + "\n\n")
 
 
-def _session_pass(llm, timeline_doc, cfg, log, memory_block=""):
+def _session_pass(llm, timeline_doc, cfg, log, memory_block="",
+                  language_block="", hosts_block=""):
     """Send the WHOLE session log through the session prompt. Long sessions go
     in line-aligned chunks; the merged findings so far ride along into each
     next chunk so cross-chunk gags/callbacks can be connected. memory_block
@@ -185,8 +208,9 @@ def _session_pass(llm, timeline_doc, cfg, log, memory_block=""):
             prior = ("FINDINGS FROM EARLIER PARTS OF THIS SESSION "
                      "(extend/merge them with what you find below):\n"
                      + json.dumps(merged, ensure_ascii=False)[:6000] + "\n\n")
-        res = llm.ask_json(SESSION_PROMPT.format(memory=memory_block, prior=prior,
-                                                 part=part, log=chunk))
+        res = llm.ask_json(SESSION_PROMPT.format(
+            language=language_block, hosts=hosts_block,
+            memory=memory_block, prior=prior, part=part, log=chunk))
         if isinstance(res, dict):
             merged = _merge_context(merged, res)
         else:
@@ -433,7 +457,7 @@ def _clean_text(v, cap):
 
 def _discovered(t0, t1, fields):
     c = Candidate(t0=round(t0, 3), t1=round(t1, 3), signal_score=0.0,
-                  reasons=["llm-discovered"])
+                  reasons=["llm-discovered"], window_from_llm=True)
     for k, v in fields.items():
         setattr(c, k, v)
     return c
@@ -461,6 +485,7 @@ def _apply_moments(cands, moments, cfg, *, style_names=(), channel_names=()):
             # the setup starts and the beat ends; keeping only the event
             # instant would truncate exactly that editorial intent
             target.t0, target.t1 = round(t0, 3), round(t1, 3)
+            target.window_from_llm = True
         elif not (_overlaps_strictly(cands, t0, t1)
                   or _overlaps_strictly(discovered, t0, t1)):
             discovered.append(_discovered(t0, t1, fields))
@@ -505,6 +530,7 @@ def _blend_second_opinion(cands, moments_b, *, style_names=(), channel_names=())
             for k, v in _moment_fields(m, style_names, channel_names).items():
                 setattr(target, k, v)
             target.t0, target.t1 = round(t0, 3), round(t1, 3)
+            target.window_from_llm = True
     cands.extend(discovered)
 
 

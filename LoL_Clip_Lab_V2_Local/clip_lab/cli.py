@@ -44,7 +44,10 @@ def _style_path(cfg):
 
 def cmd_analyze(args):
     cfg = _cfg(args)
-    out = Path(args.out or (Path(args.vod).stem + "_clips"))
+    # default output NEXT TO the VOD (like batch does) — not into the current
+    # directory, which after START.bat drag&drop is the tool folder
+    vod = Path(args.vod)
+    out = Path(args.out) if args.out else (vod.parent / (vod.stem + "_clips"))
     if not args.transcript and not Path(args.vod).exists():
         print(f"VOD not found: {args.vod}", file=sys.stderr)
         return 2
@@ -94,7 +97,8 @@ def cmd_batch(args):
         print(f"=== [{i}/{len(vids)}] {v.name} ===")
         try:
             plan, meta = analyze(str(v), cfg, out, memory_path=mem_path,
-                                 style_path=sty_path)
+                                 style_path=sty_path,
+                                 audio_stream=args.audio_stream)
             print(f"  -> {len(plan)} clips, {out/'edit_sheet.md'}\n")
             ok += 1
         except Exception as e:
@@ -150,18 +154,29 @@ def _safe_slug(value, fallback="moment"):
     return slug or fallback
 
 
+def _vertical_channels(cfg):
+    return {str(c.get("name", "")).strip().lower()
+            for c in (cfg.channels if isinstance(cfg.channels, list) else [])
+            if isinstance(c, dict) and c.get("vertical")}
+
+
 def _cut_all(vod, plan, cfg, out):
     from .render import cut_clip, pick_encoder
     _, enc = pick_encoder(cfg)
     print(f"\nCutting {len(plan)} clips with {enc} …")
     cdir = Path(out) / "cuts"
     cdir.mkdir(parents=True, exist_ok=True)
+    vert_channels = _vertical_channels(cfg)
     for p in plan:
-        name = f"{p.rank:02d}_{_safe_slug(p.category)}.mp4"
+        # a clip destined for a vertical channel (insta) is cut 9:16; channel
+        # names in the filename tell the three-channel user what goes where
+        vertical = cfg.render_vertical or bool(vert_channels & set(p.channels))
+        chan = "+".join(p.channels) if p.channels else "clip"
+        name = f"{p.rank:02d}_{_safe_slug(chan)}_{_safe_slug(p.category)}.mp4"
         try:
             cut_clip(vod, cdir / name, p.clip_t0, p.clip_t1, cfg,
-                     vertical=cfg.render_vertical)
-            print(f"  ok  {name}")
+                     vertical=vertical)
+            print(f"  ok  {name}" + ("  (9:16)" if vertical else ""))
         except Exception as e:
             print(f"  FAIL {name}: {e}")
 
@@ -300,11 +315,28 @@ def cmd_selftest(args):
                              transcript_path=sample_t, events_path=sample_e, llm=None)
     else:
         from ._demo import demo_llm
+        from .style import save_profiles
         cfg.use_llm = True
         # determinism: NO second brain in the selftest — config.toml ships an
         # active codex line, and with codex on PATH the pipeline would spawn
-        # the REAL CLI here and blend its answers into the canned demo
+        # the REAL CLI here and blend its answers into the canned demo. The
+        # demo's channel/style tags are pinned to the shipped defaults too, so
+        # a renamed channels config cannot break the demo.
         cfg.llm_cmd_b = []
+        cfg.channels = Config().channels
+        # scratch style profile so the sheet demonstrates 'Cut as: ...-style'
+        style_path = out / "selftest_styles.json"
+        out.mkdir(parents=True, exist_ok=True)
+        save_profiles(style_path, {
+            "insta_funny": {"kind": "cut", "learned_from": 8,
+                            "target_clip_s": 24.0,
+                            "pace": "fast, punchy, cut on reactions"},
+            "insta_montage": {"kind": "cut", "learned_from": 6,
+                              "target_clip_s": 35.0,
+                              "pace": "beat-synced montage"},
+            "yt": {"kind": "format", "learned_from": 5,
+                   "target_video_s": 600.0},
+        })
         # scratch brain with its OWN name, so even `--out .` inside the tool
         # dir can never collide with (and delete) the real channel_memory.json
         mem_path = out / "selftest_memory.json"
@@ -312,14 +344,16 @@ def cmd_selftest(args):
             mem_path = out / "selftest_memory_scratch.json"
         if mem_path.exists():
             mem_path.unlink()
-        # session 1: brain is empty, gags get learned
+        # session 1: brain is empty, gags get learned (a different vod name
+        # per pass — a same-name rerun deliberately does NOT bump counters)
         plan, meta = analyze(sample_vod, cfg, out, transcript_path=sample_t,
                              events_path=sample_e, llm=demo_llm(),
-                             memory_path=mem_path)
+                             memory_path=mem_path, style_path=style_path)
         # session 2: the brain now knows the gags -> lore refs in the sheet
-        plan, meta = analyze(sample_vod, cfg, out, transcript_path=sample_t,
+        plan, meta = analyze(str(ROOT / "samples" / "sample_vod_session2.mkv"),
+                             cfg, out, transcript_path=sample_t,
                              events_path=sample_e, llm=demo_llm(),
-                             memory_path=mem_path)
+                             memory_path=mem_path, style_path=style_path)
     print(f"\nSelf-test OK — editorial brain: {meta['editorial']} — "
           f"{len(plan)} clips → {out/'edit_sheet.md'}")
     if meta.get("memory"):
@@ -357,6 +391,9 @@ def build_parser():
     b.add_argument("--no-memory", action="store_true", help="skip the channel memory")
     b.add_argument("--no-style", action="store_true", help="ignore the learned style profile")
     b.add_argument("--whisper-model", help="tiny|base|small|medium")
+    b.add_argument("--audio-stream",
+                   help="audio track for ALL videos, e.g. a:1 for the mic "
+                        "track (or set audio_stream in config.toml)")
     b.set_defaults(func=cmd_batch)
 
     l = sub.add_parser("learn", help="learn your target style from the references folder")

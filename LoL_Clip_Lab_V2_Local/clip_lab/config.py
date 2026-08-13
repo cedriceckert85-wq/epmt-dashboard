@@ -12,6 +12,14 @@ class Config:
     whisper_compute_type: str = "int8"    # int8 = fast on CPU
     whisper_language: str = "auto"        # auto | de | en
     whisper_vad: bool = True              # skip silence -> much faster
+    # which audio track to analyze: "" = ffmpeg default, "a:1" = second track
+    # (OBS track 2 — the mic-only track of a two-track recording)
+    audio_stream: str = ""
+    keep_work_audio: bool = False         # keep work/audio.wav after analysis
+    # language for titles/captions/gag names: "auto" = the language spoken in
+    # the stream; or force e.g. "German"
+    output_language: str = "auto"
+    hosts: list = field(default_factory=list)  # streamer names, e.g. ["Max", "Tom"]
 
     # --- reaction detection ---
     reaction_frame_ms: int = 50
@@ -62,13 +70,18 @@ class Config:
     memory_max_gags: int = 40
     memory_max_sessions: int = 20
 
-    # --- target channels (each moment gets tagged with the channels it serves) ---
+    # --- target channels (each moment gets tagged with the channels it serves)
+    # per channel: name, note (prompt guidance), and optionally
+    #   kind    : "clips" (default) or "full" (whole-VOD channel like uncut —
+    #             its plan section points at chapters.txt instead of a cut list)
+    #   max_s   : clip-length warning threshold in the channel plan
+    #   vertical: cut this channel's clips as 9:16 when using --cut
     channels: list = field(default_factory=lambda: [
-        {"name": "insta",
+        {"name": "insta", "max_s": 60, "vertical": True,
          "note": "vertical 9:16 reel/short, hook in the first 2 seconds, ideally under 60s"},
         {"name": "yt",
          "note": "edited highlight video for the main YouTube channel"},
-        {"name": "uncut",
+        {"name": "uncut", "kind": "full",
          "note": "full-session upload; the best moments become chapter markers"},
     ])
 

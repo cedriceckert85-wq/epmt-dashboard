@@ -12,10 +12,14 @@ from .models import EditPlanItem
 from .timeline import transcript_excerpt
 
 
-def _clip_bounds(c, cfg, duration):
+def _clip_bounds(c, cfg, duration, style_targets=None):
     cat = (c.category or "").lower()
-    # base pre/post-roll by category
-    if cat == "funny":
+    if getattr(c, "window_from_llm", False):
+        # the brain's window ALREADY contains the setup lead-in it wanted —
+        # stacking category preroll on top would double the setup
+        pre = 0.0
+        post = cfg.default_postroll_s
+    elif cat == "funny":
         pre = cfg.funny_setup_preroll_s
         post = cfg.default_postroll_s
     elif cat in ("clutch", "hype", "fail"):
@@ -32,12 +36,19 @@ def _clip_bounds(c, cfg, duration):
     else:
         end = c.t1 + post
 
+    # a LEARNED style may honestly want longer clips than the generic
+    # clip_max_s — the learned target (plus slack) wins over the global cap,
+    # so a 60s montage style is not silently truncated to 45s
+    max_len = cfg.clip_max_s
+    if style_targets and c.style_target in style_targets:
+        max_len = max(max_len, min(90.0, style_targets[c.style_target] * 1.25))
+
     # Desired length, clamped to the sane clip range. We then place a window of
     # exactly this length rather than clamping the raw edges — clamping edges to
     # the media bounds could push one edge in without re-extending the other and
     # silently break the clip_min_s guarantee near t=0 or t=duration (e.g. a
     # pentakill in the last seconds of the VOD would yield a 3s clip).
-    target_len = min(cfg.clip_max_s, max(cfg.clip_min_s, end - start))
+    target_len = min(max_len, max(cfg.clip_min_s, end - start))
     has_media = bool(duration and duration > 0)
     if has_media:
         target_len = min(target_len, float(duration))  # can't exceed the whole VOD
@@ -67,12 +78,14 @@ def _clamp_overlays(items, t0, t1):
     return out
 
 
-def build_edit_plan(ranked, segments, cfg, duration):
+def build_edit_plan(ranked, segments, cfg, duration, style_targets=None):
     """Return list[EditPlanItem], ordered by rank. Overlapping clips are
-    merged so two adjacent candidates don't produce a double clip."""
+    merged so two adjacent candidates don't produce a double clip.
+    style_targets maps learned CUT-style names to their target_clip_s so a
+    styled clip may exceed the generic clip_max_s."""
     plan = []
     for i, c in enumerate(ranked, 1):
-        t0, t1 = _clip_bounds(c, cfg, duration)
+        t0, t1 = _clip_bounds(c, cfg, duration, style_targets)
         # callback inserts: reference an earlier moment, clamped to available media
         inserts = []
         for ref in (c.callback_refs or []):

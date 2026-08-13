@@ -1,9 +1,25 @@
 # Counsel — Claude & Codex entscheiden gemeinsam
 
 `counsel` ist ein kleines CLI-Tool, das die **Claude Code CLI** und die **OpenAI Codex CLI**
-in eine strukturierte Diskussion bringt: Beide KIs debattieren eine Software- oder
+in eine strukturierte Diskussion bringt: Die KIs debattieren eine Software- oder
 Design-Entscheidung über mehrere Runden, versuchen einen Konsens zu finden, und ein
 Moderator fasst das Ergebnis als **Entscheidungsprotokoll (Decision Record)** zusammen.
+
+Der Counsel kann **mehrköpfig** besetzt werden: Jede Rolle (z. B. Design, Frontend,
+Backend) wird doppelt besetzt — einmal mit Claude, einmal mit Codex. So diskutieren
+bis zu sechs Perspektiven miteinander:
+
+```
+              ┌─ claude·design    ─┐
+   Design  ───┤                    │
+              └─ codex·design     ─┤
+              ┌─ claude·frontend  ─┤
+   Frontend ──┤                    ├──► Moderator ──► Entscheidungsprotokoll
+              └─ codex·frontend   ─┤
+              ┌─ claude·backend   ─┤
+   Backend ───┤                    │
+              └─ codex·backend    ─┘
+```
 
 ## Voraussetzungen
 
@@ -17,23 +33,47 @@ nur, er ändert keine Dateien.
 ## Schnellstart
 
 ```bash
+# Klassisch: 2 Architekten (claude + codex)
 node counsel/counsel.mjs "Sollen wir das Dashboard von Vanilla-JS auf React umstellen?"
+
+# Mehrköpfig: Design-, Frontend- und Backend-Rolle, je mit Claude UND Codex besetzt (6 Mitglieder)
+node counsel/counsel.mjs --roles design,frontend,backend "Wie bauen wir Feature X?"
 ```
 
 Ablauf:
 
-1. **Runde 1:** Claude eröffnet (Optionen + vorläufige Empfehlung), Codex antwortet (Zustimmung/Widerspruch).
-2. **Weitere Runden:** Beide reagieren aufeinander; in der letzten Runde wird aktiv ein Konsens gesucht.
+1. **Jede Runde:** Alle Mitglieder sprechen einmal, jeweils mit Blick auf den kompletten
+   bisherigen Verlauf und aus der Perspektive ihrer Rolle. Das erste Mitglied eröffnet
+   mit Optionen und einer vorläufigen Empfehlung, alle weiteren stimmen zu oder
+   widersprechen begründet.
+2. **Letzte Runde:** Alle versuchen aktiv, einen Konsens zu formulieren.
 3. **Moderation:** Der Moderator (Default: Claude) schreibt das Entscheidungsprotokoll mit
-   Entscheidung, Begründung, verworfenen Alternativen, Risiken, nächsten Schritten und Dissens.
+   Entscheidung, Begründung, verworfenen Alternativen, Risiken, nächsten Schritten und
+   Dissens (inkl. welche Rolle abweicht).
 4. Das komplette Protokoll inkl. Diskussionsverlauf landet in `counsel/sessions/<datum>-<thema>.md`.
+
+## Rollen
+
+Eingebaut: `architekt` (Default), `design` (UI/UX), `frontend`, `backend`.
+Eigene Rollen gehen über `--role-def`, eine freie Besetzung über `--member`:
+
+```bash
+# Eigene Rolle definieren und einzeln besetzen
+node counsel/counsel.mjs \
+  --role-def "security=Du bist Security-Engineer und bewertest Angriffsflaechen und Datenschutz." \
+  --member claude:design --member codex:backend --member claude:security \
+  "Duerfen wir die Kurs-Daten clientseitig cachen?"
+```
 
 ## Beispiele
 
 ```bash
-# 3 Runden, Codex eröffnet, Codex moderiert
-node counsel/counsel.mjs --rounds 3 --first codex --moderator codex \
+# Volles Panel, 2 Runden = 12 Wortmeldungen + Moderation
+node counsel/counsel.mjs --roles design,frontend,backend --rounds 2 \
   "Wie strukturieren wir die Speku-Dashboard-Daten: eine grosse index.html oder Aufteilung?"
+
+# 3 Runden, Codex spricht je Rolle zuerst, Codex moderiert
+node counsel/counsel.mjs --rounds 3 --first codex --moderator codex "Frage..."
 
 # Dateien als Kontext mitgeben
 node counsel/counsel.mjs --context spec.html --context index.html \
@@ -50,8 +90,11 @@ node counsel/counsel.mjs --dry-run "Testfrage"
 
 | Option | Bedeutung | Default |
 |---|---|---|
-| `--rounds <n>` | Anzahl Diskussionsrunden (jede Runde = beide sprechen einmal) | `2` |
-| `--first <claude\|codex>` | Wer die Diskussion eröffnet | `claude` |
+| `--rounds <n>` | Anzahl Diskussionsrunden (jede Runde = alle sprechen einmal) | `2` |
+| `--roles <liste>` | Rollen, je mit Claude und Codex besetzt (z. B. `design,frontend,backend`) | `architekt` |
+| `--member <engine:rolle>` | Einzelnes Mitglied (mehrfach möglich, ersetzt `--roles`) | — |
+| `--role-def <name=text>` | Eigene Rolle definieren (mehrfach möglich) | — |
+| `--first <claude\|codex>` | Welche Engine je Rolle zuerst spricht | `claude` |
 | `--moderator <claude\|codex>` | Wer das Entscheidungsprotokoll schreibt | `claude` |
 | `--context <datei>` | Datei als Kontext in die Diskussion geben (mehrfach möglich) | — |
 | `--lang <de\|en>` | Sprache der Diskussion | `de` |

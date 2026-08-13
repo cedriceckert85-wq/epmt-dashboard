@@ -9,8 +9,16 @@
  *
  * Optionen:
  *   --rounds <n>        Anzahl der Diskussionsrunden (Default: 2)
+ *   --roles <liste>     Rollen, je einmal mit Claude UND Codex besetzt,
+ *                       z. B. --roles design,frontend,backend  → 6 Teilnehmer.
+ *                       Verfuegbar: architekt, design, frontend, backend
+ *                       (Default: architekt → 2 Teilnehmer wie bisher)
+ *   --member <e:r>      Einzelnes Mitglied hinzufuegen, z. B. --member codex:frontend
+ *                       (mehrfach moeglich; ersetzt --roles, wenn angegeben)
+ *   --role-def <n=txt>  Eigene Rolle definieren, z. B. --role-def "security=Du bist
+ *                       Security-Engineer und bewertest Angriffsflaechen." (mehrfach)
  *   --moderator <wer>   Wer fasst zusammen: claude | codex (Default: claude)
- *   --first <wer>       Wer eroeffnet: claude | codex (Default: claude)
+ *   --first <wer>       Welche Engine je Rolle zuerst spricht: claude | codex (Default: claude)
  *   --context <datei>   Datei als Kontext mitgeben (mehrfach moeglich)
  *   --lang <de|en>      Sprache der Diskussion (Default: de)
  *   --out <datei>       Pfad fuer das Protokoll (Default: counsel/sessions/...)
@@ -37,6 +45,9 @@ function parseArgs(argv) {
   const opts = {
     topic: null,
     rounds: 2,
+    roles: ["architekt"],
+    members: [],
+    roleDefs: {},
     moderator: "claude",
     first: "claude",
     context: [],
@@ -54,6 +65,15 @@ function parseArgs(argv) {
     const a = args.shift();
     switch (a) {
       case "--rounds": opts.rounds = parseInt(args.shift(), 10); break;
+      case "--roles": opts.roles = args.shift().split(",").map((r) => r.trim()).filter(Boolean); break;
+      case "--member": opts.members.push(args.shift()); break;
+      case "--role-def": {
+        const def = args.shift();
+        const eq = def.indexOf("=");
+        if (eq < 1) die(`--role-def erwartet das Format name=Beschreibung, nicht "${def}".`);
+        opts.roleDefs[def.slice(0, eq).trim()] = def.slice(eq + 1).trim();
+        break;
+      }
       case "--moderator": opts.moderator = args.shift(); break;
       case "--first": opts.first = args.shift(); break;
       case "--context": opts.context.push(args.shift()); break;
@@ -81,9 +101,9 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  const header = readFileSync(fileURLToPath(import.meta.url), "utf8")
-    .split("\n").slice(1, 28).map((l) => l.replace(/^ \* ?/, "")).join("\n");
-  console.log(header);
+  const lines = readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n");
+  const end = lines.findIndex((l) => l.startsWith(" */"));
+  console.log(lines.slice(2, end).map((l) => l.replace(/^ \* ?/, "")).join("\n"));
 }
 
 function die(msg) {
@@ -150,19 +170,78 @@ function runAgent(who, prompt, opts) {
   return who === "claude" ? runClaude(prompt, opts) : runCodex(prompt, opts);
 }
 
+// ------------------------------------------------------------------ Rollen
+
+const ROLES = {
+  de: {
+    architekt:
+      "Software-Architekt: Du bewertest Gesamtarchitektur, Modularitaet, Wartbarkeit und langfristige Folgen der Entscheidung.",
+    design:
+      "Design-Lead (UI/UX): Du bewertest Nutzerfuehrung, Informationsarchitektur, visuelle Konsistenz, Barrierefreiheit und ob die Loesung fuer die Zielgruppe verstaendlich ist. Technik interessiert dich nur, soweit sie das Nutzererlebnis beeinflusst.",
+    frontend:
+      "Frontend-Engineer: Du bewertest Umsetzbarkeit im Browser, Komponentenstruktur, State-Handling, Performance (Ladezeit, Rendering), Build-Tooling und Testbarkeit des UI-Codes.",
+    backend:
+      "Backend-Engineer: Du bewertest Datenmodell, Schnittstellen/APIs, Persistenz, Sicherheit, Skalierung, Betrieb/Deployment und die Folgen fuer Datenintegritaet.",
+  },
+  en: {
+    architekt:
+      "Software architect: you assess overall architecture, modularity, maintainability and long-term consequences.",
+    design:
+      "Design lead (UI/UX): you assess user flows, information architecture, visual consistency, accessibility and whether the solution is understandable for the target audience.",
+    frontend:
+      "Frontend engineer: you assess browser feasibility, component structure, state handling, performance, build tooling and UI testability.",
+    backend:
+      "Backend engineer: you assess data model, APIs, persistence, security, scaling, operations/deployment and data integrity.",
+  },
+};
+
+/** Baut die Teilnehmerliste: pro Rolle je ein Claude- und ein Codex-Mitglied,
+ *  oder explizit via --member engine:rolle. */
+function buildParticipants(opts) {
+  const roleDesc = (role) => {
+    const desc = opts.roleDefs[role] || (ROLES[opts.lang] || ROLES.de)[role];
+    if (!desc) die(`Unbekannte Rolle "${role}". Verfuegbar: ${Object.keys(ROLES.de).join(", ")} oder eigene via --role-def.`);
+    return desc;
+  };
+  let participants;
+  if (opts.members.length) {
+    participants = opts.members.map((m) => {
+      const [engine, role] = m.split(":").map((s) => s && s.trim());
+      if (!["claude", "codex"].includes(engine) || !role) {
+        die(`--member erwartet das Format engine:rolle (z. B. claude:frontend), nicht "${m}".`);
+      }
+      return { engine, role, desc: roleDesc(role) };
+    });
+  } else {
+    const engineOrder = opts.first === "claude" ? ["claude", "codex"] : ["codex", "claude"];
+    participants = opts.roles.flatMap((role) =>
+      engineOrder.map((engine) => ({ engine, role, desc: roleDesc(role) })),
+    );
+  }
+  for (const p of participants) {
+    const sameRoleSameEngine = participants.filter((q) => q.engine === p.engine && q.role === p.role);
+    p.name = sameRoleSameEngine.length > 1
+      ? `${p.engine}·${p.role}·${sameRoleSameEngine.indexOf(p) + 1}`
+      : `${p.engine}·${p.role}`;
+  }
+  return participants;
+}
+
 // ----------------------------------------------------------------- Prompts
 
 const TEXT = {
   de: {
-    roleIntro: (self, other) =>
-      `Du bist "${self}", ein Software-Architekt in einem zweikoepfigen Entscheidungsrat ("Counsel"). ` +
-      `Dein Gegenueber ist "${other}". Ihr diskutiert eine Software- bzw. Design-Entscheidung und sollt ` +
-      `am Ende zu einer gemeinsamen, gut begruendeten Empfehlung kommen. ` +
-      `Sei konkret, nenne Trade-offs, und aendere deine Meinung, wenn die Argumente des anderen besser sind. ` +
-      `Antworte auf Deutsch, kompakt (max. ~400 Woerter), in Markdown ohne Ueberschrift erster Ebene.`,
-    opening: `Eroeffne die Diskussion: Analysiere die Fragestellung, nenne 2-3 realistische Optionen mit Vor- und Nachteilen und sprich eine klare vorlaeufige Empfehlung aus.`,
-    reply: `Antworte auf den bisherigen Diskussionsverlauf: Wo stimmst du zu, wo widersprichst du (mit Begruendung)? Ergaenze uebersehene Aspekte. Nenne am Ende deine aktuelle Empfehlung.`,
-    lastRound: `Dies ist die letzte Diskussionsrunde: Versuche aktiv, einen Konsens zu formulieren, dem beide zustimmen koennen. Benenne verbleibenden Dissens explizit.`,
+    roleIntro: (self, desc, others, maxWords) =>
+      `Du bist "${self.name}" in einem ${others.length + 1}-koepfigen Entscheidungsrat ("Counsel"). ` +
+      `Deine Rolle: ${desc} ` +
+      `Die weiteren Mitglieder sind: ${others.map((o) => `"${o.name}" (${o.role})`).join(", ")}. ` +
+      `Ihr diskutiert eine Software- bzw. Design-Entscheidung und sollt am Ende zu einer gemeinsamen, ` +
+      `gut begruendeten Empfehlung kommen. Argumentiere klar aus der Perspektive deiner Rolle, ` +
+      `sei konkret, nenne Trade-offs, und aendere deine Meinung, wenn andere besser argumentieren. ` +
+      `Antworte auf Deutsch, kompakt (max. ~${maxWords} Woerter), in Markdown ohne Ueberschrift erster Ebene.`,
+    opening: `Eroeffne die Diskussion: Analysiere die Fragestellung aus Sicht deiner Rolle, nenne 2-3 realistische Optionen mit Vor- und Nachteilen und sprich eine klare vorlaeufige Empfehlung aus.`,
+    reply: `Antworte auf den bisherigen Diskussionsverlauf: Wo stimmst du zu, wo widersprichst du (mit Begruendung)? Ergaenze Aspekte, die aus Sicht deiner Rolle uebersehen wurden. Nenne am Ende deine aktuelle Empfehlung.`,
+    lastRound: `Dies ist die letzte Diskussionsrunde: Versuche aktiv, einen Konsens zu formulieren, dem alle Mitglieder zustimmen koennen. Benenne verbleibenden Dissens explizit.`,
     moderator: (self) =>
       `Du bist "${self}" und agierst jetzt als neutraler Moderator des Counsels. ` +
       `Fasse die Diskussion in einem Entscheidungsprotokoll (Decision Record) auf Deutsch zusammen. ` +
@@ -172,21 +251,22 @@ const TEXT = {
       `## Verworfene Alternativen\n(Optionen und warum sie ausschieden)\n\n` +
       `## Risiken & offene Fragen\n(was unklar bleibt)\n\n` +
       `## Naechste Schritte\n(konkrete, umsetzbare Schritte)\n\n` +
-      `## Dissens\n(explizite Restmeinungsverschiedenheiten, oder "keiner")`,
+      `## Dissens\n(explizite Restmeinungsverschiedenheiten — nenne jeweils, welches Mitglied/welche Rolle abweicht, oder "keiner")`,
     topicLabel: "Fragestellung",
     contextLabel: "Kontext",
     transcriptLabel: "Bisheriger Diskussionsverlauf",
   },
   en: {
-    roleIntro: (self, other) =>
-      `You are "${self}", a software architect on a two-member decision counsel. ` +
-      `Your counterpart is "${other}". You are debating a software/design decision and must ` +
-      `converge on a well-reasoned joint recommendation. ` +
-      `Be concrete, name trade-offs, and change your mind when the other side argues better. ` +
-      `Reply in English, concise (max ~400 words), in Markdown without a top-level heading.`,
-    opening: `Open the discussion: analyse the question, present 2-3 realistic options with pros and cons, and give a clear preliminary recommendation.`,
-    reply: `Respond to the discussion so far: where do you agree, where do you disagree (with reasons)? Add overlooked aspects. End with your current recommendation.`,
-    lastRound: `This is the final round: actively try to formulate a consensus both can accept. Name any remaining dissent explicitly.`,
+    roleIntro: (self, desc, others, maxWords) =>
+      `You are "${self.name}" on a ${others.length + 1}-member decision counsel. ` +
+      `Your role: ${desc} ` +
+      `The other members are: ${others.map((o) => `"${o.name}" (${o.role})`).join(", ")}. ` +
+      `You are debating a software/design decision and must converge on a well-reasoned joint recommendation. ` +
+      `Argue clearly from your role's perspective, be concrete, name trade-offs, and change your mind when others argue better. ` +
+      `Reply in English, concise (max ~${maxWords} words), in Markdown without a top-level heading.`,
+    opening: `Open the discussion: analyse the question from your role's perspective, present 2-3 realistic options with pros and cons, and give a clear preliminary recommendation.`,
+    reply: `Respond to the discussion so far: where do you agree, where do you disagree (with reasons)? Add aspects your role sees that were overlooked. End with your current recommendation.`,
+    lastRound: `This is the final round: actively try to formulate a consensus all members can accept. Name any remaining dissent explicitly.`,
     moderator: (self) =>
       `You are "${self}", now acting as the counsel's neutral moderator. ` +
       `Summarise the discussion as a decision record in English using exactly this Markdown structure:\n\n` +
@@ -209,10 +289,10 @@ function buildContextBlock(opts, t) {
   return `\n\n# ${t.contextLabel}\n${parts.join("\n\n")}`;
 }
 
-function buildPrompt({ self, other, t, opts, transcript, instruction, contextBlock }) {
-  let p = `${t.roleIntro(self, other)}\n\n# ${t.topicLabel}\n${opts.topic}${contextBlock}`;
+function buildPrompt({ intro, t, opts, transcript, instruction, contextBlock }) {
+  let p = `${intro}\n\n# ${t.topicLabel}\n${opts.topic}${contextBlock}`;
   if (transcript.length) {
-    const log = transcript.map((turn) => `### ${turn.who} (Runde ${turn.round}):\n${turn.text}`).join("\n\n");
+    const log = transcript.map((turn) => `### ${turn.name} (Runde ${turn.round}):\n${turn.text}`).join("\n\n");
     p += `\n\n# ${t.transcriptLabel}\n${log}`;
   }
   p += `\n\n# Deine Aufgabe\n${instruction}`;
@@ -231,34 +311,38 @@ function main() {
   }
 
   const contextBlock = buildContextBlock(opts, t);
-  const order = opts.first === "claude" ? ["claude", "codex"] : ["codex", "claude"];
+  const participants = buildParticipants(opts);
+  const maxWords = participants.length > 2 ? 250 : 400;
   const transcript = [];
 
   console.error(`\n=== Counsel gestartet: ${opts.topic}`);
-  console.error(`=== Runden: ${opts.rounds} | Eroeffnung: ${order[0]} | Moderator: ${opts.moderator}\n`);
+  console.error(`=== Mitglieder: ${participants.map((p) => p.name).join(", ")}`);
+  console.error(`=== Runden: ${opts.rounds} | Moderator: ${opts.moderator}\n`);
 
   for (let round = 1; round <= opts.rounds; round++) {
-    for (const who of order) {
+    for (const p of participants) {
       const isFirstTurn = transcript.length === 0;
       const isLastRound = round === opts.rounds;
       let instruction = isFirstTurn ? t.opening : t.reply;
       if (isLastRound && !isFirstTurn) instruction += `\n\n${t.lastRound}`;
-      const other = who === "claude" ? "codex" : "claude";
-      const prompt = buildPrompt({ self: who, other, t, opts, transcript, instruction, contextBlock });
+      const others = participants.filter((q) => q !== p);
+      const intro = t.roleIntro(p, p.desc, others, maxWords);
+      const prompt = buildPrompt({ intro, t, opts, transcript, instruction, contextBlock });
 
-      console.error(`--- Runde ${round}: ${who} denkt nach ...`);
-      const text = runAgent(who, prompt, opts);
-      transcript.push({ who, round, text });
-      console.error(`\n### ${who} (Runde ${round}):\n${text}\n`);
+      console.error(`--- Runde ${round}: ${p.name} denkt nach ...`);
+      const text = runAgent(p.engine, prompt, opts);
+      transcript.push({ name: p.name, round, text });
+      console.error(`\n### ${p.name} (Runde ${round}):\n${text}\n`);
     }
   }
 
   console.error(`--- Moderator (${opts.moderator}) erstellt das Entscheidungsprotokoll ...`);
   const modPrompt = buildPrompt({
-    self: opts.moderator,
-    other: opts.moderator === "claude" ? "codex" : "claude",
+    intro: t.moderator(opts.moderator),
     t, opts, transcript,
-    instruction: t.moderator(opts.moderator),
+    instruction: opts.lang === "en"
+      ? "Write the decision record now, following the structure above."
+      : "Erstelle jetzt das Entscheidungsprotokoll gemaess der oben vorgegebenen Struktur.",
     contextBlock,
   });
   const decision = runAgent(opts.moderator, modPrompt, opts);
@@ -273,8 +357,8 @@ function main() {
     `# Counsel: ${opts.topic}`,
     ``,
     `- Datum: ${new Date().toISOString()}`,
-    `- Teilnehmer: claude (Claude Code CLI), codex (Codex CLI)`,
-    `- Runden: ${opts.rounds} | Eroeffnung: ${order[0]} | Moderator: ${opts.moderator}`,
+    `- Mitglieder: ${participants.map((p) => p.name).join(", ")}`,
+    `- Runden: ${opts.rounds} | Moderator: ${opts.moderator}`,
     opts.context.length ? `- Kontext: ${opts.context.join(", ")}` : null,
     ``,
     `# Entscheidungsprotokoll`,
@@ -283,7 +367,7 @@ function main() {
     ``,
     `# Diskussionsverlauf`,
     ``,
-    ...transcript.map((turn) => `## ${turn.who} — Runde ${turn.round}\n\n${turn.text}\n`),
+    ...transcript.map((turn) => `## ${turn.name} — Runde ${turn.round}\n\n${turn.text}\n`),
   ].filter((l) => l !== null).join("\n");
 
   writeFileSync(outPath, doc, "utf8");

@@ -1,0 +1,135 @@
+{
+ "channels": [
+  {
+   "format_runtime_s": null,
+   "kind": "clips",
+   "max_s": 60.0,
+   "name": "insta",
+   "vertical": true
+  },
+  {
+   "format_runtime_s": 612.0,
+   "kind": "clips",
+   "max_s": 0.0,
+   "name": "yt",
+   "vertical": false
+  },
+  {
+   "format_runtime_s": null,
+   "kind": "full",
+   "max_s": 0.0,
+   "name": "uncut",
+   "vertical": false
+  }
+ ],
+ "chapters": [
+  {
+   "t": 0.0,
+   "title": "Start"
+  },
+  {
+   "t": 183.0,
+   "title": "Busch-Gag Folge 2: die Rueckkehr"
+  },
+  {
+   "t": 3064.0,
+   "title": "Der heilige Busch liefert wieder"
+  }
+ ],
+ "clips": [
+  {
+   "callback_refs": [
+    {
+     "note": "Busch-Lore aus Session 1 referenzieren",
+     "t": 190.0
+    }
+   ],
+   "captions": [
+    {
+     "t": 3107.0,
+     "text": "PENTAKILL 🌿👑"
+    }
+   ],
+   "category": "clutch",
+   "channels": [
+    "insta",
+    "yt"
+   ],
+   "duration_s": 60.0,
+   "final_score": 0.956,
+   "lore_refs": [
+    "Der verfluchte Busch"
+   ],
+   "punchline_state": "ends_just_after",
+   "punchline_t": 3120.0,
+   "rank": 1,
+   "reason": "Der etablierte Gag zahlt erneut aus — Penta aus dem Lieblingsbusch.",
+   "second_score": null,
+   "semantic_score": 9.2,
+   "sfx": [
+    {
+     "kind": "airhorn",
+     "t": 3108.0
+    }
+   ],
+   "signal_score": 1.97,
+   "source": "llm",
+   "style": "insta_funny",
+   "t0": 3064.0,
+   "t1": 3124.0,
+   "title": "Der heilige Busch liefert wieder",
+   "zooms": [
+    {
+     "duration": 3.0,
+     "t": 3106.0
+    }
+   ]
+  },
+  {
+   "callback_refs": [],
+   "captions": [
+    {
+     "t": 186.0,
+     "text": "ER SCHON WIEDER 🌿"
+    }
+   ],
+   "category": "funny",
+   "channels": [
+    "insta"
+   ],
+   "duration_s": 27.0,
+   "final_score": 0.429,
+   "lore_refs": [
+    "Der verfluchte Busch"
+   ],
+   "punchline_state": "ends_just_after",
+   "punchline_t": 206.0,
+   "rank": 2,
+   "reason": "Wiederaufnahme des bekannten Running Gags aus der letzten Session.",
+   "second_score": null,
+   "semantic_score": 7.8,
+   "sfx": [],
+   "signal_score": 0.0,
+   "source": "llm",
+   "style": "insta_funny",
+   "t0": 183.0,
+   "t1": 210.0,
+   "title": "Busch-Gag Folge 2: die Rueckkehr",
+   "zooms": []
+  }
+ ],
+ "duration_s": 3600.0,
+ "generated": "2026-01-01",
+ "mode": "llm",
+ "stats": {
+  "candidates": 5,
+  "clips": 2,
+  "events": 4,
+  "moments": 2,
+  "reactions": 5,
+  "segments": 39
+ },
+ "tool": "cliplab",
+ "version": 1,
+ "vod": "demo_session_2.mp4"
+}

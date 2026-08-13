@@ -1,0 +1,75 @@
+# LoL Clip Lab — Konfiguration
+# CLI-Flags ueberschreiben diese Werte. Kaputte Eintraege -> Warnung + Defaults.
+
+[general]
+language = "auto"           # "auto" = Sprache der Streamer erkennen; oder z.B. "de" erzwingen
+hosts = ["Jonas", "Basti"]  # Namen des Duos — fuer korrekte Gag-Zuordnung in den Prompts
+keep_wav = false            # true = WAV-Zwischendatei nach der Analyse behalten
+out_suffix = "_cliplab"     # Ausgabeordner: <vodname><suffix> neben der VOD
+
+[audio]
+audio_stream = ""           # "" = ffmpeg-Standardspur; "a:1" = Spur 2 (nur Mikrofon)
+
+[whisper]
+model = "small"             # tiny | base | small | medium (CPU, int8 — AMD-sicher)
+
+[reactions]
+threshold_db = 8.0          # wie viel lauter als die lokale Baseline
+floor_dbfs = -50.0          # absoluter Energie-Boden (gemuteter Mic erzeugt nichts)
+merge_gap_s = 2.0           # nahe Peaks mergen
+baseline_window_s = 30.0    # Fenster fuer robuste Baseline (Median/MAD)
+
+[llm]
+llm_cmd = ["claude", "-p"]  # Primaer-Gehirn: Prompt via stdin
+# Zweitmeinung (Doppel-Gehirn, F9): standardmaessig DEAKTIVIERT.
+# Opt-in z.B.: llm2_cmd = ["codex", "exec", "-"]   (siehe README)
+llm2_cmd = []
+timeout_s = 240
+chunk_chars = 150000        # Session-Pass: Chunk-Groesse (zeilen-aligniert)
+moment_budget_chars = 150000  # Moment-Pass: Kontext-Budget
+context_window_s = 90.0     # volle Transkript-Details ± um jeden Kandidaten
+
+[memory]
+enabled = true
+path = "cliplab_memory.json"  # relativ zum Ordner der config.toml
+max_gags = 40
+max_phrases = 30
+max_lore = 30
+max_summaries = 12
+
+[styles]
+profile_path = "style_profile.json"
+references_dir = "references"
+cut_threshold_s = 120.0     # Median-Dauer <= 2 min -> CUT-Stil, sonst FORMAT-Profil
+
+[ranking]
+w_signal = 0.45             # Gewicht Audio-/Event-Signal
+w_semantic = 0.55           # Gewicht LLM-Bewertung
+clips_per_hour = 8.0        # top_k skaliert mit der Session-Dauer
+min_clips = 4
+per_10min_cap = 3           # max. Clips pro 10-Minuten-Fenster (gegen Crowding)
+
+[planning]
+min_clip_s = 8.0
+max_clip_s = 60.0
+punchline_decay_s = 4.0     # Clip endet so viele Sekunden nach der Pointe
+style_max_cap_s = 90.0      # Obergrenze, wenn ein gelernter Stil das Maximum uebersteuert
+
+[cutting]
+encoder = "auto"            # auto = AMD AMF wenn vorhanden, sonst CPU x264
+
+# Kanaele: frei umbenennbar — alles (Tags, Plaene, Dateinamen) folgt diesen Namen.
+[[channels]]
+name = "insta"
+note = "Vertikale Reels unter 60s, zwei Stile: funny-talk und montage"
+max_s = 60
+vertical = true
+
+[[channels]]
+name = "yt"
+note = "Geschnittene Highlight-Videos, ca. 10 Minuten"
+
+[[channels]]
+name = "uncut"
+note = "Ganze Session, nur Kapitelmarker"
+kind = "full"

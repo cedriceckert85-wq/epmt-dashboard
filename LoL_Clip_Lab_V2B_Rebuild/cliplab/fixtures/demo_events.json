@@ -1,0 +1,8 @@
+{
+  "events": [
+    {"t": 648.0, "kind": "death"},
+    {"t": 1506.0, "kind": "steal", "weight": 4.5},
+    {"t": 2410.0, "kind": "double"},
+    {"t": 3106.0, "kind": "penta"}
+  ]
+}

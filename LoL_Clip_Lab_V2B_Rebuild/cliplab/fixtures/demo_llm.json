@@ -1,0 +1,123 @@
+{
+  "session1": {
+    "session": {
+      "running_gags": [
+        {"name": "Der verfluchte Busch", "first_t": 190, "note": "Jonas erklaert den Bot-Busch zu seinem Todfeind — zieht sich durch die ganze Session"}
+      ],
+      "callbacks": [
+        {"setup_t": 190, "payoff_t": 3106, "note": "Busch-Fluch loest sich auf: Penta AUS dem verfluchten Busch"},
+        {"setup_t": 204, "payoff_t": 648, "note": "'Ich sterbe da noch dreimal' — erster Tod exakt aus dem Busch"}
+      ],
+      "arcs": [
+        {"t0": 185, "t1": 3131, "title": "Vom Todfeind-Busch zum heiligen Busch"}
+      ],
+      "catchphrases": ["Ich hab es gesagt!", "Merk dir diesen Moment"],
+      "lore": ["Jonas' Smurf heisst seit dieser Session 'Buschangst'"],
+      "notes": ["Baron-Steal bei 1506 ist ein eigener Hype-Moment"],
+      "summary": "Duo-Ranked-Session mit durchgehendem Busch-Fluch-Arc, der sich in Minute 52 mit einem Pentakill aus genau diesem Busch aufloest."
+    },
+    "moments": {
+      "moments": [
+        {
+          "t0": 183.0, "t1": 212.0, "title": "Dieser Busch ist VERFLUCHT",
+          "category": "funny", "score": 7.5, "punchline_t": 206.0,
+          "reason": "Setup des Session-Gags: Jonas erklaert dem Busch den Krieg, Basti nennt ihn Drama-Koenig.",
+          "style": "insta_funny", "channels": ["insta", "yt"],
+          "callback_refs": [], "lore_refs": [],
+          "captions": [{"t": 186.0, "text": "DIESER BUSCH IST VERFLUCHT 😤"}],
+          "zooms": [{"t": 206.0, "duration": 1.5}],
+          "sfx": [{"t": 207.0, "kind": "vine_boom"}]
+        },
+        {
+          "t0": 636.0, "t1": 668.0, "title": "Tod aus dem Busch — er hat es GESAGT",
+          "category": "fail", "score": 8.2, "punchline_t": 658.0,
+          "reason": "Prophezeiung erfuellt sich woertlich nach fuenf Minuten; Bastis trockenes 'Und er ist tot' ist die Pointe.",
+          "style": "insta_funny", "channels": ["insta", "yt"],
+          "callback_refs": [{"t": 190.0, "note": "Setup: Busch-Fluch-Ansage"}],
+          "lore_refs": [],
+          "captions": [{"t": 641.0, "text": "NICHT AUS DEM BUSCH 😱"}, {"t": 650.0, "text": "aus dem busch."}],
+          "zooms": [{"t": 658.0, "duration": 2.0}],
+          "sfx": [{"t": 649.0, "kind": "sad_trombone"}]
+        },
+        {
+          "t0": 1486.0, "t1": 1522.0, "title": "Baron-Steal — 'Das war Skill'",
+          "category": "clutch", "score": 8.8, "punchline_t": 1516.0,
+          "reason": "Echter Hype-Moment mit Screaming-Peak; Jonas' 'Das war Skill' als Abbinder.",
+          "style": "", "channels": ["yt"],
+          "callback_refs": [], "lore_refs": [],
+          "captions": [{"t": 1505.0, "text": "ER HAT IHN GESTOHLEN 🤯"}],
+          "zooms": [{"t": 1506.0, "duration": 2.5}],
+          "sfx": [{"t": 1507.0, "kind": "airhorn"}]
+        },
+        {
+          "t0": 2386.0, "t1": 2428.0, "title": "Flash-Ulti Doppelkill — Basti faellt vom Stuhl",
+          "category": "hype", "score": 8.0, "punchline_t": 2420.0,
+          "reason": "Call, Gegen-Call, Ausfuehrung — und Bastis Sturz vom Stuhl als Reaktions-Pointe.",
+          "style": "insta_funny", "channels": ["insta"],
+          "callback_refs": [], "lore_refs": [],
+          "captions": [{"t": 2400.0, "text": "MACH ES NICHT... er macht es"}],
+          "zooms": [{"t": 2410.0, "duration": 1.5}],
+          "sfx": [{"t": 2411.0, "kind": "boom"}]
+        },
+        {
+          "t0": 3046.0, "t1": 3130.0, "title": "PENTAKILL aus dem verfluchten Busch",
+          "category": "clutch", "score": 9.6, "punchline_t": 3120.0,
+          "reason": "Payoff der ganzen Session: Der Todfeind-Busch versteckt Jonas fuer das Penta — Gag-Aufloesung und Highlight in einem.",
+          "style": "insta_funny", "channels": ["insta", "yt"],
+          "callback_refs": [{"t": 190.0, "note": "Setup aus Minute 3 als Flashback einblenden"}],
+          "lore_refs": [],
+          "captions": [{"t": 3059.0, "text": "IN DEM BUSCH?!"}, {"t": 3107.0, "text": "PENTAKILL 🌿👑"}],
+          "zooms": [{"t": 3106.0, "duration": 3.0}],
+          "sfx": [{"t": 3108.0, "kind": "airhorn"}, {"t": 3117.0, "kind": "applause"}]
+        }
+      ]
+    },
+    "consolidate": [
+      {"new": "Der verfluchte Busch", "matches": null}
+    ]
+  },
+  "session2": {
+    "session": {
+      "running_gags": [
+        {"name": "Der verfluchte Busch", "first_t": 190, "note": "Der Busch-Gag geht weiter — jetzt als 'heiliger Busch'"}
+      ],
+      "callbacks": [
+        {"setup_t": 190, "payoff_t": 3106, "note": "Busch liefert erneut den Schluss-Moment"}
+      ],
+      "arcs": [
+        {"t0": 185, "t1": 3131, "title": "Heiliger Busch, Folge 2"}
+      ],
+      "catchphrases": ["Ich hab es gesagt!"],
+      "lore": [],
+      "notes": [],
+      "summary": "Zweite Session: Der Busch-Gag ist etabliert und wird sofort wiedererkannt."
+    },
+    "moments": {
+      "moments": [
+        {
+          "t0": 183.0, "t1": 212.0, "title": "Busch-Gag Folge 2: die Rueckkehr",
+          "category": "funny", "score": 7.8, "punchline_t": 206.0,
+          "reason": "Wiederaufnahme des bekannten Running Gags aus der letzten Session.",
+          "style": "insta_funny", "channels": ["insta"],
+          "callback_refs": [], "lore_refs": ["Der verfluchte Busch"],
+          "captions": [{"t": 186.0, "text": "ER SCHON WIEDER 🌿"}],
+          "zooms": [], "sfx": []
+        },
+        {
+          "t0": 3046.0, "t1": 3130.0, "title": "Der heilige Busch liefert wieder",
+          "category": "clutch", "score": 9.2, "punchline_t": 3120.0,
+          "reason": "Der etablierte Gag zahlt erneut aus — Penta aus dem Lieblingsbusch.",
+          "style": "insta_funny", "channels": ["insta", "yt"],
+          "callback_refs": [{"t": 190.0, "note": "Busch-Lore aus Session 1 referenzieren"}],
+          "lore_refs": ["Der verfluchte Busch"],
+          "captions": [{"t": 3107.0, "text": "PENTAKILL 🌿👑"}],
+          "zooms": [{"t": 3106.0, "duration": 3.0}],
+          "sfx": [{"t": 3108.0, "kind": "airhorn"}]
+        }
+      ]
+    },
+    "consolidate": [
+      {"new": "Der verfluchte Busch", "matches": "der_verfluchte_busch"}
+    ]
+  }
+}

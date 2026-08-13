@@ -1,0 +1,292 @@
+{
+ "channels": [
+  {
+   "format_runtime_s": null,
+   "kind": "clips",
+   "max_s": 60.0,
+   "name": "insta",
+   "vertical": true
+  },
+  {
+   "format_runtime_s": 612.0,
+   "kind": "clips",
+   "max_s": 0.0,
+   "name": "yt",
+   "vertical": false
+  },
+  {
+   "format_runtime_s": null,
+   "kind": "full",
+   "max_s": 0.0,
+   "name": "uncut",
+   "vertical": false
+  }
+ ],
+ "chapters": [
+  {
+   "t": 0.0,
+   "title": "Start"
+  },
+  {
+   "t": 183.0,
+   "title": "Dieser Busch ist VERFLUCHT"
+  },
+  {
+   "t": 636.0,
+   "title": "Tod aus dem Busch — er hat es GESAGT"
+  },
+  {
+   "t": 1486.0,
+   "title": "Baron-Steal — 'Das war Skill'"
+  },
+  {
+   "t": 2386.0,
+   "title": "Flash-Ulti Doppelkill — Basti faellt vom Stuhl"
+  },
+  {
+   "t": 3064.0,
+   "title": "PENTAKILL aus dem verfluchten Busch"
+  }
+ ],
+ "clips": [
+  {
+   "callback_refs": [
+    {
+     "note": "Setup aus Minute 3 als Flashback einblenden",
+     "t": 190.0
+    }
+   ],
+   "captions": [
+    {
+     "t": 3064.0,
+     "text": "IN DEM BUSCH?!"
+    },
+    {
+     "t": 3107.0,
+     "text": "PENTAKILL 🌿👑"
+    }
+   ],
+   "category": "clutch",
+   "channels": [
+    "insta",
+    "yt"
+   ],
+   "duration_s": 60.0,
+   "final_score": 0.978,
+   "lore_refs": [],
+   "punchline_state": "ends_just_after",
+   "punchline_t": 3120.0,
+   "rank": 1,
+   "reason": "Payoff der ganzen Session: Der Todfeind-Busch versteckt Jonas fuer das Penta — Gag-Aufloesung und Highlight in einem.",
+   "second_score": null,
+   "semantic_score": 9.6,
+   "sfx": [
+    {
+     "kind": "airhorn",
+     "t": 3108.0
+    },
+    {
+     "kind": "applause",
+     "t": 3117.0
+    }
+   ],
+   "signal_score": 1.97,
+   "source": "llm",
+   "style": "insta_funny",
+   "t0": 3064.0,
+   "t1": 3124.0,
+   "title": "PENTAKILL aus dem verfluchten Busch",
+   "zooms": [
+    {
+     "duration": 3.0,
+     "t": 3106.0
+    }
+   ]
+  },
+  {
+   "callback_refs": [],
+   "captions": [
+    {
+     "t": 1505.0,
+     "text": "ER HAT IHN GESTOHLEN 🤯"
+    }
+   ],
+   "category": "clutch",
+   "channels": [
+    "yt"
+   ],
+   "duration_s": 34.0,
+   "final_score": 0.8678,
+   "lore_refs": [],
+   "punchline_state": "ends_just_after",
+   "punchline_t": 1516.0,
+   "rank": 2,
+   "reason": "Echter Hype-Moment mit Screaming-Peak; Jonas' 'Das war Skill' als Abbinder.",
+   "second_score": null,
+   "semantic_score": 8.8,
+   "sfx": [
+    {
+     "kind": "airhorn",
+     "t": 1507.0
+    }
+   ],
+   "signal_score": 1.68,
+   "source": "llm",
+   "style": "",
+   "t0": 1486.0,
+   "t1": 1520.0,
+   "title": "Baron-Steal — 'Das war Skill'",
+   "zooms": [
+    {
+     "duration": 2.5,
+     "t": 1506.0
+    }
+   ]
+  },
+  {
+   "callback_refs": [],
+   "captions": [
+    {
+     "t": 2400.0,
+     "text": "MACH ES NICHT... er macht es"
+    }
+   ],
+   "category": "hype",
+   "channels": [
+    "insta"
+   ],
+   "duration_s": 38.0,
+   "final_score": 0.721,
+   "lore_refs": [],
+   "punchline_state": "ends_just_after",
+   "punchline_t": 2420.0,
+   "rank": 3,
+   "reason": "Call, Gegen-Call, Ausfuehrung — und Bastis Sturz vom Stuhl als Reaktions-Pointe.",
+   "second_score": null,
+   "semantic_score": 8.0,
+   "sfx": [
+    {
+     "kind": "boom",
+     "t": 2411.0
+    }
+   ],
+   "signal_score": 1.23,
+   "source": "llm",
+   "style": "insta_funny",
+   "t0": 2386.0,
+   "t1": 2424.0,
+   "title": "Flash-Ulti Doppelkill — Basti faellt vom Stuhl",
+   "zooms": [
+    {
+     "duration": 1.5,
+     "t": 2410.0
+    }
+   ]
+  },
+  {
+   "callback_refs": [
+    {
+     "note": "Setup: Busch-Fluch-Ansage",
+     "t": 190.0
+    }
+   ],
+   "captions": [
+    {
+     "t": 641.0,
+     "text": "NICHT AUS DEM BUSCH 😱"
+    },
+    {
+     "t": 650.0,
+     "text": "aus dem busch."
+    }
+   ],
+   "category": "fail",
+   "channels": [
+    "insta",
+    "yt"
+   ],
+   "duration_s": 26.0,
+   "final_score": 0.5926,
+   "lore_refs": [],
+   "punchline_state": "ends_just_after",
+   "punchline_t": 658.0,
+   "rank": 4,
+   "reason": "Prophezeiung erfuellt sich woertlich nach fuenf Minuten; Bastis trockenes 'Und er ist tot' ist die Pointe.",
+   "second_score": null,
+   "semantic_score": 8.2,
+   "sfx": [
+    {
+     "kind": "sad_trombone",
+     "t": 649.0
+    }
+   ],
+   "signal_score": 0.62,
+   "source": "llm",
+   "style": "insta_funny",
+   "t0": 636.0,
+   "t1": 662.0,
+   "title": "Tod aus dem Busch — er hat es GESAGT",
+   "zooms": [
+    {
+     "duration": 2.0,
+     "t": 658.0
+    }
+   ]
+  },
+  {
+   "callback_refs": [],
+   "captions": [
+    {
+     "t": 186.0,
+     "text": "DIESER BUSCH IST VERFLUCHT 😤"
+    }
+   ],
+   "category": "funny",
+   "channels": [
+    "insta",
+    "yt"
+   ],
+   "duration_s": 27.0,
+   "final_score": 0.4125,
+   "lore_refs": [],
+   "punchline_state": "ends_just_after",
+   "punchline_t": 206.0,
+   "rank": 5,
+   "reason": "Setup des Session-Gags: Jonas erklaert dem Busch den Krieg, Basti nennt ihn Drama-Koenig.",
+   "second_score": null,
+   "semantic_score": 7.5,
+   "sfx": [
+    {
+     "kind": "vine_boom",
+     "t": 207.0
+    }
+   ],
+   "signal_score": 0.0,
+   "source": "llm",
+   "style": "insta_funny",
+   "t0": 183.0,
+   "t1": 210.0,
+   "title": "Dieser Busch ist VERFLUCHT",
+   "zooms": [
+    {
+     "duration": 1.5,
+     "t": 206.0
+    }
+   ]
+  }
+ ],
+ "duration_s": 3600.0,
+ "generated": "2026-01-01",
+ "mode": "llm",
+ "stats": {
+  "candidates": 5,
+  "clips": 5,
+  "events": 4,
+  "moments": 5,
+  "reactions": 5,
+  "segments": 39
+ },
+ "tool": "cliplab",
+ "version": 1,
+ "vod": "demo_session_1.mp4"
+}

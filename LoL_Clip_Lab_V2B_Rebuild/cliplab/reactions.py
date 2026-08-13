@@ -17,8 +17,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np
-
 FRAME_S = 0.10  # Fensterlaenge
 HOP_S = 0.05  # Schrittweite
 SIGMA_FLOOR_DB = 2.0  # Schutz gegen kollabierende Streuung
@@ -42,8 +40,10 @@ class Reaction:
         }
 
 
-def _frame_dbfs(samples: np.ndarray, sr: int) -> tuple[np.ndarray, np.ndarray]:
+def _frame_dbfs(samples, sr: int):
     """RMS-Energie pro Frame in dBFS + Frame-Mittenzeiten."""
+    import numpy as np
+
     win = max(1, int(round(FRAME_S * sr)))
     hop = max(1, int(round(HOP_S * sr)))
     n = len(samples)
@@ -63,7 +63,7 @@ def _frame_dbfs(samples: np.ndarray, sr: int) -> tuple[np.ndarray, np.ndarray]:
 
 
 def detect_reactions(
-    samples: np.ndarray | None,
+    samples,
     sr: int = 16000,
     threshold_db: float = 8.0,
     floor_dbfs: float = -50.0,
@@ -71,6 +71,8 @@ def detect_reactions(
     baseline_window_s: float = 30.0,
 ) -> list[Reaction]:
     """Reaktionen im Audio finden. Leerer/kaputter Input -> []."""
+    import numpy as np  # lazy — Rest des Tools laeuft auch ohne numpy
+
     if samples is None:
         return []
     samples = np.asarray(samples)

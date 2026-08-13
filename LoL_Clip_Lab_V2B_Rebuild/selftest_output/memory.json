@@ -1,0 +1,38 @@
+{
+ "catchphrases": [
+  "Ich hab es gesagt!",
+  "Merk dir diesen Moment"
+ ],
+ "gags": [
+  {
+   "first_seen": "demo_session_1.mp4",
+   "last_seen": "demo_session_2.mp4",
+   "name": "Der verfluchte Busch",
+   "note": "",
+   "slug": "der_verfluchte_busch",
+   "times_seen": 2
+  }
+ ],
+ "lore": [
+  "Jonas' Smurf heisst seit dieser Session 'Buschangst'"
+ ],
+ "sessions": {
+  "demo_session_1.mp4": {
+   "analyzed_at": "2026-01-01"
+  },
+  "demo_session_2.mp4": {
+   "analyzed_at": "2026-01-01"
+  }
+ },
+ "summaries": [
+  {
+   "summary": "Duo-Ranked-Session mit durchgehendem Busch-Fluch-Arc, der sich in Minute 52 mit einem Pentakill aus genau diesem Busch aufloest.",
+   "vod": "demo_session_1.mp4"
+  },
+  {
+   "summary": "Zweite Session: Der Busch-Gag ist etabliert und wird sofort wiedererkannt.",
+   "vod": "demo_session_2.mp4"
+  }
+ ],
+ "version": 1
+}

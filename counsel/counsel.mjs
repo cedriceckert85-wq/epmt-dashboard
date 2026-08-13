@@ -305,13 +305,15 @@ function main() {
   const opts = parseArgs(process.argv.slice(2));
   const t = TEXT[opts.lang] || TEXT.de;
 
-  if (!opts.dryRun) {
-    checkAvailable(opts.claudeCmd, "Claude");
-    checkAvailable(opts.codexCmd, "Codex");
-  }
-
   const contextBlock = buildContextBlock(opts, t);
   const participants = buildParticipants(opts);
+
+  // Nur die CLIs pruefen, die tatsaechlich am Tisch sitzen (inkl. Moderator)
+  if (!opts.dryRun) {
+    const engines = new Set([...participants.map((p) => p.engine), opts.moderator]);
+    if (engines.has("claude")) checkAvailable(opts.claudeCmd, "Claude");
+    if (engines.has("codex")) checkAvailable(opts.codexCmd, "Codex");
+  }
   const maxWords = participants.length > 2 ? 250 : 400;
   const transcript = [];
 

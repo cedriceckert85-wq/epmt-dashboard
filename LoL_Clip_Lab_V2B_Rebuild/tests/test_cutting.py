@@ -87,12 +87,13 @@ class TestCut:
         vod.write_bytes(b"x")
         plan = write_plan(tmp_path, [{"t0": 500, "t1": 540, "title": "zu spaet", "rank": 1}])
         records = []
-        ok, notes = cut_from_plan(
+        ok, notes, errors = cut_from_plan(
             vod, plan, cfg, log=quiet, which=fake_which,
             run_fn=make_run(records, duration=100.0),
         )
         assert ok == 0
-        assert any("100" in n or "ausserhalb" in n for n in notes)
+        # Range ausserhalb = FEHLER (nicht bloss Hinweis)
+        assert any("100" in e or "ausserhalb" in e for e in errors)
         # ffmpeg wurde fuer diesen Clip gar nicht erst aufgerufen
         assert not any("-ss" in r for r in records)
 
@@ -101,12 +102,13 @@ class TestCut:
         vod.write_bytes(b"x")
         plan = write_plan(tmp_path, [{"t0": 90, "t1": 150, "title": "lang", "rank": 1}])
         records = []
-        ok, notes = cut_from_plan(
+        ok, notes, errors = cut_from_plan(
             vod, plan, cfg, log=quiet, which=fake_which,
             run_fn=make_run(records, duration=100.0),
         )
         assert ok >= 1
         assert any("gekuerzt" in n for n in notes)
+        assert errors == []  # gekuerzt ist ein Hinweis, kein Fehler
 
     def test_channel_names_in_filenames(self, tmp_path, cfg):
         vod = tmp_path / "v.mkv"
@@ -121,7 +123,7 @@ class TestCut:
             ],
         )
         records = []
-        ok, _ = cut_from_plan(
+        ok, _, _ = cut_from_plan(
             vod, plan, cfg, out_dir=tmp_path / "clips", log=quiet,
             which=fake_which, run_fn=make_run(records),
         )
@@ -152,7 +154,7 @@ class TestCut:
             channels=[{"name": "uncut", "kind": "full", "vertical": False}],
         )
         records = []
-        ok, _ = cut_from_plan(vod, plan, cfg, log=quiet, which=fake_which, run_fn=make_run(records))
+        ok, _, _ = cut_from_plan(vod, plan, cfg, log=quiet, which=fake_which, run_fn=make_run(records))
         cut_call = next(r for r in records if "-ss" in r)
         assert ok == 1  # eine Datei OHNE Kanal-Suffix
         assert not Path(cut_call[-1]).name.endswith("_uncut.mp4")
@@ -164,7 +166,7 @@ class TestCut:
             tmp_path,
             [{"t0": "x", "t1": 5}, {"t0": 10, "t1": 20, "title": "ok", "rank": 1}],
         )
-        ok, notes = cut_from_plan(
+        ok, notes, errors = cut_from_plan(
             vod, plan, cfg, log=quiet, which=fake_which, run_fn=make_run([])
         )
         assert ok == 1 and any("uebersprungen" in n for n in notes)

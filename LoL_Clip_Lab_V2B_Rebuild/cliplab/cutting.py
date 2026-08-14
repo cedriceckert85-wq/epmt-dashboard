@@ -57,8 +57,14 @@ def cut_from_plan(
     run_fn=default_run,
     which=shutil.which,
     log: Callable[[str], None] = print,
-) -> tuple[int, list[str]]:
-    """Alle Clips aus dem Plan schneiden. Rueckgabe (anzahl_ok, notizen)."""
+) -> tuple[int, list[str], list[str]]:
+    """Alle Clips aus dem Plan schneiden.
+
+    Rueckgabe (anzahl_ok, notizen, fehler):
+    - notizen  = ehrliche Hinweise (z.B. abgeschnittene Ranges)
+    - fehler   = fehlgeschlagene Schnitte (z.B. Range komplett ausserhalb
+      des Videos) — der Aufrufer entscheidet ueber den Sammel-Exit
+    """
     vod = Path(vod)
     if not vod.is_file():
         raise MissingInputError(f"VOD nicht gefunden: {vod}")
@@ -72,6 +78,7 @@ def cut_from_plan(
         )
     skipped = len(raw_clips) - len(valid)
     notes: list[str] = []
+    errors: list[str] = []
     if skipped:
         notes.append(f"{skipped} kaputte Clip-Eintraege im Plan uebersprungen.")
 
@@ -119,10 +126,10 @@ def cut_from_plan(
                     which=which,
                 )
             except ClipLabError as exc:
-                notes.append(f"#{rank} {fname}: {exc.message}")
+                errors.append(f"#{rank} {fname}: {exc.message}")
                 continue
             ok += 1
             for n in clip_notes:
                 notes.append(f"#{rank} {fname}: {n}")
             log(f"  geschnitten: {fname}" + (" (9:16)" if vertical else ""))
-    return ok, notes
+    return ok, notes, errors

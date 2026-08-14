@@ -137,8 +137,11 @@ def _want_type(default: Any, value: Any) -> Any | None:
         if isinstance(value, (int, float)):
             import math
 
-            if math.isfinite(float(value)):
-                return float(value)
+            try:
+                if math.isfinite(float(value)):
+                    return float(value)
+            except (OverflowError, ValueError):
+                return None  # Riesen-Integer (z.B. 10**400) -> falscher Typ
         return None
     if isinstance(default, int):
         if isinstance(value, bool):
@@ -276,7 +279,8 @@ def load_config(path: Path | str | None = None, cwd: Path | str | None = None) -
 
     try:
         raw = tomllib.loads(found.read_text(encoding="utf-8", errors="replace"))
-    except (tomllib.TOMLDecodeError, OSError, ValueError) as exc:
+    except (tomllib.TOMLDecodeError, OSError, ValueError, RecursionError) as exc:
+        # RecursionError: absurd tief verschachtelte TOML-Arrays
         warnings.append(f"config: {found.name} kaputt ({exc}) — nutze Code-Defaults")
         return cfg, warnings
     if not isinstance(raw, dict):

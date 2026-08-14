@@ -145,6 +145,11 @@ def run_creative_pipeline(
             if deps.llm_secondary is not None and any("uebernommen" in n or "bewertet" in n for n in notes):
                 mode_line += " + Zweitmeinung"
         else:
+            # Ehrliche Modus-Zeile: die CLI war DA, die Antwort war unbrauchbar
+            mode_line = (
+                "Signal-only — LLM lieferte keine verwertbaren Momente; "
+                "Ranking rein nach Audio-Reaktionen/Game-Events"
+            )
             warnings.append(
                 "LLM lieferte keine verwertbaren Momente — Fallback auf Signal-only."
             )

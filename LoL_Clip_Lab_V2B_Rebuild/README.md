@@ -20,7 +20,9 @@ harte Voraussetzung fuer echte VODs). Optional: `faster-whisper`
 
 **Windows:** `START.bat` doppelklicken — legt die venv an, installiert
 `numpy` + `faster-whisper`, prueft die Umgebung (`doctor`) und fuehrt den
-Offline-Selbsttest vor.
+Offline-Selbsttest vor. Beim Python-Installer von python.org bitte das
+Haekchen **"Add python.exe to PATH"** setzen — falls es fehlt, nutzt
+`START.bat` automatisch den `py`-Launcher (`py -3`).
 
 **Linux/Mac:**
 

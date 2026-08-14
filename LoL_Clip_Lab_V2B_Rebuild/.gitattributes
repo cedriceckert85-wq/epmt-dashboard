@@ -1,0 +1,2 @@
+# cmd.exe braucht CRLF fuer zuverlaessige GOTO/CALL-Label-Suche
+*.bat text eol=crlf

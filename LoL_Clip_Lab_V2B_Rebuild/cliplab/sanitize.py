@@ -58,7 +58,12 @@ def clean_str(value: Any, max_len: int = 200, default: str = "") -> str:
         return default
     if not isinstance(value, str):
         if isinstance(value, (int, float)):
-            if isinstance(value, bool) or not math.isfinite(float(value)):
+            # bool ist int-Subklasse; float(10**400) wirft OverflowError —
+            # ein 400-stelliges Integer-Literal ist aber gueltiges JSON!
+            try:
+                if isinstance(value, bool) or not math.isfinite(float(value)):
+                    return default
+            except (OverflowError, ValueError):
                 return default
             value = str(value)
         else:

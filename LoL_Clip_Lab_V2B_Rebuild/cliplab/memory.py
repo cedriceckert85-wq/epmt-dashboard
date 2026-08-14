@@ -145,8 +145,8 @@ class BrainStore:
             return fresh_brain()
         try:
             return sanitize_brain(raw, self.cfg)
-        except RecursionError:
-            return fresh_brain()
+        except Exception:  # noqa: BLE001 — Kontrakt: feindliche Datei -> frisches
+            return fresh_brain()  # Gehirn, NIE ein Crash (z.B. Riesen-Integer)
 
     def save(self, brain: dict) -> None:
         try:

@@ -67,18 +67,23 @@ def clamp(value: float, lo: float, hi: float) -> float:
 
 
 def finite(value: object, default: float = 0.0) -> float:
-    """Zahl -> endlicher float (json akzeptiert Infinity/NaN!)."""
+    """Zahl -> endlicher float (json akzeptiert Infinity/NaN — und
+    Riesen-Integer-Literale wie 10**400 sind gueltiges JSON, deren
+    float()-Konvertierung OverflowError wirft!)."""
     if isinstance(value, bool):
         return default
     if isinstance(value, (int, float)):
-        v = float(value)
+        try:
+            v = float(value)
+        except (OverflowError, ValueError):
+            return default
         if math.isfinite(v):
             return v
         return default
     if isinstance(value, str):
         try:
             v = float(value.strip())
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, OverflowError):
             return default
         if math.isfinite(v):
             return v

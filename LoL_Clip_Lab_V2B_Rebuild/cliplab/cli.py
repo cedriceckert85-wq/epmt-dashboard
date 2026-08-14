@@ -162,7 +162,7 @@ def cmd_analyze(args, cfg: Config) -> int:
         say(f"  Hinweis: {w}")
     if args.cut:
         say("Schneide Clips ...")
-        ok, notes = cut_from_plan(
+        ok, notes, errors = cut_from_plan(
             args.vod, result.paths["plan"], cfg,
             out_dir=result.out_dir / "clips",
             encoder_choice=args.encoder,
@@ -171,6 +171,10 @@ def cmd_analyze(args, cfg: Config) -> int:
         say(f"  {ok} Clip-Dateien geschnitten.")
         for n in notes:
             say(f"  Hinweis: {n}")
+        for e in errors:
+            say(f"  Fehler: {e}")
+        if errors:
+            return 1  # Sammel-Exit: mindestens ein Schnitt schlug fehl
     return 0
 
 
@@ -201,12 +205,16 @@ def cmd_batch(args, cfg: Config) -> int:
             result = analyze_vod(cfg, req, deps)
             say(f"  -> {result.paths['sheet']}")
             if args.cut:
-                ok, notes = cut_from_plan(
+                ok, notes, errors = cut_from_plan(
                     vod, result.paths["plan"], cfg,
                     out_dir=result.out_dir / "clips",
                     encoder_choice=args.encoder, log=say,
                 )
                 say(f"  -> {ok} Clips geschnitten")
+                for e in errors:
+                    say(f"  Fehler: {e}")
+                if errors:
+                    failures += 1  # zaehlt in den Sammel-Exit
         except ClipLabError as exc:
             failures += 1
             say(exc.friendly())
@@ -216,13 +224,17 @@ def cmd_batch(args, cfg: Config) -> int:
 
 
 def cmd_cut(args, cfg: Config) -> int:
-    ok, notes = cut_from_plan(
+    ok, notes, errors = cut_from_plan(
         args.vod, args.plan, cfg, out_dir=args.out,
         encoder_choice=args.encoder, log=say,
     )
     say(f"{ok} Clip-Dateien geschnitten.")
     for n in notes:
         say(f"Hinweis: {n}")
+    for e in errors:
+        say(f"Fehler: {e}")
+    if errors:
+        return 1  # Sammel-Exit wie bei batch: Fehler gab es
     return 0
 
 
